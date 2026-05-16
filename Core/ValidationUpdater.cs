@@ -343,10 +343,11 @@ namespace ConfigExcelEnhancer.Core
         /// 使 Luban 等直接读取 xlsx 的工具能读到正确的公式结果。
         /// 要求本机安装 Excel；若未安装则静默跳过。必须在 STA 线程上调用。
         /// </summary>
-        public static void RefreshFormulasViaExcel(IReadOnlyList<string> filePaths)
+        /// <returns>true = 刷新已执行；false = 本机未安装 Excel，已跳过。</returns>
+        public static bool RefreshFormulasViaExcel(IReadOnlyList<string> filePaths)
         {
             var excelType = Type.GetTypeFromProgID("Excel.Application");
-            if (excelType == null) return;
+            if (excelType == null) return false;
 
             dynamic? excel = null;
             try
@@ -369,6 +370,7 @@ namespace ConfigExcelEnhancer.Core
                 try { excel?.Quit(); } catch { }
                 if (excel != null) Marshal.ReleaseComObject(excel);
             }
+            return true;
         }
 
         /// <summary>
