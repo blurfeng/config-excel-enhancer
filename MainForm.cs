@@ -7,6 +7,7 @@ namespace ConfigExcelEnhancer
         public MainForm()
         {
             InitializeComponent();
+            settingsTab.SettingsCleared += (_, _) => LoadSettings();
             LoadSettings();
         }
 

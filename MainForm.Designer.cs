@@ -20,15 +20,19 @@ namespace ConfigExcelEnhancer
             enumTab = new EnumTab();
             tabLuban = new TabPage();
             lubanTab = new LubanTab();
+            tabSettings = new TabPage();
+            settingsTab = new SettingsTab();
             tabControl.SuspendLayout();
             tabEnum.SuspendLayout();
             tabLuban.SuspendLayout();
+            tabSettings.SuspendLayout();
             SuspendLayout();
 
             // tabControl
             tabControl.Dock = DockStyle.Fill;
             tabControl.Controls.Add(tabEnum);
             tabControl.Controls.Add(tabLuban);
+            tabControl.Controls.Add(tabSettings);
 
             // tabEnum
             tabEnum.Text = "Enum 验证";
@@ -46,6 +50,14 @@ namespace ConfigExcelEnhancer
             // lubanTab
             lubanTab.Dock = DockStyle.Fill;
 
+            // tabSettings
+            tabSettings.Text = "设置";
+            tabSettings.Padding = new Padding(4);
+            tabSettings.Controls.Add(settingsTab);
+
+            // settingsTab
+            settingsTab.Dock = DockStyle.Fill;
+
             // MainForm
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -56,6 +68,7 @@ namespace ConfigExcelEnhancer
             tabControl.ResumeLayout(false);
             tabEnum.ResumeLayout(false);
             tabLuban.ResumeLayout(false);
+            tabSettings.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -64,5 +77,7 @@ namespace ConfigExcelEnhancer
         private EnumTab enumTab = null!;
         private TabPage tabLuban = null!;
         private LubanTab lubanTab = null!;
+        private TabPage tabSettings = null!;
+        private SettingsTab settingsTab = null!;
     }
 }

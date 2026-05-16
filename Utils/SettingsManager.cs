@@ -32,5 +32,15 @@ namespace ConfigExcelEnhancer.Utils
             var json = JsonSerializer.Serialize(settings, JsonOptions);
             File.WriteAllText(SettingsPath, json);
         }
+
+        public static void Clear()
+        {
+            try
+            {
+                if (File.Exists(SettingsPath))
+                    File.Delete(SettingsPath);
+            }
+            catch { }
+        }
     }
 }
