@@ -18,9 +18,17 @@ namespace ConfigExcelEnhancer.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
+        private CancellationTokenSource? _cts;
+
         public EnumTab()
         {
             InitializeComponent();
+        }
+
+        /// <summary>取消当前正在进行的任务（供窗口关闭时调用）。</summary>
+        public void CancelRunningTask()
+        {
+            _cts?.Cancel();
         }
 
         protected override void OnLoad(EventArgs e)
@@ -91,7 +99,13 @@ namespace ConfigExcelEnhancer.UI
                 return;
             }
 
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
+
             btnUpdate.Enabled = false;
+            btnStop.Enabled = true;
+            progressBar.Value = 0;
+            progressBar.Visible = true;
             LogDivider();
 
             try
@@ -100,8 +114,11 @@ namespace ConfigExcelEnhancer.UI
                 Log("扫描 XML Enum 定义...", ClrInfo);
                 var sw = Stopwatch.StartNew();
 
-                List<EnumInfo> enums = await Task.Run(() => EnumScanner.ScanDirectory(xmlDir));
+                List<EnumInfo> enums = await Task.Run(() => EnumScanner.ScanDirectory(xmlDir), token);
                 sw.Stop();
+                progressBar.Value = 15;
+
+                token.ThrowIfCancellationRequested();
 
                 if (enums.Count == 0)
                 {
@@ -128,17 +145,33 @@ namespace ConfigExcelEnhancer.UI
                 Log("开始修改 Excel...", ClrInfo);
                 sw.Restart();
 
+                int totalFiles = Directory.EnumerateFiles(excelDir, "*.xlsx", SearchOption.AllDirectories)
+                    .Count(f => !Path.GetFileName(f).StartsWith("~$"));
+                int processed = 0;
+
                 var results = await Task.Run(() =>
                     ValidationUpdater.UpdateDirectory(
                         excelDir,
                         enums,
                         chkHideEnumDataSheet.Checked,
-                        result => BeginInvoke(() => LogFileResult(result))));
+                        result =>
+                        {
+                            processed++;
+                            int pct = totalFiles > 0 ? 15 + (int)(processed * 70.0 / totalFiles) : 85;
+                            BeginInvoke(() =>
+                            {
+                                progressBar.Value = Math.Min(pct, 85);
+                                LogFileResult(result);
+                            });
+                        }), token);
 
                 sw.Stop();
 
+                token.ThrowIfCancellationRequested();
+
                 // ── 步骤3：汇总 ─────────────────────────────
                 PrintSummary(enums.Count, results, sw.Elapsed);
+                progressBar.Value = 95;
 
                 // ── 步骤4：Excel COM 刷新公式缓存值 ─────────
                 var savedFiles = results.Where(r => r.WasSaved).Select(r => r.FilePath).ToList();
@@ -155,12 +188,19 @@ namespace ConfigExcelEnhancer.UI
                         sta.Start();
                         sta.Join();
                         excelAvailable = result;
-                    });
+                    }, token);
                     if (excelAvailable)
+                    {
                         Log("公式缓存值刷新完成。", ClrNormal);
+                    }
                     else
                         Log("本机未安装 Excel，已跳过公式缓存刷新。如需刷新，请安装 Microsoft Excel 后重试。", ClrWarn);
                 }
+                progressBar.Value = 100;
+            }
+            catch (OperationCanceledException)
+            {
+                Log("操作已停止。", ClrWarn);
             }
             catch (Exception ex)
             {
@@ -169,7 +209,29 @@ namespace ConfigExcelEnhancer.UI
             finally
             {
                 btnUpdate.Enabled = true;
+                btnStop.Enabled = false;
+                progressBar.Value = 0;
+                progressBar.Visible = false;
+                _cts?.Dispose();
+                _cts = null;
             }
+        }
+
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+            _cts?.Cancel();
+            btnStop.Enabled = false;
+        }
+
+        private void btnClearLog_Click(object sender, EventArgs e)
+        {
+            txtLog.Clear();
+        }
+
+        private void btnCopyLog_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(txtLog.Text))
+                Clipboard.SetText(txtLog.Text);
         }
 
         // ── 结果打印 ──────────────────────────────────────────

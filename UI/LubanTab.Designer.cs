@@ -23,6 +23,7 @@ namespace ConfigExcelEnhancer.UI
             btnSave = new Button();
             btnRun = new Button();
             btnCancel = new Button();
+            ctxLog = new ContextMenuStrip();
             txtLog = new RichTextBox();
             pnlTop.SuspendLayout();
             pnlBottom.SuspendLayout();
@@ -93,9 +94,16 @@ namespace ConfigExcelEnhancer.UI
             btnReset.Enabled = false;
             btnReset.Click += btnReset_Click;
 
+            // ctxLog
+            var ctxClear = ctxLog.Items.Add("清空日志");
+            var ctxCopy  = ctxLog.Items.Add("复制全部");
+            ctxClear.Click += btnClearLog_Click;
+            ctxCopy.Click  += btnCopyLog_Click;
+
             // txtLog
             txtLog.Location = new Point(8, 44);
             txtLog.Size = new Size(631, 136);
+            txtLog.ContextMenuStrip = ctxLog;
             txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             txtLog.ReadOnly = true;
             txtLog.BackColor = Color.FromArgb(30, 30, 30);
@@ -126,6 +134,7 @@ namespace ConfigExcelEnhancer.UI
         private Button btnRun = null!;
         private Button btnCancel = null!;
         private Button btnReset = null!;
+        private ContextMenuStrip ctxLog = null!;
         private RichTextBox txtLog = null!;
     }
 }

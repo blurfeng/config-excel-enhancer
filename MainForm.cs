@@ -26,6 +26,8 @@ namespace ConfigExcelEnhancer
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            enumTab.CancelRunningTask();
+            lubanTab.CancelRunningTask();
             SaveSettings();
             base.OnFormClosing(e);
         }

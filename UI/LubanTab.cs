@@ -563,5 +563,23 @@ namespace ConfigExcelEnhancer.UI
             txtLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}");
             txtLog.ScrollToCaret();
         }
+
+        private void btnClearLog_Click(object sender, EventArgs e)
+        {
+            txtLog.Clear();
+        }
+
+        private void btnCopyLog_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(txtLog.Text))
+                Clipboard.SetText(txtLog.Text);
+        }
+
+        /// <summary>取消当前正在进行的任务（供窗口关闭时调用）。</summary>
+        public void CancelRunningTask()
+        {
+            if (btnCancel.Enabled)
+                btnCancel_Click(this, EventArgs.Empty);
+        }
     }
 }

@@ -21,6 +21,9 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseExcel = new Button();
             chkHideEnumDataSheet = new CheckBox();
             btnUpdate = new Button();
+            btnStop = new Button();
+            progressBar = new ProgressBar();
+            ctxLog = new ContextMenuStrip();
             txtLog = new RichTextBox();
             SuspendLayout();
 
@@ -60,21 +63,45 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseExcel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnBrowseExcel.Click += btnBrowseExcel_Click;
 
-            // chkHideEnumDataSheet
+            // chkHideEnumDataSheet  （第三行，更新按钮上方）
             chkHideEnumDataSheet.AutoSize = true;
-            chkHideEnumDataSheet.Location = new Point(160, 86);
+            chkHideEnumDataSheet.Location = new Point(12, 80);
             chkHideEnumDataSheet.Text = "隐藏枚举数据表";
             chkHideEnumDataSheet.CheckedChanged += chkHideEnumDataSheet_CheckedChanged;
 
-            // btnUpdate
+            // btnUpdate  （第四行）
             btnUpdate.Text = "更新 Enum 验证";
-            btnUpdate.Location = new Point(12, 80);
+            btnUpdate.Location = new Point(12, 108);
             btnUpdate.Size = new Size(130, 30);
             btnUpdate.Click += btnUpdate_Click;
 
+            // btnStop
+            btnStop.Text = "停止";
+            btnStop.Location = new Point(150, 108);
+            btnStop.Size = new Size(75, 30);
+            btnStop.Enabled = false;
+            btnStop.Click += btnStop_Click;
+
+            // progressBar
+            progressBar.Location = new Point(234, 112);
+            progressBar.Size = new Size(419, 22);
+            progressBar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            progressBar.Style = ProgressBarStyle.Continuous;
+            progressBar.Minimum = 0;
+            progressBar.Maximum = 100;
+            progressBar.Value = 0;
+            progressBar.Visible = false;
+
+            // ctxLog
+            var ctxClear = ctxLog.Items.Add("清空日志");
+            var ctxCopy  = ctxLog.Items.Add("复制全部");
+            ctxClear.Click += btnClearLog_Click;
+            ctxCopy.Click  += btnCopyLog_Click;
+
             // txtLog
-            txtLog.Location = new Point(12, 120);
-            txtLog.Size = new Size(641, 280);
+            txtLog.Location = new Point(12, 147);
+            txtLog.Size = new Size(641, 253);
+            txtLog.ContextMenuStrip = ctxLog;
             txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             txtLog.ReadOnly = true;
             txtLog.BackColor = Color.FromArgb(30, 30, 30);
@@ -93,6 +120,8 @@ namespace ConfigExcelEnhancer.UI
             Controls.Add(btnBrowseExcel);
             Controls.Add(chkHideEnumDataSheet);
             Controls.Add(btnUpdate);
+            Controls.Add(btnStop);
+            Controls.Add(progressBar);
             Controls.Add(txtLog);
             Size = new Size(665, 412);
             ResumeLayout(false);
@@ -107,6 +136,9 @@ namespace ConfigExcelEnhancer.UI
         private Button btnBrowseExcel = null!;
         private CheckBox chkHideEnumDataSheet = null!;
         private Button btnUpdate = null!;
+        private Button btnStop = null!;
+        private ProgressBar progressBar = null!;
+        private ContextMenuStrip ctxLog = null!;
         private RichTextBox txtLog = null!;
     }
 }
