@@ -1,0 +1,426 @@
+using System.IO.Compression;
+using System.Runtime.InteropServices;
+using System.Xml.Linq;
+using ClosedXML.Excel;
+using ConfigExcelEnhancer.Models;
+
+namespace ConfigExcelEnhancer.Core
+{
+    public class ValidationUpdater
+    {
+        private const string EnumSheetName = "__enum_data"; // 双下划线开头能防止 Luban 等工具误识别为普通数据表
+
+        /// <summary>
+        /// 更新目录下所有 xlsx，每处理完一个文件回调 onFileProcessed，最终返回全部结果。
+        /// </summary>
+        public static List<UpdateResult> UpdateDirectory(
+            string excelDirectory,
+            List<EnumInfo> enums,
+            bool hideEnumDataSheet,
+            Action<UpdateResult> onFileProcessed)
+        {
+            var enumMap = enums.ToDictionary(e => e.Name, StringComparer.Ordinal);
+            var results = new List<UpdateResult>();
+
+            foreach (var file in Directory.EnumerateFiles(excelDirectory, "*.xlsx", SearchOption.AllDirectories)
+                                          .Where(f => !Path.GetFileName(f).StartsWith("~$")))
+            {
+                var result = new UpdateResult { FilePath = file };
+
+                try
+                {
+                    UpdateWorkbook(file, enumMap, hideEnumDataSheet, result);
+                }
+                catch (IOException ioEx)
+                {
+                    result.WasSkipped = true;
+                    result.SkipReason = ioEx.Message;
+                }
+                catch (Exception ex)
+                {
+                    result.HasError = true;
+                    result.ErrorMessage = ex.Message;
+                }
+
+                results.Add(result);
+                onFileProcessed(result);
+            }
+
+            return results;
+        }
+
+        private static void UpdateWorkbook(
+            string filePath,
+            Dictionary<string, EnumInfo> enumMap,
+            bool hideEnumDataSheet,
+            UpdateResult result)
+        {
+            using var wb = new XLWorkbook(filePath);
+
+            // 预扫描：若该文件没有任何枚举列，跳过，不创建/更新 __enum_data，不写盘
+            if (!WorkbookHasEnumUsage(wb, enumMap))
+                return;
+
+            var enumColumns = WriteEnumSheet(wb, enumMap, hideEnumDataSheet, result);
+
+            if (result.HasSchemaChange)
+            {
+                // Schema 有变化：重建 DefinedNames 并重写所有 sheet 的验证规则
+                UpdateDefinedNames(wb, enumMap, enumColumns);
+                foreach (var ws in wb.Worksheets.ToList())
+                {
+                    if (ws.Name == EnumSheetName) continue;
+                    ApplyValidationToSheet(ws, enumMap, result, rewriteValidation: true);
+                }
+            }
+            else
+            {
+                // Schema 无变化：仅补填空白单元格的默认值，不触碰验证规则
+                foreach (var ws in wb.Worksheets.ToList())
+                {
+                    if (ws.Name == EnumSheetName) continue;
+                    ApplyValidationToSheet(ws, enumMap, result, rewriteValidation: false);
+                }
+            }
+
+            // 只有确实发生了数据变更时才写盘，避免 git 误报和 xlsx 结构被意外改动
+            if (result.HasSchemaChange || result.HasDataChange || result.HasVisibilityChange)
+            {
+                wb.Save();
+                result.WasSaved = true;
+                // ClosedXML 不评估公式，保存后公式单元格的缓存值为空。
+                // 设置 fullCalcOnLoad="1" 告知 Excel 打开时做完整重算，避免公式列显示为空。
+                EnsureFullCalcOnLoad(filePath);
+            }
+        }
+
+        /// <summary>
+        /// Schema 无变化时不重建 sheet，仅读取现有列位置并返回。
+        /// Schema 有变化时删除旧 sheet 并重新写入。
+        /// </summary>
+        private static Dictionary<string, int> WriteEnumSheet(
+            XLWorkbook wb,
+            Dictionary<string, EnumInfo> enumMap,
+            bool hideEnumDataSheet,
+            UpdateResult result)
+        {
+            result.HasSchemaChange = DetectSchemaChange(wb, enumMap);
+
+            if (!result.HasSchemaChange)
+            {
+                // 直接读取现有 __enum_data 的列位置，检查并修正可见性
+                if (wb.TryGetWorksheet(EnumSheetName, out var existingWs))
+                {
+                    var expectedVisibility = hideEnumDataSheet
+                        ? XLWorksheetVisibility.VeryHidden
+                        : XLWorksheetVisibility.Visible;
+                    if (existingWs.Visibility != expectedVisibility)
+                    {
+                        existingWs.Visibility = expectedVisibility;
+                        result.HasVisibilityChange = true;
+                    }
+                    return ReadEnumColumnPositions(existingWs);
+                }
+                // 理论上不会走到这里（DetectSchemaChange 在无 sheet 时返回 true）
+                result.HasSchemaChange = true;
+            }
+
+            if (wb.TryGetWorksheet(EnumSheetName, out var toDelete))
+                toDelete.Delete();
+
+            var ws = wb.AddWorksheet(EnumSheetName);
+            ws.Visibility = hideEnumDataSheet ? XLWorksheetVisibility.VeryHidden : XLWorksheetVisibility.Visible;
+
+            var enumColumns = new Dictionary<string, int>(StringComparer.Ordinal);
+            int col = 1;
+
+            foreach (var (enumName, enumInfo) in enumMap)
+            {
+                ws.Cell(1, col).Value = enumName;
+                for (int i = 0; i < enumInfo.Options.Count; i++)
+                    ws.Cell(2 + i, col).Value = enumInfo.Options[i].Name;
+
+                enumColumns[enumName] = col;
+                col++;
+            }
+
+            return enumColumns;
+        }
+
+        private static Dictionary<string, int> ReadEnumColumnPositions(IXLWorksheet ws)
+        {
+            var cols = new Dictionary<string, int>(StringComparer.Ordinal);
+            int lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 0;
+            for (int col = 1; col <= lastCol; col++)
+            {
+                var name = ws.Cell(1, col).GetString().Trim();
+                if (!string.IsNullOrEmpty(name))
+                    cols[name] = col;
+            }
+            return cols;
+        }
+
+        /// <summary>
+        /// 读取 workbook 中现有的 _enum_data 内容，与新 enumMap 比较。
+        /// 若 enum 数量、名称或选项列表有任何差异则返回 true。
+        /// </summary>
+        private static bool DetectSchemaChange(XLWorkbook wb, Dictionary<string, EnumInfo> enumMap)
+        {
+            if (!wb.TryGetWorksheet(EnumSheetName, out var ws))
+                return true;
+
+            var oldData = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            int lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 0;
+
+            for (int col = 1; col <= lastCol; col++)
+            {
+                var name = ws.Cell(1, col).GetString().Trim();
+                if (string.IsNullOrEmpty(name)) continue;
+
+                var options = new List<string>();
+                int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+                for (int row = 2; row <= lastRow; row++)
+                {
+                    var v = ws.Cell(row, col).GetString();
+                    if (!string.IsNullOrEmpty(v)) options.Add(v);
+                }
+                oldData[name] = options;
+            }
+
+            if (oldData.Count != enumMap.Count) return true;
+
+            foreach (var (name, info) in enumMap)
+            {
+                if (!oldData.TryGetValue(name, out var oldOptions)) return true;
+                var newOptions = info.Options.Select(o => o.Name).ToList();
+                if (!oldOptions.SequenceEqual(newOptions)) return true;
+            }
+
+            return false;
+        }
+
+        private static void UpdateDefinedNames(
+            XLWorkbook wb,
+            Dictionary<string, EnumInfo> enumMap,
+            Dictionary<string, int> enumColumns)
+        {
+            foreach (var enumName in enumMap.Keys)
+            {
+                if (wb.DefinedNames.Contains(enumName))
+                    wb.DefinedNames.Delete(enumName);
+            }
+            var staleNames = wb.DefinedNames.ValidNamedRanges()
+                .Concat(wb.DefinedNames.InvalidNamedRanges())
+                .Select(dn => dn.Name)
+                .Where(name => !enumMap.ContainsKey(name))
+                .ToList();
+            foreach (var name in staleNames)
+                wb.DefinedNames.Delete(name);
+
+            if (wb.TryGetWorksheet(EnumSheetName, out var enumWs))
+            {
+                foreach (var (enumName, enumInfo) in enumMap)
+                {
+                    if (!enumColumns.TryGetValue(enumName, out var col)) continue;
+                    var range = enumWs.Range(2, col, 1 + enumInfo.Options.Count, col);
+                    wb.DefinedNames.Add(enumName, range);
+                }
+            }
+        }
+
+        /// <param name="rewriteValidation">
+        /// true = 清除旧验证规则并重建（Schema 变化时）；
+        /// false = 仅补填空白默认值，不触碰验证规则（Schema 无变化时）。
+        /// </param>
+        private static void ApplyValidationToSheet(
+            IXLWorksheet ws,
+            Dictionary<string, EnumInfo> enumMap,
+            UpdateResult result,
+            bool rewriteValidation)
+        {
+            int typeRow = FindTypeRow(ws);
+            if (typeRow < 0) return;
+
+            int dataStartRow = FindDataStartRow(ws, typeRow + 1);
+            if (dataStartRow < 0) return;
+
+            int lastDataRow = FindLastDataRow(ws, dataStartRow);
+            if (lastDataRow < dataStartRow) return;
+
+            int lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 0;
+            if (lastCol < 2) return;
+
+            // 预构建已使用单元格的坐标集，避免通过 ws.Cell() 隐式创建空单元格
+            var cellsUsed = ws.CellsUsed().ToList();
+            var usedCoords = new HashSet<(int row, int col)>(
+                cellsUsed.Select(c => (c.Address.RowNumber, c.Address.ColumnNumber)));
+            var rowsWithData = new HashSet<int>(
+                cellsUsed.Select(c => c.Address.RowNumber));
+
+            for (int col = 2; col <= lastCol; col++)
+            {
+                var typeName = ws.Cell(typeRow, col).GetString().Trim();
+                var colRange = ws.Range(dataStartRow, col, lastDataRow, col);
+
+                if (!enumMap.TryGetValue(typeName, out var enumInfo))
+                {
+                    if (!string.IsNullOrEmpty(typeName) && rewriteValidation)
+                        ClearValidationForRange(ws, colRange);
+                    continue;
+                }
+
+                result.EnumColumnsFound++;
+
+                if (rewriteValidation)
+                    ClearValidationForRange(ws, colRange);
+
+                // 补填默认值：仅针对有数据的行、且该 enum 列单元格确实为空的情况
+                if (!string.IsNullOrEmpty(enumInfo.DefaultOptionName))
+                {
+                    for (int row = dataStartRow; row <= lastDataRow; row++)
+                    {
+                        if (!rowsWithData.Contains(row)) continue;
+                        if (usedCoords.Contains((row, col))) continue; // 已有值，跳过
+
+                        ws.Cell(row, col).Value = enumInfo.DefaultOptionName;
+                        result.DefaultsFilled++;
+                        usedCoords.Add((row, col)); // 更新集合，防止同列多次判断
+                    }
+                }
+
+                if (rewriteValidation)
+                {
+                    var dv = colRange.CreateDataValidation();
+                    dv.List(enumInfo.Name, true);
+                }
+            }
+        }
+
+        private static void ClearValidationForRange(IXLWorksheet ws, IXLRange range)
+        {
+            var overlapping = ws.DataValidations.GetAllInRange(range.RangeAddress).ToList();
+            foreach (var dv in overlapping)
+                dv.RemoveRange(range);
+        }
+
+        private static int FindTypeRow(IXLWorksheet ws)
+        {
+            int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+            for (int r = 1; r <= lastRow; r++)
+            {
+                if (ws.Cell(r, 1).GetString().Trim() == "##type")
+                    return r;
+            }
+            return -1;
+        }
+
+        private static int FindDataStartRow(IXLWorksheet ws, int searchFrom)
+        {
+            int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+            for (int r = searchFrom; r <= lastRow; r++)
+            {
+                var a = ws.Cell(r, 1).GetString();
+                if (!a.StartsWith("##"))
+                    return r;
+            }
+            return -1;
+        }
+
+        private static int FindLastDataRow(IXLWorksheet ws, int dataStartRow)
+        {
+            // 使用 CellsUsed 避免通过 ws.Cell() 创建空单元格
+            int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+            for (int r = lastRow; r >= dataStartRow; r--)
+            {
+                if (ws.Row(r).CellsUsed().Any())
+                    return r;
+            }
+            return dataStartRow - 1;
+        }
+
+        /// <summary>
+        /// 用 Excel COM 批量刷新公式缓存值。Excel 打开文件时执行完整重算并保存，
+        /// 使 Luban 等直接读取 xlsx 的工具能读到正确的公式结果。
+        /// 要求本机安装 Excel；若未安装则静默跳过。必须在 STA 线程上调用。
+        /// </summary>
+        public static void RefreshFormulasViaExcel(IReadOnlyList<string> filePaths)
+        {
+            var excelType = Type.GetTypeFromProgID("Excel.Application");
+            if (excelType == null) return;
+
+            dynamic? excel = null;
+            try
+            {
+                excel = Activator.CreateInstance(excelType)!;
+                excel.Visible = false;
+                excel.DisplayAlerts = false;
+                excel.ScreenUpdating = false;
+
+                foreach (var path in filePaths)
+                {
+                    dynamic workbook = excel.Workbooks.Open(path);
+                    workbook.Save();
+                    workbook.Close(SaveChanges: false);
+                    Marshal.ReleaseComObject(workbook);
+                }
+            }
+            finally
+            {
+                try { excel?.Quit(); } catch { }
+                if (excel != null) Marshal.ReleaseComObject(excel);
+            }
+        }
+
+        /// <summary>
+        /// 在已保存的 xlsx 文件中设置 fullCalcOnLoad="1"。
+        /// ClosedXML 保存时不评估公式，会清空公式单元格的缓存值；
+        /// 此标志告知 Excel 打开文件时做完整重算，否则公式列显示为空。
+        /// </summary>
+        private static void EnsureFullCalcOnLoad(string filePath)
+        {
+            XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
+            using var zip = ZipFile.Open(filePath, ZipArchiveMode.Update);
+            var entry = zip.GetEntry("xl/workbook.xml");
+            if (entry == null) return;
+
+            XDocument doc;
+            using (var stream = entry.Open())
+                doc = XDocument.Load(stream);
+
+            var calcPr = doc.Root?.Element(ns + "calcPr");
+            if (calcPr == null) return;
+
+            if (calcPr.Attribute("fullCalcOnLoad")?.Value == "1") return;
+
+            calcPr.SetAttributeValue("fullCalcOnLoad", "1");
+
+            entry.Delete();
+            var newEntry = zip.CreateEntry("xl/workbook.xml");
+            using var outStream = newEntry.Open();
+            doc.Save(outStream);
+        }
+
+        /// <summary>
+        /// 快速预扫描：workbook 中是否存在至少一列类型名匹配 enumMap 的枚举列。
+        /// 无枚举列的文件不需要 __enum_data，也不应被写盘。
+        /// </summary>
+        private static bool WorkbookHasEnumUsage(XLWorkbook wb, Dictionary<string, EnumInfo> enumMap)
+        {
+            foreach (var ws in wb.Worksheets)
+            {
+                if (ws.Name == EnumSheetName) continue;
+                int typeRow = FindTypeRow(ws);
+                if (typeRow < 0) continue;
+                int lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 0;
+                for (int col = 2; col <= lastCol; col++)
+                {
+                    var typeName = ws.Cell(typeRow, col).GetString().Trim();
+                    if (enumMap.ContainsKey(typeName))
+                        return true;
+                }
+            }
+            return false;
+        }
+    }
+}

@@ -1,39 +1,68 @@
-﻿namespace ConfigExcelEnhancer
+using ConfigExcelEnhancer.UI;
+
+namespace ConfigExcelEnhancer
 {
-    partial class Form1
+    partial class MainForm
     {
-        /// <summary>
-        ///  Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        ///  Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
-            {
                 components.Dispose();
-            }
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
-
-        /// <summary>
-        ///  Required method for Designer support - do not modify
-        ///  the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
+            tabControl = new TabControl();
+            tabEnum = new TabPage();
+            enumTab = new EnumTab();
+            tabLuban = new TabPage();
+            lubanTab = new LubanTab();
+            tabControl.SuspendLayout();
+            tabEnum.SuspendLayout();
+            tabLuban.SuspendLayout();
+            SuspendLayout();
+
+            // tabControl
+            tabControl.Dock = DockStyle.Fill;
+            tabControl.Controls.Add(tabEnum);
+            tabControl.Controls.Add(tabLuban);
+
+            // tabEnum
+            tabEnum.Text = "Enum 验证";
+            tabEnum.Padding = new Padding(4);
+            tabEnum.Controls.Add(enumTab);
+
+            // enumTab
+            enumTab.Dock = DockStyle.Fill;
+
+            // tabLuban
+            tabLuban.Text = "Luban";
+            tabLuban.Padding = new Padding(4);
+            tabLuban.Controls.Add(lubanTab);
+
+            // lubanTab
+            lubanTab.Dock = DockStyle.Fill;
+
+            // MainForm
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
-            Text = "Form1";
+            ClientSize = new Size(700, 480);
+            MinimumSize = new Size(600, 440);
+            Controls.Add(tabControl);
+            Text = "ConfigStudio";
+            tabControl.ResumeLayout(false);
+            tabEnum.ResumeLayout(false);
+            tabLuban.ResumeLayout(false);
+            ResumeLayout(false);
         }
 
-        #endregion
+        private TabControl tabControl = null!;
+        private TabPage tabEnum = null!;
+        private EnumTab enumTab = null!;
+        private TabPage tabLuban = null!;
+        private LubanTab lubanTab = null!;
     }
 }
