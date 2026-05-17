@@ -178,21 +178,10 @@ namespace ConfigExcelEnhancer.UI
                 if (savedFiles.Count > 0)
                 {
                     Log($"正在通过 Excel 刷新 {savedFiles.Count} 个文件的公式缓存值...", ClrInfo);
-                    bool excelAvailable = false;
-                    await Task.Run(() =>
-                    {
-                        // Excel COM 要求 STA 线程
-                        bool result = false;
-                        var sta = new Thread(() => result = ValidationUpdater.RefreshFormulasViaExcel(savedFiles));
-                        sta.SetApartmentState(ApartmentState.STA);
-                        sta.Start();
-                        sta.Join();
-                        excelAvailable = result;
-                    }, token);
+                    bool excelAvailable = await Task.Run(
+                        () => FunctionLibrary.RefreshFormulasViaSTA(savedFiles), token);
                     if (excelAvailable)
-                    {
                         Log("公式缓存值刷新完成。", ClrNormal);
-                    }
                     else
                         Log("本机未安装 Excel，已跳过公式缓存刷新。如需刷新，请安装 Microsoft Excel 后重试。", ClrWarn);
                 }

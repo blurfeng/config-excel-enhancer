@@ -16,8 +16,10 @@ namespace ConfigExcelEnhancer
             var settings = SettingsManager.Load();
             enumTab.Settings = settings;
             lubanTab.Settings = settings;
+            tableDesignTab.Settings = settings;
             enumTab.LoadFromSettings();
             lubanTab.LoadFromSettings();
+            tableDesignTab.LoadFromSettings();
         }
 
         private void SaveSettings()
@@ -29,6 +31,7 @@ namespace ConfigExcelEnhancer
         {
             enumTab.CancelRunningTask();
             lubanTab.CancelRunningTask();
+            tableDesignTab.CancelRunningTask();
             SaveSettings();
             base.OnFormClosing(e);
         }

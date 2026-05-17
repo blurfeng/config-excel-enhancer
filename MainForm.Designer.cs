@@ -20,11 +20,14 @@ namespace ConfigExcelEnhancer
             enumTab = new EnumTab();
             tabLuban = new TabPage();
             lubanTab = new LubanTab();
+            tabTableDesign = new TabPage();
+            tableDesignTab = new TableDesignTab();
             tabSettings = new TabPage();
             settingsTab = new SettingsTab();
             tabControl.SuspendLayout();
             tabEnum.SuspendLayout();
             tabLuban.SuspendLayout();
+            tabTableDesign.SuspendLayout();
             tabSettings.SuspendLayout();
             SuspendLayout();
 
@@ -32,6 +35,7 @@ namespace ConfigExcelEnhancer
             tabControl.Dock = DockStyle.Fill;
             tabControl.Controls.Add(tabEnum);
             tabControl.Controls.Add(tabLuban);
+            tabControl.Controls.Add(tabTableDesign);
             tabControl.Controls.Add(tabSettings);
 
             // tabEnum
@@ -50,6 +54,14 @@ namespace ConfigExcelEnhancer
             // lubanTab
             lubanTab.Dock = DockStyle.Fill;
 
+            // tabTableDesign
+            tabTableDesign.Text = "表设计";
+            tabTableDesign.Padding = new Padding(4);
+            tabTableDesign.Controls.Add(tableDesignTab);
+
+            // tableDesignTab
+            tableDesignTab.Dock = DockStyle.Fill;
+
             // tabSettings
             tabSettings.Text = "设置";
             tabSettings.Padding = new Padding(4);
@@ -61,13 +73,14 @@ namespace ConfigExcelEnhancer
             // MainForm
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(700, 480);
-            MinimumSize = new Size(600, 440);
+            ClientSize = new Size(700, 530);
+            MinimumSize = new Size(600, 490);
             Controls.Add(tabControl);
             Text = "ConfigStudio";
             tabControl.ResumeLayout(false);
             tabEnum.ResumeLayout(false);
             tabLuban.ResumeLayout(false);
+            tabTableDesign.ResumeLayout(false);
             tabSettings.ResumeLayout(false);
             ResumeLayout(false);
         }
@@ -77,6 +90,8 @@ namespace ConfigExcelEnhancer
         private EnumTab enumTab = null!;
         private TabPage tabLuban = null!;
         private LubanTab lubanTab = null!;
+        private TabPage tabTableDesign = null!;
+        private TableDesignTab tableDesignTab = null!;
         private TabPage tabSettings = null!;
         private SettingsTab settingsTab = null!;
     }
