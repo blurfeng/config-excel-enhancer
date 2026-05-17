@@ -9,7 +9,7 @@ namespace ConfigExcelEnhancer.Core
         [GeneratedRegex(@"^(\s*set\s+)(\w+)(=)(.*)$", RegexOptions.IgnoreCase)]
         private static partial Regex SetVarRegex();
 
-        // Matches -x key=value; value stops at whitespace or ^ (line continuation)
+        // 匹配 -x key=value；值在空白字符或 ^（续行符）处截止
         [GeneratedRegex(@"-x\s+([\w.]+)=([^\s^]+)")]
         private static partial Regex XArgRegex();
 
@@ -25,7 +25,7 @@ namespace ConfigExcelEnhancer.Core
                 var raw = lines[i];
                 var trimmed = raw.Trim();
 
-                // set VAR=value
+                // 处理 set VAR=value 语句
                 var setMatch = SetVarRegex().Match(raw);
                 if (setMatch.Success)
                 {
@@ -34,7 +34,7 @@ namespace ConfigExcelEnhancer.Core
                     continue;
                 }
 
-                // echo lines: capture non-separator text as label for the next dotnet block
+                // echo 行：将非分隔符文本捕获为下一个 dotnet 块的标签
                 if (trimmed.StartsWith("echo ", StringComparison.OrdinalIgnoreCase))
                 {
                     var echoText = trimmed[5..].Trim();
@@ -44,7 +44,7 @@ namespace ConfigExcelEnhancer.Core
                     continue;
                 }
 
-                // dotnet command block
+                // dotnet 命令块
                 if (trimmed.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
                 {
                     var cmd = new LubanDotnetCommand
@@ -53,7 +53,7 @@ namespace ConfigExcelEnhancer.Core
                     };
                     pendingLabel = null;
 
-                    // Collect all continuation lines into one string
+                    // 将所有续行合并为一个字符串
                     var sb = new StringBuilder();
                     while (i < lines.Length)
                     {
@@ -110,7 +110,7 @@ namespace ConfigExcelEnhancer.Core
             {
                 var trimmed = line.Trim();
 
-                // Replace set variable values
+                // 替换 set 变量值
                 var setMatch = SetVarRegex().Match(line);
                 if (setMatch.Success)
                 {
@@ -122,14 +122,14 @@ namespace ConfigExcelEnhancer.Core
                     }
                 }
 
-                // Track which dotnet command block we're in
+                // 追踪当前所在的 dotnet 命令块
                 if (trimmed.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
                 {
                     cmdIdx++;
                     inDotnet = true;
                 }
 
-                // Replace -x values within the current command block
+                // 替换当前命令块内的 -x 参数值
                 if (inDotnet && cmdIdx >= 0 && cmdIdx < config.Commands.Count)
                 {
                     var cmd = config.Commands[cmdIdx];
@@ -141,7 +141,7 @@ namespace ConfigExcelEnhancer.Core
                             : m.Value;
                     });
 
-                    // Last line of the dotnet block has no trailing ^
+                    // dotnet 块的最后一行末尾无 ^
                     if (!line.TrimEnd().EndsWith('^'))
                         inDotnet = false;
 
