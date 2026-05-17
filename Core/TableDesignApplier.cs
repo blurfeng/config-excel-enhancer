@@ -252,7 +252,7 @@ namespace ConfigExcelEnhancer.Core
                 var keywords = options.MergeHeaderKeywords
                     .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 if (keywords.Length > 0)
-                    DoMergeHeaderCells(t2, keywords, dataLastRow, dataLastCol);
+                    DoMergeHeaderCells(t2, keywords, dataLastRow, dataLastCol, options.HeaderSymbol);
             }
 
             // 8. Resize smart tables to cover new data extent
@@ -398,7 +398,8 @@ namespace ConfigExcelEnhancer.Core
             IXLWorksheet ws,
             string[] keywords,
             int lastRow,
-            int lastCol)
+            int lastCol,
+            string headerSymbol)
         {
             var rowNums = new HashSet<int>();
             var textKws = new List<string>();
@@ -423,6 +424,14 @@ namespace ConfigExcelEnhancer.Core
                 int c = 1;
                 while (c <= lastCol)
                 {
+                    // Skip cells containing the header symbol — they should not participate in merging
+                    string cellVal = ws.Cell(r, c).GetString();
+                    if (!string.IsNullOrEmpty(headerSymbol) && cellVal.Contains(headerSymbol, StringComparison.Ordinal))
+                    {
+                        c++;
+                        continue;
+                    }
+
                     if (!IsEffectivelyEmpty(ws.Cell(r, c)))
                     {
                         int end = c;
