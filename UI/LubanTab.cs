@@ -20,7 +20,10 @@ namespace ConfigExcelEnhancer.UI
         // 是否有未保存的修改（一旦有改动就置 true，重置/保存后清除）
         private bool _isDirty;
 
-        public LubanTab() => InitializeComponent();
+        public LubanTab()
+        {
+            InitializeComponent();
+        }
 
         public void LoadFromSettings()
         {
@@ -53,11 +56,11 @@ namespace ConfigExcelEnhancer.UI
             {
                 _config = LubanBatParser.Parse(batPath);
                 PopulateTabs();
-                Log($"已加载：{batPath}（{_config.Commands.Count} 个导出命令）");
+                Log($"已加载：{batPath}（{_config.Commands.Count} 个导出命令）", LogLevel.Ok);
             }
             catch (Exception ex)
             {
-                Log($"[错误] 读取 gen.bat 失败：{ex.Message}");
+                Log($"读取 gen.bat 失败：{ex.Message}", LogLevel.Error);
             }
         }
 
@@ -300,7 +303,7 @@ namespace ConfigExcelEnhancer.UI
                 var wsPath = ToWorkspaceRelative(selected, workspace);
                 if (wsPath == null)
                 {
-                    Log($"[警告] 所选目录不在 WORKSPACE（{workspace}）下，已取消。");
+                    Log($"所选目录不在 WORKSPACE（{workspace}）下，已取消。", LogLevel.Warn);
                     return;
                 }
                 valCell.Value = wsPath;
@@ -335,25 +338,25 @@ namespace ConfigExcelEnhancer.UI
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            if (_config == null) { Log("[警告] 未加载 gen.bat。"); return; }
+            if (_config == null) { Log("未加载 gen.bat。", LogLevel.Warn); return; }
 
             ReadFromGrids();
             try
             {
                 LubanBatParser.Save(_config);
                 PopulateTabs(); // 重置 dirty 状态
-                Log("配置已写回 gen.bat。");
+                Log("配置已写回 gen.bat。", LogLevel.Ok);
             }
             catch (Exception ex)
             {
-                Log($"[错误] 保存失败：{ex.Message}");
+                Log($"保存失败：{ex.Message}", LogLevel.Error);
             }
         }
 
         private void btnReset_Click(object sender, EventArgs e)
         {
             PopulateTabs();
-            Log("已重置所有修改。");
+            Log("已重置所有修改。", LogLevel.Ok);
         }
 
         private void ReadFromGrids()
@@ -426,20 +429,23 @@ namespace ConfigExcelEnhancer.UI
         {
             if (string.IsNullOrEmpty(Settings.GenBatPath) || !File.Exists(Settings.GenBatPath))
             {
-                Log("[错误] 请先选择有效的 gen.bat 路径。");
+                Log("请先选择有效的 gen.bat 路径。", LogLevel.Error);
                 return;
             }
 
             btnRun.Enabled = false;
             btnCancel.Enabled = true;
             txtLog.Clear();
-            Log("开始执行导表...");
+            Log("开始执行导表...", LogLevel.Info);
 
             _runner = new LubanRunner();
-            _runner.OutputReceived += msg => BeginInvoke(() => Log(msg));
+            _runner.OutputReceived += msg => BeginInvoke(() => Log(msg, LogLevel.Skip));
             _runner.Finished += code => BeginInvoke(() =>
             {
-                Log(code == 0 ? "[成功] 导表完成。" : $"[失败] 退出码：{code}");
+                if (code == 0)
+                    Log("导表完成。", LogLevel.Ok);
+                else
+                    Log($"导表失败，退出码：{code}", LogLevel.Error);
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
                 _runner = null;
@@ -448,7 +454,7 @@ namespace ConfigExcelEnhancer.UI
             try { _runner.Run(Settings.GenBatPath); }
             catch (Exception ex)
             {
-                Log($"[错误] 启动失败：{ex.Message}");
+                Log($"启动失败：{ex.Message}", LogLevel.Error);
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
             }
@@ -457,7 +463,7 @@ namespace ConfigExcelEnhancer.UI
         private void btnCancel_Click(object sender, EventArgs e)
         {
             _runner?.Cancel();
-            Log("[取消] 已发送终止信号。");
+            Log("已发送终止信号。", LogLevel.Warn);
         }
 
         // ── 工具方法 ──────────────────────────────────────────
@@ -558,11 +564,8 @@ namespace ConfigExcelEnhancer.UI
             value.Contains('\\') || value.Contains('/') ||
             value == "." || value.StartsWith("..");
 
-        private void Log(string message)
-        {
-            txtLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}");
-            txtLog.ScrollToCaret();
-        }
+        private void Log(string message, LogLevel level = LogLevel.Ok)
+            => LogLibrary.Write(txtLog, message, level);
 
         private void btnClearLog_Click(object sender, EventArgs e)
         {

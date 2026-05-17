@@ -6,13 +6,6 @@ namespace ConfigExcelEnhancer.UI
 {
     public partial class TableDesignTab : UserControl
     {
-        private static readonly Color ClrNormal  = Color.LightGreen;
-        private static readonly Color ClrGray    = Color.FromArgb(150, 150, 150);
-        private static readonly Color ClrWarn    = Color.FromArgb(255, 200, 60);
-        private static readonly Color ClrError   = Color.OrangeRed;
-        private static readonly Color ClrInfo    = Color.FromArgb(100, 200, 255);
-        private static readonly Color ClrSection = Color.FromArgb(80, 160, 80);
-
         private CancellationTokenSource? _cts;
 
         public TableDesignTab()
@@ -185,14 +178,14 @@ namespace ConfigExcelEnhancer.UI
             string sourcePath = txtSourceExcel.Text.Trim();
             if (string.IsNullOrEmpty(sourcePath) || !File.Exists(sourcePath))
             {
-                Log("请选择有效的来源 Excel 文件。", ClrError);
+                Log("请选择有效的来源 Excel 文件。", LogLevel.Error);
                 return;
             }
 
             var targetFiles = BuildTargetFileList();
             if (targetFiles.Count == 0)
             {
-                Log("未找到任何目标文件。", ClrWarn);
+                Log("未找到任何目标文件。", LogLevel.Warn);
                 return;
             }
 
@@ -201,8 +194,6 @@ namespace ConfigExcelEnhancer.UI
 
             btnApply.Enabled = false;
             btnStop.Enabled = true;
-            progressBar.Value = 0;
-            progressBar.Visible = true;
             LogDivider();
 
             var options = new TableDesignOptions(
@@ -217,33 +208,28 @@ namespace ConfigExcelEnhancer.UI
                 MergeHeaderKeywords: txtMergeKeywords.Text.Trim()
             );
 
-            var progress = new Progress<(int current, int total, string fileName)>(p =>
-            {
-                progressBar.Value = p.total > 0 ? (int)(p.current * 100.0 / p.total) : 0;
-            });
+            var progress = new Progress<(int current, int total, string fileName)>();
 
             try
             {
                 await Task.Run(() => TableDesignApplier.Apply(options, progress,
-                    (msg, sev) => BeginInvoke(() => Log(msg, SeverityToColor(sev))),
+                    (msg, level) => LogLibrary.Write(txtLog, msg, level),
                     token), token);
 
-                Log("完成。", ClrNormal);
+                Log("完成。", LogLevel.Ok);
             }
             catch (OperationCanceledException)
             {
-                Log("操作已停止。", ClrWarn);
+                Log("操作已停止。", LogLevel.Warn);
             }
             catch (Exception ex)
             {
-                Log($"未预期的错误：{ex.Message}", ClrError);
+                Log($"未预期的错误：{ex.Message}", LogLevel.Error);
             }
             finally
             {
                 btnApply.Enabled = true;
                 btnStop.Enabled = false;
-                progressBar.Value = 0;
-                progressBar.Visible = false;
                 _cts?.Dispose();
                 _cts = null;
             }
@@ -280,33 +266,11 @@ namespace ConfigExcelEnhancer.UI
 
         // ── Log helpers ───────────────────────────────────────────────────
 
-        private void Log(string message, Color? color = null)
-        {
-            txtLog.SelectionStart = txtLog.TextLength;
-            txtLog.SelectionLength = 0;
-            txtLog.SelectionColor = color ?? ClrNormal;
-            txtLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}");
-            txtLog.ScrollToCaret();
-        }
+        private void Log(string message, LogLevel level = LogLevel.Ok)
+            => LogLibrary.Write(txtLog, message, level);
 
         private void LogDivider()
-        {
-            txtLog.SelectionStart = txtLog.TextLength;
-            txtLog.SelectionLength = 0;
-            txtLog.SelectionColor = ClrSection;
-            txtLog.AppendText($"{"─".PadRight(60, '─')}{Environment.NewLine}");
-            txtLog.ScrollToCaret();
-        }
-
-        private static Color SeverityToColor(LogSeverity s) => s switch
-        {
-            LogSeverity.Warning => ClrWarn,
-            LogSeverity.Error   => ClrError,
-            LogSeverity.Info    => ClrInfo,
-            LogSeverity.Section => ClrSection,
-            LogSeverity.Gray    => ClrGray,
-            _                   => ClrNormal
-        };
+            => LogLibrary.Divider(txtLog);
 
         private void btnClearLog_Click(object? sender, EventArgs e) => txtLog.Clear();
 

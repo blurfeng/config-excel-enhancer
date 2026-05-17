@@ -15,19 +15,17 @@ namespace ConfigExcelEnhancer.Core
         string MergeHeaderKeywords
     );
 
-    public enum LogSeverity { Normal, Gray, Warning, Error, Info, Section }
-
     public static class TableDesignApplier
     {
         public static void Apply(
             TableDesignOptions options,
             IProgress<(int current, int total, string fileName)> progress,
-            Action<string, LogSeverity> log,
+            Action<string, LogLevel> log,
             CancellationToken token)
         {
             if (!File.Exists(options.SourceExcelPath))
             {
-                log($"来源文件不存在：{options.SourceExcelPath}", LogSeverity.Error);
+                log($"来源文件不存在：{options.SourceExcelPath}", LogLevel.Error);
                 return;
             }
 
@@ -44,13 +42,13 @@ namespace ConfigExcelEnhancer.Core
 
                 if (options.IgnoreUnderscoreFiles && fileName.StartsWith("__"))
                 {
-                    log($"跳过（__开头）：{fileName}", LogSeverity.Gray);
+                    log($"跳过（__开头）：{fileName}", LogLevel.Skip);
                     continue;
                 }
 
                 if (!File.Exists(targetPath))
                 {
-                    log($"文件不存在，跳过：{fileName}", LogSeverity.Warning);
+                    log($"文件不存在，跳过：{fileName}", LogLevel.Warn);
                     continue;
                 }
 
@@ -65,11 +63,11 @@ namespace ConfigExcelEnhancer.Core
                 }
                 catch (IOException)
                 {
-                    log($"文件被占用，跳过：{fileName}", LogSeverity.Warning);
+                    log($"文件被占用，跳过：{fileName}", LogLevel.Warn);
                 }
                 catch (Exception ex)
                 {
-                    log($"处理失败 {fileName}：{ex.Message}", LogSeverity.Error);
+                    log($"处理失败 {fileName}：{ex.Message}", LogLevel.Error);
                 }
             }
 
@@ -78,12 +76,12 @@ namespace ConfigExcelEnhancer.Core
             // Excel COM refresh — recalculates formula cache so external tools read correct values
             if (savedFiles.Count > 0)
             {
-                log($"正在通过 Excel 刷新 {savedFiles.Count} 个文件的公式缓存值...", LogSeverity.Info);
+                log($"正在通过 Excel 刷新 {savedFiles.Count} 个文件的公式缓存值...", LogLevel.Info);
                 bool excelAvailable = FunctionLibrary.RefreshFormulasViaSTA(savedFiles);
                 if (excelAvailable)
-                    log("公式缓存值刷新完成。", LogSeverity.Normal);
+                    log("公式缓存值刷新完成。", LogLevel.Ok);
                 else
-                    log("本机未安装 Excel，已跳过公式缓存刷新。如需刷新，请安装 Microsoft Excel 后重试。", LogSeverity.Warning);
+                    log("本机未安装 Excel，已跳过公式缓存刷新。如需刷新，请安装 Microsoft Excel 后重试。", LogLevel.Warn);
             }
         }
 
@@ -91,7 +89,7 @@ namespace ConfigExcelEnhancer.Core
             byte[] sourceBytes,
             string targetPath,
             TableDesignOptions options,
-            Action<string, LogSeverity> log,
+            Action<string, LogLevel> log,
             CancellationToken token)
         {
             string fileName = Path.GetFileName(targetPath);
@@ -107,7 +105,7 @@ namespace ConfigExcelEnhancer.Core
             var srcSheets = workingWb.Worksheets.OrderBy(s => s.Position).ToList();
             if (srcSheets.Count == 0)
             {
-                log($"来源表中无有效Sheet，跳过：{fileName}", LogSeverity.Warning);
+                log($"来源表中无有效Sheet，跳过：{fileName}", LogLevel.Warn);
                 return;
             }
 
@@ -131,7 +129,7 @@ namespace ConfigExcelEnhancer.Core
                 var t3 = sheetsToProcess[i];
                 ApplyDesign(t2, t3, options);
                 t2.Name = t3.Name;
-                log($"✓ {fileName} [{t3.Name}]", LogSeverity.Normal);
+                log($"{fileName} [{t3.Name}]", LogLevel.Ok);
             }
 
             // D. Delete extra source sheets that have no target counterpart
@@ -144,7 +142,7 @@ namespace ConfigExcelEnhancer.Core
                 if (!workingWb.TryGetWorksheet(t3.Name, out _))
                 {
                     t3.CopyTo(workingWb, t3.Name);
-                    log($"  → 保留 [{t3.Name}]", LogSeverity.Gray);
+                    log($"  → 保留 [{t3.Name}]", LogLevel.Skip);
                 }
             }
 
@@ -157,7 +155,7 @@ namespace ConfigExcelEnhancer.Core
             }
 
             workingWb.SaveAs(targetPath);
-            log($"已保存：{fileName}", LogSeverity.Section);
+            log($"已保存：{fileName}", LogLevel.Section);
         }
 
         private static void ApplyDesign(

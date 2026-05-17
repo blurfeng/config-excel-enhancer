@@ -7,14 +7,6 @@ namespace ConfigExcelEnhancer.UI
 {
     public partial class EnumTab : UserControl
     {
-        // ── 颜色定义 ──────────────────────────────────────────
-        private static readonly Color ClrNormal  = Color.LightGreen;
-        private static readonly Color ClrGray    = Color.FromArgb(150, 150, 150);
-        private static readonly Color ClrWarn    = Color.FromArgb(255, 200, 60);
-        private static readonly Color ClrError   = Color.OrangeRed;
-        private static readonly Color ClrInfo    = Color.FromArgb(100, 200, 255);
-        private static readonly Color ClrSection = Color.FromArgb(80, 160, 80);
-
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
@@ -34,7 +26,7 @@ namespace ConfigExcelEnhancer.UI
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            Log("Hello! ConfigStudio 已就绪。", ClrInfo);
+            Log("Hello! ConfigStudio 已就绪。", LogLevel.Info);
         }
 
         // ── 目录选择 ──────────────────────────────────────────
@@ -90,12 +82,12 @@ namespace ConfigExcelEnhancer.UI
 
             if (!Directory.Exists(xmlDir))
             {
-                Log("XML 目录不存在。", ClrError);
+                Log("XML 目录不存在。", LogLevel.Error);
                 return;
             }
             if (!Directory.Exists(excelDir))
             {
-                Log("Excel 目录不存在。", ClrError);
+                Log("Excel 目录不存在。", LogLevel.Error);
                 return;
             }
 
@@ -104,25 +96,22 @@ namespace ConfigExcelEnhancer.UI
 
             btnUpdate.Enabled = false;
             btnStop.Enabled = true;
-            progressBar.Value = 0;
-            progressBar.Visible = true;
             LogDivider();
 
             try
             {
                 // ── 步骤1：扫描 XML ──────────────────────────
-                Log("扫描 XML Enum 定义...", ClrInfo);
+                Log("扫描 XML Enum 定义...", LogLevel.Info);
                 var sw = Stopwatch.StartNew();
 
                 List<EnumInfo> enums = await Task.Run(() => EnumScanner.ScanDirectory(xmlDir), token);
                 sw.Stop();
-                progressBar.Value = 15;
 
                 token.ThrowIfCancellationRequested();
 
                 if (enums.Count == 0)
                 {
-                    Log("未找到任何 Enum 定义，请检查 XML 目录。", ClrWarn);
+                    Log("未找到任何 Enum 定义，请检查 XML 目录。", LogLevel.Warn);
                     return;
                 }
 
@@ -132,17 +121,17 @@ namespace ConfigExcelEnhancer.UI
                 var namesDisplay = enumNames.Count <= maxShow
                     ? string.Join("、", enumNames)
                     : string.Join("、", enumNames.Take(maxShow)) + $" (+{enumNames.Count - maxShow})";
-                Log($"找到 {enums.Count} 个 Enum：{namesDisplay}", ClrNormal);
+                Log($"找到 {enums.Count} 个 Enum：{namesDisplay}", LogLevel.Ok);
 
                 // 警告没有 value=0 的枚举（默认值将使用第一项）
                 foreach (var ei in enums)
                 {
                     if (!ei.Options.Any(o => o.Value == "0"))
-                        Log($"  ⚠ {ei.Name} 没有 value=0 的选项，默认将使用第一项：{ei.Options.FirstOrDefault()?.Name}", ClrWarn);
+                        Log($"  ⚠ {ei.Name} 没有 value=0 的选项，默认将使用第一项：{ei.Options.FirstOrDefault()?.Name}", LogLevel.Warn);
                 }
 
                 // ── 步骤2：修改 Excel ────────────────────────
-                Log("开始修改 Excel...", ClrInfo);
+                Log("开始修改 Excel...", LogLevel.Info);
                 sw.Restart();
 
                 int totalFiles = Directory.EnumerateFiles(excelDir, "*.xlsx", SearchOption.AllDirectories)
@@ -160,7 +149,6 @@ namespace ConfigExcelEnhancer.UI
                             int pct = totalFiles > 0 ? 15 + (int)(processed * 70.0 / totalFiles) : 85;
                             BeginInvoke(() =>
                             {
-                                progressBar.Value = Math.Min(pct, 85);
                                 LogFileResult(result);
                             });
                         }), token);
@@ -171,36 +159,32 @@ namespace ConfigExcelEnhancer.UI
 
                 // ── 步骤3：汇总 ─────────────────────────────
                 PrintSummary(enums.Count, results, sw.Elapsed);
-                progressBar.Value = 95;
 
                 // ── 步骤4：Excel COM 刷新公式缓存值 ─────────
                 var savedFiles = results.Where(r => r.WasSaved).Select(r => r.FilePath).ToList();
                 if (savedFiles.Count > 0)
                 {
-                    Log($"正在通过 Excel 刷新 {savedFiles.Count} 个文件的公式缓存值...", ClrInfo);
+                    Log($"正在通过 Excel 刷新 {savedFiles.Count} 个文件的公式缓存值...", LogLevel.Info);
                     bool excelAvailable = await Task.Run(
                         () => FunctionLibrary.RefreshFormulasViaSTA(savedFiles), token);
                     if (excelAvailable)
-                        Log("公式缓存值刷新完成。", ClrNormal);
+                        Log("公式缓存值刷新完成。", LogLevel.Ok);
                     else
-                        Log("本机未安装 Excel，已跳过公式缓存刷新。如需刷新，请安装 Microsoft Excel 后重试。", ClrWarn);
+                        Log("本机未安装 Excel，已跳过公式缓存刷新。如需刷新，请安装 Microsoft Excel 后重试。", LogLevel.Warn);
                 }
-                progressBar.Value = 100;
             }
             catch (OperationCanceledException)
             {
-                Log("操作已停止。", ClrWarn);
+                Log("操作已停止。", LogLevel.Warn);
             }
             catch (Exception ex)
             {
-                Log($"未预期的错误：{ex.Message}", ClrError);
+                Log($"未预期的错误：{ex.Message}", LogLevel.Error);
             }
             finally
             {
                 btnUpdate.Enabled = true;
                 btnStop.Enabled = false;
-                progressBar.Value = 0;
-                progressBar.Visible = false;
                 _cts?.Dispose();
                 _cts = null;
             }
@@ -229,19 +213,19 @@ namespace ConfigExcelEnhancer.UI
         {
             if (r.WasSkipped)
             {
-                Log($"⚠  {r.FileName}  —  跳过（文件被占用）", ClrWarn);
+                Log($"{r.FileName}  —  跳过（文件被占用）", LogLevel.Warn);
                 return;
             }
             if (r.HasError)
             {
-                Log($"✗  {r.FileName}  —  错误：{r.ErrorMessage}", ClrError);
+                Log($"{r.FileName}  —  错误：{r.ErrorMessage}", LogLevel.Error);
                 return;
             }
             if (!r.WasProcessed)
             {
                 // WasSaved=true 但无枚举列：理论上修复后不再出现，保留为兜底警告
                 if (r.WasSaved)
-                    Log($"⚠  {r.FileName}  —  已写盘但未发现枚举列", ClrWarn);
+                    Log($"{r.FileName}  —  已写盘但未发现枚举列", LogLevel.Warn);
                 return;
             }
 
@@ -255,9 +239,9 @@ namespace ConfigExcelEnhancer.UI
                 parts.Add("__enum_data 表可见性已修正");
 
             if (parts.Count > 0)
-                Log($"OK  {r.FileName}  —  {string.Join(" | ", parts)}  [{r.EnumColumnsFound} 列]", ClrNormal);
+                Log($"{r.FileName}  —  {string.Join(" | ", parts)}  [{r.EnumColumnsFound} 列]", LogLevel.Ok);
             else
-                Log($"—  {r.FileName}  —  已同步，无变化  [{r.EnumColumnsFound} 列]", ClrGray);
+                Log($"{r.FileName}  —  已同步，无变化  [{r.EnumColumnsFound} 列]", LogLevel.Skip);
         }
 
         private void PrintSummary(int enumCount, List<UpdateResult> results, TimeSpan elapsed)
@@ -272,7 +256,7 @@ namespace ConfigExcelEnhancer.UI
             bool anyUpdate     = withSchema > 0 || withData > 0 || withVisibility > 0;
 
             LogDivider();
-            Log($"枚举定义：{enumCount} 个", ClrInfo);
+            Log($"枚举定义：{enumCount} 个", LogLevel.Info);
 
             var statParts = new List<string>
             {
@@ -284,42 +268,30 @@ namespace ConfigExcelEnhancer.UI
             if (withVisibility > 0) statParts.Add($"可见性修正：{withVisibility} 个");
             if (skipped > 0) statParts.Add($"跳过：{skipped} 个");
             if (errors  > 0) statParts.Add($"错误：{errors} 个");
-            Log(string.Join("  |  ", statParts), ClrInfo);
-            Log($"耗时 {elapsed.TotalSeconds:F1}s", ClrGray);
+            Log(string.Join("  |  ", statParts), LogLevel.Info);
+            Log($"耗时 {elapsed.TotalSeconds:F1}s", LogLevel.Skip);
 
             if (errors > 0 || skipped > 0)
                 Log($"完成（有 {errors + skipped} 个文件处理异常，请检查上方日志）",
-                    errors > 0 ? ClrError : ClrWarn);
+                    errors > 0 ? LogLevel.Error : LogLevel.Warn);
             else if (anyUpdate)
             {
                 var updateDesc = new List<string>();
                 if (withSchema     > 0) updateDesc.Add($"Enum 定义变更 {withSchema} 个文件");
                 if (withData       > 0) updateDesc.Add($"数据变更 {withData} 个文件");
                 if (withVisibility > 0) updateDesc.Add($"可见性修正 {withVisibility} 个文件");
-                Log($"完成 | 有更新内容（{string.Join("，", updateDesc)}）", ClrNormal);
+                Log($"完成 | 有更新内容（{string.Join("，", updateDesc)}）", LogLevel.Ok);
             }
             else
-                Log("完成 | 无更新内容", ClrGray);
+                Log("完成 | 无更新内容", LogLevel.Skip);
         }
 
         // ── 日志工具 ──────────────────────────────────────────
 
-        private void Log(string message, Color? color = null)
-        {
-            txtLog.SelectionStart  = txtLog.TextLength;
-            txtLog.SelectionLength = 0;
-            txtLog.SelectionColor  = color ?? ClrNormal;
-            txtLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}");
-            txtLog.ScrollToCaret();
-        }
+        private void Log(string message, LogLevel level = LogLevel.Ok)
+            => LogLibrary.Write(txtLog, message, level);
 
         private void LogDivider()
-        {
-            txtLog.SelectionStart  = txtLog.TextLength;
-            txtLog.SelectionLength = 0;
-            txtLog.SelectionColor  = ClrSection;
-            txtLog.AppendText($"{"─".PadRight(60, '─')}{Environment.NewLine}");
-            txtLog.ScrollToCaret();
-        }
+            => LogLibrary.Divider(txtLog);
     }
 }

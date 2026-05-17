@@ -42,7 +42,6 @@ namespace ConfigExcelEnhancer.UI
             txtMergeKeywords = new TextBox();
             btnApply = new Button();
             btnStop = new Button();
-            progressBar = new ProgressBar();
             ctxLog = new ContextMenuStrip();
             txtLog = new RichTextBox();
             pnlModeGroup.SuspendLayout();
@@ -241,16 +240,6 @@ namespace ConfigExcelEnhancer.UI
             btnStop.Enabled = false;
             btnStop.Click += btnStop_Click;
 
-            // progressBar
-            progressBar.Location = new Point(213, 280);
-            progressBar.Size = new Size(436, 20);
-            progressBar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            progressBar.Style = ProgressBarStyle.Continuous;
-            progressBar.Minimum = 0;
-            progressBar.Maximum = 100;
-            progressBar.Value = 0;
-            progressBar.Visible = false;
-
             // ctxLog
             var ctxClear = ctxLog.Items.Add("清空日志");
             var ctxCopy = ctxLog.Items.Add("复制全部");
@@ -290,7 +279,6 @@ namespace ConfigExcelEnhancer.UI
             Controls.Add(txtMergeKeywords);
             Controls.Add(btnApply);
             Controls.Add(btnStop);
-            Controls.Add(progressBar);
             Controls.Add(txtLog);
             Size = new Size(665, 462);
             pnlModeGroup.ResumeLayout(false);
@@ -333,7 +321,6 @@ namespace ConfigExcelEnhancer.UI
         private TextBox txtMergeKeywords = null!;
         private Button btnApply = null!;
         private Button btnStop = null!;
-        private ProgressBar progressBar = null!;
         private ContextMenuStrip ctxLog = null!;
         private RichTextBox txtLog = null!;
     }
