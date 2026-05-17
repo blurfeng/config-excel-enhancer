@@ -468,10 +468,13 @@ namespace ConfigExcelEnhancer.UI
             const int avgLines = 20;
             int totalEstLines = cmdCount * avgLines;
             int _lineCount = 0;
+            bool _hasError = false;
             _runner = new LubanRunner();
             _runner.OutputReceived += msg => BeginInvoke(() =>
             {
-                Log(msg, LogLevel.Skip);
+                bool isError = msg.Contains("|ERROR|");
+                if (isError) _hasError = true;
+                LogLibrary.WriteRaw(txtLog, msg, isError ? LogLibrary.ClrError : LogLibrary.ClrOk);
                 _lineCount++;
                 int v = totalEstLines > 0 ? 100 + (int)(_lineCount * 800.0 / totalEstLines) : 900;
                 v = Math.Min(v, 900);
@@ -480,7 +483,7 @@ namespace ConfigExcelEnhancer.UI
             });
             _runner.Finished += code => BeginInvoke(() =>
             {
-                if (code == 0)
+                if (code == 0 && !_hasError)
                     Log("导表完成。", LogLevel.Ok);
                 else
                     Log($"导表失败，退出码：{code}", LogLevel.Error);

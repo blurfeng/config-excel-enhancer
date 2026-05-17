@@ -22,6 +22,7 @@ namespace ConfigExcelEnhancer.Core
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
+                    RedirectStandardInput = true,
                     CreateNoWindow = true
                 },
                 EnableRaisingEvents = true
@@ -43,6 +44,7 @@ namespace ConfigExcelEnhancer.Core
             };
 
             _process.Start();
+            _process.StandardInput.Close();
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
         }

@@ -57,6 +57,20 @@ namespace ConfigExcelEnhancer.Core
                 DoWrite();
         }
 
+        public static void WriteRaw(RichTextBox rtb, string message, Color? color = null)
+        {
+            void DoWrite()
+            {
+                rtb.SelectionStart  = rtb.TextLength;
+                rtb.SelectionLength = 0;
+                rtb.SelectionColor  = color ?? ClrOk;
+                rtb.AppendText($"{message}{Environment.NewLine}");
+                rtb.ScrollToCaret();
+            }
+            if (rtb.InvokeRequired) rtb.BeginInvoke(DoWrite);
+            else DoWrite();
+        }
+
         public static Color LevelToColor(LogLevel level) => LevelMeta[level].color;
     }
 }
