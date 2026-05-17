@@ -262,9 +262,21 @@ namespace ConfigExcelEnhancer.Core
             if (diff > 0)
             {
                 t2.Row(1).InsertRowsAbove(diff);
-                // Original first header row is now at diff+1; copy its cell styles to the new rows.
-                for (int r = 1; r <= diff; r++)
-                    CopyRowCellStyles(t2, diff + 1, r, lastCol);
+                // Process from the bottom-most new row upward so that r+2 (which may itself be a
+                // newly-inserted row) already has its fill set before we read from it.
+                int lastHeaderRow = diff + t2Count;   // last row of the original header block
+                for (int r = diff; r >= 1; r--)
+                {
+                    // Copy borders, alignment and font from the original first header row.
+                    CopyRowCellStylesExceptFill(t2, diff + 1, r, lastCol);
+
+                    // Fill color: take from the row two positions below (r+2), clamped to header range.
+                    int fillSrc = r + 2;
+                    if (fillSrc > lastHeaderRow) fillSrc = lastHeaderRow;
+                    if (fillSrc >= 1 && t2Count > 0)
+                        CopyRowFillOnly(t2, fillSrc, r, lastCol);
+                    // else: no original header rows exist → leave fill unset
+                }
             }
             else if (diff < 0)
             {
@@ -437,6 +449,60 @@ namespace ConfigExcelEnhancer.Core
                 d.Font.FontSize  = s.Font.FontSize;
                 d.Font.FontName  = s.Font.FontName;
                 d.Font.FontColor = s.Font.FontColor;
+            }
+        }
+
+        // Copies borders, alignment and font from srcRow to destRow, but skips fill color.
+        // Used when fill should come from a different source row.
+        private static void CopyRowCellStylesExceptFill(IXLWorksheet ws, int srcRow, int destRow, int lastCol)
+        {
+            for (int c = 1; c <= lastCol; c++)
+            {
+                var s = ws.Cell(srcRow, c).Style;
+                var d = ws.Cell(destRow, c).Style;
+
+                d.Border.TopBorder          = s.Border.TopBorder;
+                d.Border.TopBorderColor     = s.Border.TopBorderColor;
+                d.Border.BottomBorder       = s.Border.BottomBorder;
+                d.Border.BottomBorderColor  = s.Border.BottomBorderColor;
+                d.Border.LeftBorder         = s.Border.LeftBorder;
+                d.Border.LeftBorderColor    = s.Border.LeftBorderColor;
+                d.Border.RightBorder        = s.Border.RightBorder;
+                d.Border.RightBorderColor   = s.Border.RightBorderColor;
+
+                d.Alignment.Horizontal = s.Alignment.Horizontal;
+                d.Alignment.Vertical   = s.Alignment.Vertical;
+                d.Alignment.WrapText   = s.Alignment.WrapText;
+
+                d.Font.Bold      = s.Font.Bold;
+                d.Font.FontSize  = s.Font.FontSize;
+                d.Font.FontName  = s.Font.FontName;
+                d.Font.FontColor = s.Font.FontColor;
+            }
+        }
+
+        // Copies only fill color (row-level and cell-level) from srcRow to destRow.
+        // Used when borders/alignment/font come from a different source row.
+        private static void CopyRowFillOnly(IXLWorksheet ws, int srcRow, int destRow, int lastCol)
+        {
+            // Row-level fill — covers every cell that has no explicit cell-level fill
+            var srcRowFill = ws.Row(srcRow).Style.Fill;
+            var dstRowStyle = ws.Row(destRow).Style;
+            dstRowStyle.Fill.BackgroundColor = srcRowFill.BackgroundColor;
+            dstRowStyle.Fill.PatternType     = srcRowFill.PatternType;
+
+            for (int c = 1; c <= lastCol; c++)
+            {
+                var s = ws.Cell(srcRow, c).Style;
+                var d = ws.Cell(destRow, c).Style;
+
+                // Cell-level fill: only copy when the cell has an explicit fill (not NoColor),
+                // otherwise the row-level fill applied above is the correct fallback.
+                if (!s.Fill.BackgroundColor.Equals(XLColor.NoColor))
+                {
+                    d.Fill.BackgroundColor = s.Fill.BackgroundColor;
+                    d.Fill.PatternType     = s.Fill.PatternType;
+                }
             }
         }
 
