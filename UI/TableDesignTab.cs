@@ -220,7 +220,9 @@ namespace ConfigExcelEnhancer.UI
                 HeaderSymbol: string.IsNullOrWhiteSpace(txtHeaderSymbol.Text) ? "##" : txtHeaderSymbol.Text.Trim(),
                 AutoColumnWidth: chkAutoColumnWidth.Checked,
                 MergeHeaderCells: chkMergeHeaderCells.Checked,
-                MergeHeaderKeywords: txtMergeKeywords.Text.Trim()
+                MergeHeaderKeywords: txtMergeKeywords.Text.Trim(),
+                XmlDirectory: Settings.XmlDirectory,
+                HideEnumDataSheet: Settings.HideEnumDataSheet
             );
 
             int processed = 0;

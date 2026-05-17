@@ -12,7 +12,9 @@ namespace ConfigExcelEnhancer.Core
         string HeaderSymbol,
         bool AutoColumnWidth,
         bool MergeHeaderCells,
-        string MergeHeaderKeywords
+        string MergeHeaderKeywords,
+        string XmlDirectory = "",       // 指定时在表设计后自动强制更新 Enum 验证
+        bool HideEnumDataSheet = true   // 强制更新 Enum 验证时是否隐藏 __enum_data
     );
 
     public static class TableDesignApplier
@@ -72,6 +74,34 @@ namespace ConfigExcelEnhancer.Core
             }
 
             progress.Report((total, total, string.Empty));
+
+            // Enum validation — force-rewrite all enum column validations after design is applied
+            if (!string.IsNullOrWhiteSpace(options.XmlDirectory) && savedFiles.Count > 0)
+            {
+                log("扫描 XML Enum 定义...", LogLevel.Info);
+                var enums = EnumScanner.ScanDirectory(options.XmlDirectory);
+                if (enums.Count > 0)
+                {
+                    log($"找到 {enums.Count} 个 Enum，正在强制更新验证规则...", LogLevel.Info);
+                    ValidationUpdater.UpdateFiles(
+                        savedFiles,
+                        enums,
+                        options.HideEnumDataSheet,
+                        result =>
+                        {
+                            if (result.HasError)
+                                log($"  [Enum] 错误 {result.FileName}：{result.ErrorMessage}", LogLevel.Error);
+                            else if (result.WasSaved)
+                                log($"  [Enum] 已更新：{result.FileName}", LogLevel.Ok);
+                        },
+                        forceRewrite: true);
+                    log("Enum 验证规则更新完成。", LogLevel.Ok);
+                }
+                else
+                {
+                    log("未找到任何 Enum 定义，跳过验证规则更新。", LogLevel.Warn);
+                }
+            }
 
             // Excel COM refresh — recalculates formula cache so external tools read correct values
             if (savedFiles.Count > 0)

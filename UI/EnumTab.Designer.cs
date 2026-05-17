@@ -21,6 +21,7 @@ namespace ConfigExcelEnhancer.UI
             txtExcelDir = new TextBox();
             btnBrowseExcel = new Button();
             chkHideEnumDataSheet = new CheckBox();
+            chkForceRewrite = new CheckBox();
             btnUpdate = new Button();
             btnStop = new Button();
             pbUpdate = new ProgressBar();
@@ -97,9 +98,19 @@ namespace ConfigExcelEnhancer.UI
             chkHideEnumDataSheet.Text = "隐藏枚举数据表";
             chkHideEnumDataSheet.CheckedChanged += chkHideEnumDataSheet_CheckedChanged;
             // 
+            // chkForceRewrite
+            // 
+            chkForceRewrite.AutoSize = true;
+            chkForceRewrite.Location = new Point(12, 107);
+            chkForceRewrite.Name = "chkForceRewrite";
+            chkForceRewrite.Size = new Size(111, 21);
+            chkForceRewrite.TabIndex = 12;
+            chkForceRewrite.Text = "强制更新验证规则";
+            chkForceRewrite.CheckedChanged += chkForceRewrite_CheckedChanged;
+            // 
             // btnUpdate
             // 
-            btnUpdate.Location = new Point(12, 107);
+            btnUpdate.Location = new Point(12, 135);
             btnUpdate.Name = "btnUpdate";
             btnUpdate.Size = new Size(130, 32);
             btnUpdate.TabIndex = 8;
@@ -109,7 +120,7 @@ namespace ConfigExcelEnhancer.UI
             // btnStop
             // 
             btnStop.Enabled = false;
-            btnStop.Location = new Point(150, 107);
+            btnStop.Location = new Point(150, 135);
             btnStop.Name = "btnStop";
             btnStop.Size = new Size(75, 32);
             btnStop.TabIndex = 9;
@@ -119,7 +130,7 @@ namespace ConfigExcelEnhancer.UI
             // pbUpdate
             // 
             pbUpdate.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            pbUpdate.Location = new Point(233, 111);
+            pbUpdate.Location = new Point(233, 139);
             pbUpdate.Name = "pbUpdate";
             pbUpdate.Size = new Size(415, 23);
             pbUpdate.TabIndex = 10;
@@ -152,7 +163,7 @@ namespace ConfigExcelEnhancer.UI
             txtLog.ContextMenuStrip = ctxLog;
             txtLog.Font = new Font("Consolas", 9F);
             txtLog.ForeColor = Color.LightGreen;
-            txtLog.Location = new Point(0, 150);
+            txtLog.Location = new Point(0, 178);
             txtLog.Name = "txtLog";
             txtLog.ReadOnly = true;
             txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
@@ -171,6 +182,7 @@ namespace ConfigExcelEnhancer.UI
             Controls.Add(txtExcelDir);
             Controls.Add(btnBrowseExcel);
             Controls.Add(chkHideEnumDataSheet);
+            Controls.Add(chkForceRewrite);
             Controls.Add(btnUpdate);
             Controls.Add(btnStop);
             Controls.Add(pbUpdate);
@@ -188,6 +200,7 @@ namespace ConfigExcelEnhancer.UI
         private TextBox txtExcelDir = null!;
         private Button btnBrowseExcel = null!;
         private CheckBox chkHideEnumDataSheet = null!;
+        private CheckBox chkForceRewrite = null!;
         private Button btnUpdate = null!;
         private Button btnStop = null!;
         private ProgressBar pbUpdate = null!;

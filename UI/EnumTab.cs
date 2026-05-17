@@ -60,11 +60,15 @@ namespace ConfigExcelEnhancer.UI
         private void chkHideEnumDataSheet_CheckedChanged(object sender, EventArgs e)
             => Settings.HideEnumDataSheet = chkHideEnumDataSheet.Checked;
 
+        private void chkForceRewrite_CheckedChanged(object sender, EventArgs e)
+            => Settings.EnumForceRewrite = chkForceRewrite.Checked;
+
         public void LoadFromSettings()
         {
             txtXmlDir.Text = Settings.XmlDirectory;
             txtExcelDir.Text = Settings.ExcelDirectory;
             chkHideEnumDataSheet.Checked = Settings.HideEnumDataSheet;
+            chkForceRewrite.Checked = Settings.EnumForceRewrite;
         }
 
         // ── 核心流程 ──────────────────────────────────────────
@@ -76,6 +80,7 @@ namespace ConfigExcelEnhancer.UI
             txtExcelDir.Enabled = !locked;
             btnBrowseExcel.Enabled = !locked;
             chkHideEnumDataSheet.Enabled = !locked;
+            chkForceRewrite.Enabled = !locked;
         }
 
         private async void btnUpdate_Click(object sender, EventArgs e)
@@ -162,7 +167,8 @@ namespace ConfigExcelEnhancer.UI
                                 LogFileResult(result);
                                 pbUpdate.Value = Math.Min(v, 800);
                             });
-                        }), token);
+                        },
+                        forceRewrite: chkForceRewrite.Checked), token);
 
                 sw.Stop();
 

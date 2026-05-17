@@ -6,6 +6,7 @@ namespace ConfigExcelEnhancer.Models
         public string ExcelDirectory { get; set; } = string.Empty;
         public string GenBatPath { get; set; } = string.Empty;
         public bool HideEnumDataSheet { get; set; } = true;
+        public bool EnumForceRewrite { get; set; } = false;
 
         // ── 表设计 ────────────────────────────────────────
         public string TableDesignSourceExcel { get; set; } = string.Empty;

@@ -11,13 +11,53 @@ namespace ConfigExcelEnhancer.Core
         private const string EnumSheetName = "__enum_data"; // 双下划线开头能防止 Luban 等工具误识别为普通数据表
 
         /// <summary>
+        /// 更新指定文件列表中的所有 xlsx。
+        /// </summary>
+        public static List<UpdateResult> UpdateFiles(
+            IReadOnlyList<string> filePaths,
+            List<EnumInfo> enums,
+            bool hideEnumDataSheet,
+            Action<UpdateResult> onFileProcessed,
+            bool forceRewrite = false)
+        {
+            var enumMap = enums.ToDictionary(e => e.Name, StringComparer.Ordinal);
+            var results = new List<UpdateResult>();
+
+            foreach (var file in filePaths.Where(f => !Path.GetFileName(f).StartsWith("~$")))
+            {
+                var result = new UpdateResult { FilePath = file };
+
+                try
+                {
+                    UpdateWorkbook(file, enumMap, hideEnumDataSheet, result, forceRewrite);
+                }
+                catch (IOException ioEx)
+                {
+                    result.WasSkipped = true;
+                    result.SkipReason = ioEx.Message;
+                }
+                catch (Exception ex)
+                {
+                    result.HasError = true;
+                    result.ErrorMessage = ex.Message;
+                }
+
+                results.Add(result);
+                onFileProcessed(result);
+            }
+
+            return results;
+        }
+
+        /// <summary>
         /// 更新目录下所有 xlsx，每处理完一个文件回调 onFileProcessed，最终返回全部结果。
         /// </summary>
         public static List<UpdateResult> UpdateDirectory(
             string excelDirectory,
             List<EnumInfo> enums,
             bool hideEnumDataSheet,
-            Action<UpdateResult> onFileProcessed)
+            Action<UpdateResult> onFileProcessed,
+            bool forceRewrite = false)
         {
             var enumMap = enums.ToDictionary(e => e.Name, StringComparer.Ordinal);
             var results = new List<UpdateResult>();
@@ -29,7 +69,7 @@ namespace ConfigExcelEnhancer.Core
 
                 try
                 {
-                    UpdateWorkbook(file, enumMap, hideEnumDataSheet, result);
+                    UpdateWorkbook(file, enumMap, hideEnumDataSheet, result, forceRewrite);
                 }
                 catch (IOException ioEx)
                 {
@@ -53,7 +93,8 @@ namespace ConfigExcelEnhancer.Core
             string filePath,
             Dictionary<string, EnumInfo> enumMap,
             bool hideEnumDataSheet,
-            UpdateResult result)
+            UpdateResult result,
+            bool forceRewrite = false)
         {
             using var wb = new XLWorkbook(filePath);
 
@@ -62,6 +103,10 @@ namespace ConfigExcelEnhancer.Core
                 return;
 
             var enumColumns = WriteEnumSheet(wb, enumMap, hideEnumDataSheet, result);
+
+            // forceRewrite 时无论 Schema 是否变化都走完整重写路径
+            if (forceRewrite)
+                result.HasSchemaChange = true;
 
             if (result.HasSchemaChange)
             {
