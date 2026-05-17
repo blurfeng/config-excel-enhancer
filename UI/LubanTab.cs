@@ -435,19 +435,37 @@ namespace ConfigExcelEnhancer.UI
 
             btnRun.Enabled = false;
             btnCancel.Enabled = true;
+            int cmdCount = _config?.Commands.Count ?? 1;
+            pbRun.Maximum = 1000;
+            pbRun.Value = 100;
+            pbRun.Visible = true;
             txtLog.Clear();
             Log("开始执行导表...", LogLevel.Info);
 
+            // 按行数将 10%→90% 线性分配给所有命令的输出
+            const int avgLines = 20;
+            int totalEstLines = cmdCount * avgLines;
+            int _lineCount = 0;
             _runner = new LubanRunner();
-            _runner.OutputReceived += msg => BeginInvoke(() => Log(msg, LogLevel.Skip));
+            _runner.OutputReceived += msg => BeginInvoke(() =>
+            {
+                Log(msg, LogLevel.Skip);
+                _lineCount++;
+                int v = totalEstLines > 0 ? 100 + (int)(_lineCount * 800.0 / totalEstLines) : 900;
+                v = Math.Min(v, 900);
+                if (v > pbRun.Value)
+                    pbRun.Value = v;
+            });
             _runner.Finished += code => BeginInvoke(() =>
             {
                 if (code == 0)
                     Log("导表完成。", LogLevel.Ok);
                 else
                     Log($"导表失败，退出码：{code}", LogLevel.Error);
+                pbRun.Value = 1000;
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
+                pbRun.Visible = false;
                 _runner = null;
             });
 
@@ -457,6 +475,7 @@ namespace ConfigExcelEnhancer.UI
                 Log($"启动失败：{ex.Message}", LogLevel.Error);
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
+                pbRun.Visible = false;
             }
         }
 

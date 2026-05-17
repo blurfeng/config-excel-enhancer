@@ -13,6 +13,7 @@ namespace ConfigExcelEnhancer.UI
 
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             lblSourceExcel = new Label();
             txtSourceExcel = new TextBox();
             btnBrowseSource = new Button();
@@ -42,223 +43,340 @@ namespace ConfigExcelEnhancer.UI
             txtMergeKeywords = new TextBox();
             btnApply = new Button();
             btnStop = new Button();
-            ctxLog = new ContextMenuStrip();
+            pbApply = new ProgressBar();
+            ctxLog = new ContextMenuStrip(components);
             txtLog = new RichTextBox();
             pnlModeGroup.SuspendLayout();
             pnlDirMode.SuspendLayout();
             pnlListMode.SuspendLayout();
             pnlScopeGroup.SuspendLayout();
             SuspendLayout();
-
+            // 
             // lblSourceExcel
+            // 
             lblSourceExcel.AutoSize = true;
-            lblSourceExcel.Location = new Point(12, 15);
+            lblSourceExcel.Location = new Point(12, 17);
+            lblSourceExcel.Name = "lblSourceExcel";
+            lblSourceExcel.Size = new Size(77, 17);
+            lblSourceExcel.TabIndex = 1;
             lblSourceExcel.Text = "来源 Excel：";
-
+            // 
             // txtSourceExcel
-            txtSourceExcel.Location = new Point(90, 12);
-            txtSourceExcel.Size = new Size(480, 23);
+            // 
             txtSourceExcel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtSourceExcel.Location = new Point(90, 14);
+            txtSourceExcel.Name = "txtSourceExcel";
+            txtSourceExcel.Size = new Size(480, 23);
+            txtSourceExcel.TabIndex = 2;
             txtSourceExcel.TextChanged += txtSourceExcel_TextChanged;
-
+            // 
             // btnBrowseSource
-            btnBrowseSource.Text = "浏览...";
-            btnBrowseSource.Location = new Point(578, 11);
-            btnBrowseSource.Size = new Size(75, 25);
+            // 
             btnBrowseSource.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBrowseSource.Location = new Point(578, 12);
+            btnBrowseSource.Name = "btnBrowseSource";
+            btnBrowseSource.Size = new Size(75, 28);
+            btnBrowseSource.TabIndex = 3;
+            btnBrowseSource.Text = "浏览...";
             btnBrowseSource.Click += btnBrowseSource_Click;
-
+            // 
             // lblTargetMode
+            // 
             lblTargetMode.AutoSize = true;
-            lblTargetMode.Location = new Point(12, 46);
+            lblTargetMode.Location = new Point(12, 52);
+            lblTargetMode.Name = "lblTargetMode";
+            lblTargetMode.Size = new Size(56, 17);
+            lblTargetMode.TabIndex = 4;
             lblTargetMode.Text = "目标表：";
-
-            // pnlModeGroup — independent group for mode radios
-            pnlModeGroup.Location = new Point(78, 40);
-            pnlModeGroup.Size = new Size(210, 26);
-            pnlModeGroup.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            // 
+            // pnlModeGroup
+            // 
             pnlModeGroup.Controls.Add(rdoDirectory);
             pnlModeGroup.Controls.Add(rdoList);
-
-            // rdoDirectory (inside pnlModeGroup; x=4 to avoid dot clipping)
+            pnlModeGroup.Location = new Point(78, 45);
+            pnlModeGroup.Name = "pnlModeGroup";
+            pnlModeGroup.Size = new Size(210, 29);
+            pnlModeGroup.TabIndex = 5;
+            // 
+            // rdoDirectory
+            // 
             rdoDirectory.AutoSize = true;
-            rdoDirectory.Location = new Point(4, 3);
-            rdoDirectory.Text = "目录模式";
             rdoDirectory.Checked = true;
+            rdoDirectory.Location = new Point(4, 3);
+            rdoDirectory.Name = "rdoDirectory";
+            rdoDirectory.Size = new Size(74, 21);
+            rdoDirectory.TabIndex = 0;
+            rdoDirectory.TabStop = true;
+            rdoDirectory.Text = "目录模式";
             rdoDirectory.CheckedChanged += rdoDirectory_CheckedChanged;
-
-            // rdoList (inside pnlModeGroup)
+            // 
+            // rdoList
+            // 
             rdoList.AutoSize = true;
             rdoList.Location = new Point(94, 3);
+            rdoList.Name = "rdoList";
+            rdoList.Size = new Size(74, 21);
+            rdoList.TabIndex = 1;
             rdoList.Text = "列表模式";
             rdoList.CheckedChanged += rdoList_CheckedChanged;
-
+            // 
             // pnlDirMode
-            pnlDirMode.Location = new Point(12, 68);
-            pnlDirMode.Size = new Size(641, 90);
+            // 
             pnlDirMode.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             pnlDirMode.Controls.Add(txtTargetDir);
             pnlDirMode.Controls.Add(btnBrowseTargetDir);
-
+            pnlDirMode.Location = new Point(12, 77);
+            pnlDirMode.Name = "pnlDirMode";
+            pnlDirMode.Size = new Size(641, 102);
+            pnlDirMode.TabIndex = 6;
+            // 
             // txtTargetDir
-            txtTargetDir.Location = new Point(0, 3);
-            txtTargetDir.Size = new Size(555, 23);
+            // 
             txtTargetDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtTargetDir.Location = new Point(0, 3);
+            txtTargetDir.Name = "txtTargetDir";
+            txtTargetDir.Size = new Size(555, 23);
+            txtTargetDir.TabIndex = 0;
             txtTargetDir.TextChanged += txtTargetDir_TextChanged;
-
+            // 
             // btnBrowseTargetDir
-            btnBrowseTargetDir.Text = "浏览...";
-            btnBrowseTargetDir.Location = new Point(563, 2);
-            btnBrowseTargetDir.Size = new Size(75, 25);
+            // 
             btnBrowseTargetDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBrowseTargetDir.Location = new Point(563, 2);
+            btnBrowseTargetDir.Name = "btnBrowseTargetDir";
+            btnBrowseTargetDir.Size = new Size(75, 28);
+            btnBrowseTargetDir.TabIndex = 1;
+            btnBrowseTargetDir.Text = "浏览...";
             btnBrowseTargetDir.Click += btnBrowseTargetDir_Click;
-
+            // 
             // pnlListMode
-            pnlListMode.Location = new Point(12, 68);
-            pnlListMode.Size = new Size(641, 90);
+            // 
             pnlListMode.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            pnlListMode.Visible = false;
             pnlListMode.Controls.Add(lstTargetFiles);
             pnlListMode.Controls.Add(btnAddFiles);
             pnlListMode.Controls.Add(btnRemoveFiles);
             pnlListMode.Controls.Add(btnClearFiles);
-
+            pnlListMode.Location = new Point(12, 77);
+            pnlListMode.Name = "pnlListMode";
+            pnlListMode.Size = new Size(641, 102);
+            pnlListMode.TabIndex = 7;
+            pnlListMode.Visible = false;
+            // 
             // lstTargetFiles
-            lstTargetFiles.Location = new Point(0, 0);
-            lstTargetFiles.Size = new Size(553, 87);
+            // 
             lstTargetFiles.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            lstTargetFiles.SelectionMode = SelectionMode.MultiSimple;
             lstTargetFiles.HorizontalScrollbar = true;
-
+            lstTargetFiles.Location = new Point(0, 0);
+            lstTargetFiles.Name = "lstTargetFiles";
+            lstTargetFiles.SelectionMode = SelectionMode.MultiSimple;
+            lstTargetFiles.Size = new Size(553, 89);
+            lstTargetFiles.TabIndex = 0;
+            // 
             // btnAddFiles
-            btnAddFiles.Text = "添加...";
-            btnAddFiles.Location = new Point(561, 0);
-            btnAddFiles.Size = new Size(75, 27);
+            // 
             btnAddFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnAddFiles.Location = new Point(561, 0);
+            btnAddFiles.Name = "btnAddFiles";
+            btnAddFiles.Size = new Size(75, 31);
+            btnAddFiles.TabIndex = 1;
+            btnAddFiles.Text = "添加...";
             btnAddFiles.Click += btnAddFiles_Click;
-
+            // 
             // btnRemoveFiles
-            btnRemoveFiles.Text = "移除选中";
-            btnRemoveFiles.Location = new Point(561, 30);
-            btnRemoveFiles.Size = new Size(75, 27);
+            // 
             btnRemoveFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnRemoveFiles.Location = new Point(561, 34);
+            btnRemoveFiles.Name = "btnRemoveFiles";
+            btnRemoveFiles.Size = new Size(75, 31);
+            btnRemoveFiles.TabIndex = 2;
+            btnRemoveFiles.Text = "移除选中";
             btnRemoveFiles.Click += btnRemoveFiles_Click;
-
+            // 
             // btnClearFiles
-            btnClearFiles.Text = "清空";
-            btnClearFiles.Location = new Point(561, 60);
-            btnClearFiles.Size = new Size(75, 27);
+            // 
             btnClearFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnClearFiles.Location = new Point(561, 68);
+            btnClearFiles.Name = "btnClearFiles";
+            btnClearFiles.Size = new Size(75, 31);
+            btnClearFiles.TabIndex = 3;
+            btnClearFiles.Text = "清空";
             btnClearFiles.Click += btnClearFiles_Click;
-
+            // 
             // chkIgnoreUnderscoreFiles
+            // 
             chkIgnoreUnderscoreFiles.AutoSize = true;
-            chkIgnoreUnderscoreFiles.Location = new Point(12, 163);
-            chkIgnoreUnderscoreFiles.Text = "忽略__开头的文件";
             chkIgnoreUnderscoreFiles.Checked = true;
+            chkIgnoreUnderscoreFiles.CheckState = CheckState.Checked;
+            chkIgnoreUnderscoreFiles.Location = new Point(12, 185);
+            chkIgnoreUnderscoreFiles.Name = "chkIgnoreUnderscoreFiles";
+            chkIgnoreUnderscoreFiles.Size = new Size(121, 21);
+            chkIgnoreUnderscoreFiles.TabIndex = 8;
+            chkIgnoreUnderscoreFiles.Text = "忽略__开头的文件";
             chkIgnoreUnderscoreFiles.CheckedChanged += chkIgnoreUnderscoreFiles_CheckedChanged;
-
-            // lblSheetScope — fixed width so it never overlaps pnlScopeGroup
-            lblSheetScope.AutoSize = false;
-            lblSheetScope.Size = new Size(90, 17);
-            lblSheetScope.Location = new Point(12, 191);
+            // 
+            // lblSheetScope
+            // 
+            lblSheetScope.Location = new Point(12, 216);
+            lblSheetScope.Name = "lblSheetScope";
+            lblSheetScope.Size = new Size(90, 19);
+            lblSheetScope.TabIndex = 9;
             lblSheetScope.Text = "Sheet 范围：";
-
-            // pnlScopeGroup — independent group for scope radios; starts after lblSheetScope
-            pnlScopeGroup.Location = new Point(105, 185);
-            pnlScopeGroup.Size = new Size(145, 26);
+            // 
+            // pnlScopeGroup
+            // 
             pnlScopeGroup.Controls.Add(rdoScopeAll);
             pnlScopeGroup.Controls.Add(rdoScopeFirst);
-
-            // rdoScopeAll (inside pnlScopeGroup; x=4 to avoid dot clipping)
+            pnlScopeGroup.Location = new Point(105, 210);
+            pnlScopeGroup.Name = "pnlScopeGroup";
+            pnlScopeGroup.Size = new Size(145, 29);
+            pnlScopeGroup.TabIndex = 10;
+            // 
+            // rdoScopeAll
+            // 
             rdoScopeAll.AutoSize = true;
-            rdoScopeAll.Location = new Point(4, 3);
-            rdoScopeAll.Text = "所有";
             rdoScopeAll.Checked = true;
+            rdoScopeAll.Location = new Point(4, 3);
+            rdoScopeAll.Name = "rdoScopeAll";
+            rdoScopeAll.Size = new Size(50, 21);
+            rdoScopeAll.TabIndex = 0;
+            rdoScopeAll.TabStop = true;
+            rdoScopeAll.Text = "所有";
             rdoScopeAll.CheckedChanged += rdoScopeAll_CheckedChanged;
-
-            // rdoScopeFirst (inside pnlScopeGroup)
+            // 
+            // rdoScopeFirst
+            // 
             rdoScopeFirst.AutoSize = true;
             rdoScopeFirst.Location = new Point(55, 3);
+            rdoScopeFirst.Name = "rdoScopeFirst";
+            rdoScopeFirst.Size = new Size(62, 21);
+            rdoScopeFirst.TabIndex = 1;
             rdoScopeFirst.Text = "第一张";
             rdoScopeFirst.CheckedChanged += rdoScopeFirst_CheckedChanged;
-
+            // 
             // chkIgnoreUnderscoreSheets
+            // 
             chkIgnoreUnderscoreSheets.AutoSize = true;
-            chkIgnoreUnderscoreSheets.Location = new Point(257, 188);
-            chkIgnoreUnderscoreSheets.Text = "忽略__开头的Sheet";
             chkIgnoreUnderscoreSheets.Checked = true;
+            chkIgnoreUnderscoreSheets.CheckState = CheckState.Checked;
+            chkIgnoreUnderscoreSheets.Location = new Point(257, 213);
+            chkIgnoreUnderscoreSheets.Name = "chkIgnoreUnderscoreSheets";
+            chkIgnoreUnderscoreSheets.Size = new Size(129, 21);
+            chkIgnoreUnderscoreSheets.TabIndex = 11;
+            chkIgnoreUnderscoreSheets.Text = "忽略__开头的Sheet";
             chkIgnoreUnderscoreSheets.CheckedChanged += chkIgnoreUnderscoreSheets_CheckedChanged;
-
+            // 
             // lblHeaderSymbol
+            // 
             lblHeaderSymbol.AutoSize = true;
-            lblHeaderSymbol.Location = new Point(395, 191);
+            lblHeaderSymbol.Location = new Point(395, 216);
+            lblHeaderSymbol.Name = "lblHeaderSymbol";
+            lblHeaderSymbol.Size = new Size(68, 17);
+            lblHeaderSymbol.TabIndex = 12;
             lblHeaderSymbol.Text = "表头符号：";
-
+            // 
             // txtHeaderSymbol
-            txtHeaderSymbol.Location = new Point(465, 188);
+            // 
+            txtHeaderSymbol.Location = new Point(465, 213);
+            txtHeaderSymbol.Name = "txtHeaderSymbol";
             txtHeaderSymbol.Size = new Size(65, 23);
+            txtHeaderSymbol.TabIndex = 13;
             txtHeaderSymbol.Text = "##";
             txtHeaderSymbol.TextChanged += txtHeaderSymbol_TextChanged;
-
+            // 
             // chkAutoColumnWidth
+            // 
             chkAutoColumnWidth.AutoSize = true;
-            chkAutoColumnWidth.Location = new Point(12, 218);
-            chkAutoColumnWidth.Text = "按列内容自动调整列宽";
             chkAutoColumnWidth.Checked = true;
+            chkAutoColumnWidth.CheckState = CheckState.Checked;
+            chkAutoColumnWidth.Location = new Point(12, 247);
+            chkAutoColumnWidth.Name = "chkAutoColumnWidth";
+            chkAutoColumnWidth.Size = new Size(147, 21);
+            chkAutoColumnWidth.TabIndex = 14;
+            chkAutoColumnWidth.Text = "按列内容自动调整列宽";
             chkAutoColumnWidth.CheckedChanged += chkAutoColumnWidth_CheckedChanged;
-
+            // 
             // chkMergeHeaderCells
+            // 
             chkMergeHeaderCells.AutoSize = true;
-            chkMergeHeaderCells.Location = new Point(12, 244);
-            chkMergeHeaderCells.Text = "合并表头空白单元格";
             chkMergeHeaderCells.Checked = true;
+            chkMergeHeaderCells.CheckState = CheckState.Checked;
+            chkMergeHeaderCells.Location = new Point(12, 277);
+            chkMergeHeaderCells.Name = "chkMergeHeaderCells";
+            chkMergeHeaderCells.Size = new Size(135, 21);
+            chkMergeHeaderCells.TabIndex = 15;
+            chkMergeHeaderCells.Text = "合并表头空白单元格";
             chkMergeHeaderCells.CheckedChanged += chkMergeHeaderCells_CheckedChanged;
-
+            // 
             // lblMergeKeywords
+            // 
             lblMergeKeywords.AutoSize = true;
-            lblMergeKeywords.Location = new Point(175, 247);
+            lblMergeKeywords.Location = new Point(175, 280);
+            lblMergeKeywords.Name = "lblMergeKeywords";
+            lblMergeKeywords.Size = new Size(121, 17);
+            lblMergeKeywords.TabIndex = 16;
             lblMergeKeywords.Text = "合并行标识符/行号：";
-
+            // 
             // txtMergeKeywords
-            txtMergeKeywords.Location = new Point(303, 244);
-            txtMergeKeywords.Size = new Size(182, 23);
-            txtMergeKeywords.Text = "##type";
+            // 
+            txtMergeKeywords.Location = new Point(303, 277);
+            txtMergeKeywords.Name = "txtMergeKeywords";
             txtMergeKeywords.PlaceholderText = "##type,1,2（逗号或分号分隔）";
+            txtMergeKeywords.Size = new Size(182, 23);
+            txtMergeKeywords.TabIndex = 17;
+            txtMergeKeywords.Text = "##type";
             txtMergeKeywords.TextChanged += txtMergeKeywords_TextChanged;
-
+            // 
             // btnApply
+            // 
+            btnApply.Location = new Point(12, 313);
+            btnApply.Name = "btnApply";
+            btnApply.Size = new Size(120, 32);
+            btnApply.TabIndex = 18;
             btnApply.Text = "应用表设计";
-            btnApply.Location = new Point(12, 276);
-            btnApply.Size = new Size(120, 28);
             btnApply.Click += btnApply_Click;
-
+            // 
             // btnStop
-            btnStop.Text = "停止";
-            btnStop.Location = new Point(140, 276);
-            btnStop.Size = new Size(65, 28);
+            // 
             btnStop.Enabled = false;
+            btnStop.Location = new Point(140, 313);
+            btnStop.Name = "btnStop";
+            btnStop.Size = new Size(65, 32);
+            btnStop.TabIndex = 19;
+            btnStop.Text = "停止";
             btnStop.Click += btnStop_Click;
-
+            // 
+            // pbApply
+            // 
+            pbApply.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            pbApply.Location = new Point(213, 316);
+            pbApply.Name = "pbApply";
+            pbApply.Size = new Size(440, 25);
+            pbApply.TabIndex = 20;
+            pbApply.Visible = false;
+            // 
             // ctxLog
-            var ctxClear = ctxLog.Items.Add("清空日志");
-            var ctxCopy = ctxLog.Items.Add("复制全部");
-            ctxClear.Click += btnClearLog_Click;
-            ctxCopy.Click += btnCopyLog_Click;
-
+            // 
+            ctxLog.Name = "ctxLog";
+            ctxLog.Size = new Size(61, 4);
+            // 
             // txtLog
-            txtLog.Location = new Point(12, 312);
-            txtLog.Size = new Size(641, 150);
-            txtLog.ContextMenuStrip = ctxLog;
+            // 
             txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            txtLog.ReadOnly = true;
             txtLog.BackColor = Color.FromArgb(30, 30, 30);
+            txtLog.ContextMenuStrip = ctxLog;
+            txtLog.Font = new Font("Consolas", 9F);
             txtLog.ForeColor = Color.LightGreen;
-            txtLog.Font = new Font("Consolas", 9f);
+            txtLog.Location = new Point(12, 354);
+            txtLog.Name = "txtLog";
+            txtLog.ReadOnly = true;
             txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
-
+            txtLog.Size = new Size(641, 167);
+            txtLog.TabIndex = 21;
+            txtLog.Text = "";
+            // 
             // TableDesignTab
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            // 
+            AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(lblSourceExcel);
             Controls.Add(txtSourceExcel);
@@ -279,8 +397,10 @@ namespace ConfigExcelEnhancer.UI
             Controls.Add(txtMergeKeywords);
             Controls.Add(btnApply);
             Controls.Add(btnStop);
+            Controls.Add(pbApply);
             Controls.Add(txtLog);
-            Size = new Size(665, 462);
+            Name = "TableDesignTab";
+            Size = new Size(665, 524);
             pnlModeGroup.ResumeLayout(false);
             pnlModeGroup.PerformLayout();
             pnlDirMode.ResumeLayout(false);
@@ -321,6 +441,7 @@ namespace ConfigExcelEnhancer.UI
         private TextBox txtMergeKeywords = null!;
         private Button btnApply = null!;
         private Button btnStop = null!;
+        private ProgressBar pbApply = null!;
         private ContextMenuStrip ctxLog = null!;
         private RichTextBox txtLog = null!;
     }

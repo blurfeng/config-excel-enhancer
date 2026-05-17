@@ -194,6 +194,9 @@ namespace ConfigExcelEnhancer.UI
 
             btnApply.Enabled = false;
             btnStop.Enabled = true;
+            pbApply.Maximum = 1000;
+            pbApply.Value = 100;
+            pbApply.Visible = true;
             LogDivider();
 
             var options = new TableDesignOptions(
@@ -208,7 +211,14 @@ namespace ConfigExcelEnhancer.UI
                 MergeHeaderKeywords: txtMergeKeywords.Text.Trim()
             );
 
-            var progress = new Progress<(int current, int total, string fileName)>();
+            int _processed = 0;
+            int _total = targetFiles.Count;
+            var progress = new Progress<(int current, int total, string fileName)>(p =>
+            {
+                _processed++;
+                int v = _total > 0 ? 100 + (int)(_processed * 800.0 / _total) : 900;
+                pbApply.Value = Math.Min(v, 900);
+            });
 
             try
             {
@@ -216,6 +226,7 @@ namespace ConfigExcelEnhancer.UI
                     (msg, level) => LogLibrary.Write(txtLog, msg, level),
                     token), token);
 
+                pbApply.Value = 1000;
                 Log("完成。", LogLevel.Ok);
             }
             catch (OperationCanceledException)
@@ -230,6 +241,7 @@ namespace ConfigExcelEnhancer.UI
             {
                 btnApply.Enabled = true;
                 btnStop.Enabled = false;
+                pbApply.Visible = false;
                 _cts?.Dispose();
                 _cts = null;
             }

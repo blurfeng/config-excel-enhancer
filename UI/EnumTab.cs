@@ -96,6 +96,9 @@ namespace ConfigExcelEnhancer.UI
 
             btnUpdate.Enabled = false;
             btnStop.Enabled = true;
+            pbUpdate.Maximum = 1000;
+            pbUpdate.Value = 100;
+            pbUpdate.Visible = true;
             LogDivider();
 
             try
@@ -130,6 +133,8 @@ namespace ConfigExcelEnhancer.UI
                         Log($"  ⚠ {ei.Name} 没有 value=0 的选项，默认将使用第一项：{ei.Options.FirstOrDefault()?.Name}", LogLevel.Warn);
                 }
 
+                pbUpdate.Value = 200;
+
                 // ── 步骤2：修改 Excel ────────────────────────
                 Log("开始修改 Excel...", LogLevel.Info);
                 sw.Restart();
@@ -146,10 +151,11 @@ namespace ConfigExcelEnhancer.UI
                         result =>
                         {
                             processed++;
-                            int pct = totalFiles > 0 ? 15 + (int)(processed * 70.0 / totalFiles) : 85;
+                            int v = totalFiles > 0 ? 200 + (int)(processed * 600.0 / totalFiles) : 800;
                             BeginInvoke(() =>
                             {
                                 LogFileResult(result);
+                                pbUpdate.Value = Math.Min(v, 800);
                             });
                         }), token);
 
@@ -157,13 +163,16 @@ namespace ConfigExcelEnhancer.UI
 
                 token.ThrowIfCancellationRequested();
 
-                // ── 步骤3：汇总 ─────────────────────────────
+                pbUpdate.Value = 850;
+
+                // ── 步骤3：汇总
                 PrintSummary(enums.Count, results, sw.Elapsed);
 
                 // ── 步骤4：Excel COM 刷新公式缓存值 ─────────
                 var savedFiles = results.Where(r => r.WasSaved).Select(r => r.FilePath).ToList();
                 if (savedFiles.Count > 0)
                 {
+                    pbUpdate.Value = 900;
                     Log($"正在通过 Excel 刷新 {savedFiles.Count} 个文件的公式缓存值...", LogLevel.Info);
                     bool excelAvailable = await Task.Run(
                         () => FunctionLibrary.RefreshFormulasViaSTA(savedFiles), token);
@@ -172,10 +181,17 @@ namespace ConfigExcelEnhancer.UI
                     else
                         Log("本机未安装 Excel，已跳过公式缓存刷新。如需刷新，请安装 Microsoft Excel 后重试。", LogLevel.Warn);
                 }
+                else
+                {
+                    pbUpdate.Value = 900;
+                }
+
+                pbUpdate.Value = 1000;
             }
             catch (OperationCanceledException)
             {
                 Log("操作已停止。", LogLevel.Warn);
+                pbUpdate.Visible = false;
             }
             catch (Exception ex)
             {
@@ -185,6 +201,7 @@ namespace ConfigExcelEnhancer.UI
             {
                 btnUpdate.Enabled = true;
                 btnStop.Enabled = false;
+                pbUpdate.Visible = false;
                 _cts?.Dispose();
                 _cts = null;
             }
