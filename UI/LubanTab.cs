@@ -38,19 +38,15 @@ namespace ConfigExcelEnhancer.UI
 
         private void btnBrowseBat_Click(object sender, EventArgs e)
         {
-            using var dlg = new OpenFileDialog
+            var files = DialogHelper.BrowseFiles(
+                "选择 gen.bat",
+                "批处理文件 (*.bat)|*.bat|所有文件 (*.*)|*.*",
+                Settings.GenBatPath);
+            if (files.Length > 0)
             {
-                Title = "选择 gen.bat",
-                Filter = "批处理文件 (*.bat)|*.bat|所有文件 (*.*)|*.*"
-            };
-            if (!string.IsNullOrEmpty(Settings.GenBatPath))
-                dlg.InitialDirectory = Path.GetDirectoryName(Settings.GenBatPath);
-
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                txtBatPath.Text = dlg.FileName;
-                Settings.GenBatPath = dlg.FileName;
-                LoadBatConfig(dlg.FileName);
+                txtBatPath.Text = files[0];
+                Settings.GenBatPath = files[0];
+                LoadBatConfig(files[0]);
             }
         }
 
@@ -616,12 +612,15 @@ namespace ConfigExcelEnhancer.UI
         private void Log(string message, LogLevel level = LogLevel.Ok)
             => LogLibrary.Write(txtLog, message, level);
 
-        private void btnClearLog_Click(object sender, EventArgs e)
+        private void LogDivider()
+            => LogLibrary.Divider(txtLog);
+
+        private void btnClearLog_Click(object? sender, EventArgs e)
         {
             txtLog.Clear();
         }
 
-        private void btnCopyLog_Click(object sender, EventArgs e)
+        private void btnCopyLog_Click(object? sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(txtLog.Text))
                 Clipboard.SetText(txtLog.Text);

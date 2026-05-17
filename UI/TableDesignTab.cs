@@ -120,37 +120,29 @@ namespace ConfigExcelEnhancer.UI
 
         private void btnBrowseSource_Click(object sender, EventArgs e)
         {
-            using var dlg = new OpenFileDialog
-            {
-                Title = "选择来源 Excel",
-                Filter = "Excel 文件 (*.xlsx)|*.xlsx"
-            };
-            if (!string.IsNullOrEmpty(Settings.TableDesignSourceExcel))
-                dlg.InitialDirectory = Path.GetDirectoryName(Settings.TableDesignSourceExcel);
-            if (dlg.ShowDialog() == DialogResult.OK)
-                txtSourceExcel.Text = dlg.FileName;
+            var files = DialogHelper.BrowseFiles(
+                "选择来源 Excel",
+                "Excel 文件 (*.xlsx)|*.xlsx",
+                Settings.TableDesignSourceExcel);
+            if (files.Length > 0)
+                txtSourceExcel.Text = files[0];
         }
 
         private void btnBrowseTargetDir_Click(object sender, EventArgs e)
         {
-            using var dlg = new FolderBrowserDialog { Description = "选择目标 Excel 目录" };
-            if (!string.IsNullOrEmpty(Settings.TableDesignTargetDirectory))
-                dlg.SelectedPath = Settings.TableDesignTargetDirectory;
-            if (dlg.ShowDialog() == DialogResult.OK)
-                txtTargetDir.Text = dlg.SelectedPath;
+            if (DialogHelper.BrowseFolder("选择目标 Excel 目录", Settings.TableDesignTargetDirectory) is { } path)
+                txtTargetDir.Text = path;
         }
 
         private void btnAddFiles_Click(object sender, EventArgs e)
         {
-            using var dlg = new OpenFileDialog
+            var files = DialogHelper.BrowseFiles(
+                "选择目标 Excel 文件",
+                "Excel 文件 (*.xlsx)|*.xlsx",
+                multiselect: true);
+            if (files.Length > 0)
             {
-                Title = "选择目标 Excel 文件",
-                Filter = "Excel 文件 (*.xlsx)|*.xlsx",
-                Multiselect = true
-            };
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                foreach (var f in dlg.FileNames)
+                foreach (var f in files)
                     if (!lstTargetFiles.Items.Contains(f))
                         lstTargetFiles.Items.Add(f);
                 SyncTargetFilesToSettings();
@@ -231,12 +223,12 @@ namespace ConfigExcelEnhancer.UI
                 MergeHeaderKeywords: txtMergeKeywords.Text.Trim()
             );
 
-            int _processed = 0;
-            int _total = targetFiles.Count;
+            int processed = 0;
+            int total = targetFiles.Count;
             var progress = new Progress<(int current, int total, string fileName)>(p =>
             {
-                _processed++;
-                int v = _total > 0 ? 100 + (int)(_processed * 800.0 / _total) : 900;
+                processed++;
+                int v = total > 0 ? 100 + (int)(processed * 800.0 / total) : 900;
                 pbApply.Value = Math.Min(v, 900);
             });
 

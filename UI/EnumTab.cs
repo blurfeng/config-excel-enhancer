@@ -35,27 +35,19 @@ namespace ConfigExcelEnhancer.UI
 
         private void btnBrowseXml_Click(object sender, EventArgs e)
         {
-            using var dlg = new FolderBrowserDialog { Description = "选择 XML Schema 目录" };
-            if (!string.IsNullOrEmpty(Settings.XmlDirectory))
-                dlg.SelectedPath = Settings.XmlDirectory;
-
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (DialogHelper.BrowseFolder("选择 XML Schema 目录", Settings.XmlDirectory) is { } path)
             {
-                txtXmlDir.Text = dlg.SelectedPath;
-                Settings.XmlDirectory = dlg.SelectedPath;
+                txtXmlDir.Text = path;
+                Settings.XmlDirectory = path;
             }
         }
 
         private void btnBrowseExcel_Click(object sender, EventArgs e)
         {
-            using var dlg = new FolderBrowserDialog { Description = "选择 Excel 配置目录" };
-            if (!string.IsNullOrEmpty(Settings.ExcelDirectory))
-                dlg.SelectedPath = Settings.ExcelDirectory;
-
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (DialogHelper.BrowseFolder("选择 Excel 配置目录", Settings.ExcelDirectory) is { } path)
             {
-                txtExcelDir.Text = dlg.SelectedPath;
-                Settings.ExcelDirectory = dlg.SelectedPath;
+                txtExcelDir.Text = path;
+                Settings.ExcelDirectory = path;
             }
         }
 
@@ -228,12 +220,12 @@ namespace ConfigExcelEnhancer.UI
             btnStop.Enabled = false;
         }
 
-        private void btnClearLog_Click(object sender, EventArgs e)
+        private void btnClearLog_Click(object? sender, EventArgs e)
         {
             txtLog.Clear();
         }
 
-        private void btnCopyLog_Click(object sender, EventArgs e)
+        private void btnCopyLog_Click(object? sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(txtLog.Text))
                 Clipboard.SetText(txtLog.Text);

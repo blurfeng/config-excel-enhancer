@@ -406,50 +406,6 @@ namespace ConfigExcelEnhancer.Core
             }
         }
 
-        // Copies fill, borders, alignment and font from srcRow to destRow.
-        // Row-level fill is applied first (handles templates where fill is stored as a row default
-        // rather than per-cell), then cell-level fill overrides are applied where explicitly set.
-        private static void CopyRowCellStyles(IXLWorksheet ws, int srcRow, int destRow, int lastCol)
-        {
-            // Row-level fill — covers every cell that has no explicit cell-level fill
-            var srcRowFill = ws.Row(srcRow).Style.Fill;
-            var dstRowStyle = ws.Row(destRow).Style;
-            dstRowStyle.Fill.BackgroundColor = srcRowFill.BackgroundColor;
-            dstRowStyle.Fill.PatternType     = srcRowFill.PatternType;
-
-            for (int c = 1; c <= lastCol; c++)
-            {
-                var s = ws.Cell(srcRow, c).Style;
-                var d = ws.Cell(destRow, c).Style;
-
-                // Cell-level fill: only copy when the cell has an explicit fill (not NoColor),
-                // otherwise the row-level fill applied above is the correct fallback.
-                if (!s.Fill.BackgroundColor.Equals(XLColor.NoColor))
-                {
-                    d.Fill.BackgroundColor = s.Fill.BackgroundColor;
-                    d.Fill.PatternType     = s.Fill.PatternType;
-                }
-
-                d.Border.TopBorder          = s.Border.TopBorder;
-                d.Border.TopBorderColor     = s.Border.TopBorderColor;
-                d.Border.BottomBorder       = s.Border.BottomBorder;
-                d.Border.BottomBorderColor  = s.Border.BottomBorderColor;
-                d.Border.LeftBorder         = s.Border.LeftBorder;
-                d.Border.LeftBorderColor    = s.Border.LeftBorderColor;
-                d.Border.RightBorder        = s.Border.RightBorder;
-                d.Border.RightBorderColor   = s.Border.RightBorderColor;
-
-                d.Alignment.Horizontal = s.Alignment.Horizontal;
-                d.Alignment.Vertical   = s.Alignment.Vertical;
-                d.Alignment.WrapText   = s.Alignment.WrapText;
-
-                d.Font.Bold      = s.Font.Bold;
-                d.Font.FontSize  = s.Font.FontSize;
-                d.Font.FontName  = s.Font.FontName;
-                d.Font.FontColor = s.Font.FontColor;
-            }
-        }
-
         // Copies borders, alignment and font from srcRow to destRow, but skips fill color.
         // Used when fill should come from a different source row.
         private static void CopyRowCellStylesExceptFill(IXLWorksheet ws, int srcRow, int destRow, int lastCol)
