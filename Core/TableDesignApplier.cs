@@ -25,7 +25,7 @@ namespace ConfigExcelEnhancer.Core
         {
             if (!File.Exists(options.SourceExcelPath))
             {
-                log($"来源文件不存在：{options.SourceExcelPath}", LogLevel.Error);
+                log($"模板文件不存在：{options.SourceExcelPath}", LogLevel.Error);
                 return;
             }
 
@@ -105,7 +105,7 @@ namespace ConfigExcelEnhancer.Core
             var srcSheets = workingWb.Worksheets.OrderBy(s => s.Position).ToList();
             if (srcSheets.Count == 0)
             {
-                log($"来源表中无有效Sheet，跳过：{fileName}", LogLevel.Warn);
+                log($"模板表中无有效Sheet，跳过：{fileName}", LogLevel.Warn);
                 return;
             }
 
@@ -201,13 +201,18 @@ namespace ConfigExcelEnhancer.Core
             if (dataLastCol > t2LastCol && t2LastCol > 0)
                 ExtendHeaderRowStyles(t2, t3HeaderCount, t2LastCol, dataLastCol);
 
-            // Propagate first-data-row alignment to any rows beyond the template extent
+            // Propagate first-data-row alignment to ALL subsequent data rows.
+            // This covers both rows within the template extent (which may lack cell-level alignment)
+            // and rows beyond it (which have no template style at all).
             int firstDataRow = t3HeaderCount + 1;
-            if (dataLastRow > t2RowExtent && firstDataRow <= t2RowExtent)
+            if (firstDataRow < dataLastRow)
             {
                 var templateRow = t2.Row(firstDataRow);
-                for (int r = t2RowExtent + 1; r <= dataLastRow; r++)
+                for (int r = firstDataRow + 1; r <= dataLastRow; r++)
+                {
                     CopyRowAlignment(templateRow, t2.Row(r));
+                    CopyRowCellAlignment(t2, firstDataRow, r, dataLastCol);
+                }
             }
 
             // 7. Merge header cells based on keyword rows / explicit row numbers
@@ -467,6 +472,20 @@ namespace ConfigExcelEnhancer.Core
             dest.Style.Alignment.Horizontal = src.Horizontal;
             dest.Style.Alignment.Vertical   = src.Vertical;
             dest.Style.Alignment.WrapText    = src.WrapText;
+        }
+
+        // Copies cell-level alignment from srcRow to destRow for each column (used when propagating
+        // first data row alignment to rows beyond the template extent).
+        private static void CopyRowCellAlignment(IXLWorksheet ws, int srcRow, int destRow, int lastCol)
+        {
+            for (int c = 1; c <= lastCol; c++)
+            {
+                var s = ws.Cell(srcRow, c).Style.Alignment;
+                var d = ws.Cell(destRow, c).Style.Alignment;
+                d.Horizontal = s.Horizontal;
+                d.Vertical   = s.Vertical;
+                d.WrapText   = s.WrapText;
+            }
         }
 
         private static bool IsEffectivelyEmpty(IXLCell cell)

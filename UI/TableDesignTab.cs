@@ -121,7 +121,7 @@ namespace ConfigExcelEnhancer.UI
         private void btnBrowseSource_Click(object sender, EventArgs e)
         {
             var files = DialogHelper.BrowseFiles(
-                "选择来源 Excel",
+                "选择模板 Excel",
                 "Excel 文件 (*.xlsx)|*.xlsx",
                 Settings.TableDesignSourceExcel);
             if (files.Length > 0)
@@ -188,7 +188,7 @@ namespace ConfigExcelEnhancer.UI
             string sourcePath = txtSourceExcel.Text.Trim();
             if (string.IsNullOrEmpty(sourcePath) || !File.Exists(sourcePath))
             {
-                Log("请选择有效的来源 Excel 文件。", LogLevel.Error);
+                Log("请选择有效的模板 Excel 文件。", LogLevel.Error);
                 return;
             }
 

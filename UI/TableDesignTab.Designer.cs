@@ -61,7 +61,7 @@ namespace ConfigExcelEnhancer.UI
             lblSourceExcel.Name = "lblSourceExcel";
             lblSourceExcel.Size = new Size(77, 17);
             lblSourceExcel.TabIndex = 1;
-            lblSourceExcel.Text = "来源 Excel：";
+            lblSourceExcel.Text = "模板 Excel：";
             // 
             // txtSourceExcel
             // 
