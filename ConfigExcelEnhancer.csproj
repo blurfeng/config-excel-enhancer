@@ -6,10 +6,31 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyVersion></AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <AssemblyInformationalVersion>0.1.0-beta</AssemblyInformationalVersion>
+    <Authors>BlurFeng</Authors>
+    <PackageIcon></PackageIcon>
+    <ApplicationIcon>Icon\ConfigExcelEnhancer.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="Icon\ConfigExcelEnhancer.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Icon\ConfigExcelEnhancer.ico">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="Logo\ConfigExcelEnhancer.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
