@@ -294,21 +294,108 @@ namespace ConfigExcelEnhancer.Core
 
             if (diff > 0)
             {
+                // === Snapshot border and per-cell styles from T2 row 1 BEFORE insertion. ===
+                // After InsertRowsAbove, rows shift down and ClosedXML may not preserve cell-level
+                // styles reliably for cells that were empty (never had a value). Reading before the
+                // insert guarantees we see the original style objects.
+
+                // Find a representative border by scanning row-level style first, then each cell.
+                // Store the four directions + colors as plain values so we don't hold IXLStyle refs.
+                var rowBorder = t2.Row(1).Style.Border;
+                XLBorderStyleValues bTop    = rowBorder.TopBorder;
+                XLBorderStyleValues bBottom = rowBorder.BottomBorder;
+                XLBorderStyleValues bLeft   = rowBorder.LeftBorder;
+                XLBorderStyleValues bRight  = rowBorder.RightBorder;
+                XLColor cTop    = rowBorder.TopBorderColor;
+                XLColor cBottom = rowBorder.BottomBorderColor;
+                XLColor cLeft   = rowBorder.LeftBorderColor;
+                XLColor cRight  = rowBorder.RightBorderColor;
+
+                bool anyBorder = bTop    != XLBorderStyleValues.None ||
+                                 bBottom != XLBorderStyleValues.None ||
+                                 bLeft   != XLBorderStyleValues.None ||
+                                 bRight  != XLBorderStyleValues.None;
+
+                if (!anyBorder)
+                {
+                    // Row-level style has no border — scan cells to find the first with an explicit
+                    // border. Prefer an inner column to avoid thick outer-edge borders.
+                    int preferCol = lastCol >= 2 ? lastCol - 1 : lastCol;
+                    int[] scanOrder = Enumerable.Range(1, lastCol)
+                        .OrderBy(c => Math.Abs(c - preferCol))
+                        .ToArray();
+
+                    foreach (int c in scanOrder)
+                    {
+                        var cb = t2.Cell(1, c).Style.Border;
+                        if (cb.TopBorder    != XLBorderStyleValues.None ||
+                            cb.BottomBorder != XLBorderStyleValues.None ||
+                            cb.LeftBorder   != XLBorderStyleValues.None ||
+                            cb.RightBorder  != XLBorderStyleValues.None)
+                        {
+                            bTop    = cb.TopBorder;    cTop    = cb.TopBorderColor;
+                            bBottom = cb.BottomBorder; cBottom = cb.BottomBorderColor;
+                            bLeft   = cb.LeftBorder;   cLeft   = cb.LeftBorderColor;
+                            bRight  = cb.RightBorder;  cRight  = cb.RightBorderColor;
+                            break;
+                        }
+                    }
+                }
+
+                // Snapshot per-cell alignment and font from row 1 before insertion.
+                var cellAlignFont = new (XLAlignmentHorizontalValues H,
+                                         XLAlignmentVerticalValues V,
+                                         bool Wrap,
+                                         bool Bold,
+                                         double FontSize,
+                                         string FontName,
+                                         XLColor FontColor)[lastCol + 1];
+                for (int c = 1; c <= lastCol; c++)
+                {
+                    var s = t2.Cell(1, c).Style;
+                    cellAlignFont[c] = (
+                        s.Alignment.Horizontal, s.Alignment.Vertical, s.Alignment.WrapText,
+                        s.Font.Bold, s.Font.FontSize, s.Font.FontName, s.Font.FontColor);
+                }
+
+                // === Insert rows, then apply the snapshotted styles to the new rows. ===
                 t2.Row(1).InsertRowsAbove(diff);
-                // Process from the bottom-most new row upward so that r+2 (which may itself be a
-                // newly-inserted row) already has its fill set before we read from it.
-                int lastHeaderRow = diff + t2Count;   // last row of the original header block
+
+                int lastHeaderRow = diff + t2Count;
+
                 for (int r = diff; r >= 1; r--)
                 {
-                    // Copy borders, alignment and font from the original first header row.
-                    CopyRowCellStylesExceptFill(t2, diff + 1, r, lastCol);
+                    // Apply border via row-level style so every cell in the row is covered,
+                    // including cells beyond lastCol that currently have no data.
+                    var destRowStyle = t2.Row(r).Style;
+                    destRowStyle.Border.TopBorder         = bTop;
+                    destRowStyle.Border.TopBorderColor    = cTop;
+                    destRowStyle.Border.BottomBorder      = bBottom;
+                    destRowStyle.Border.BottomBorderColor = cBottom;
+                    destRowStyle.Border.LeftBorder        = bLeft;
+                    destRowStyle.Border.LeftBorderColor   = cLeft;
+                    destRowStyle.Border.RightBorder       = bRight;
+                    destRowStyle.Border.RightBorderColor  = cRight;
+
+                    // Apply per-cell alignment and font from the snapshot.
+                    for (int c = 1; c <= lastCol; c++)
+                    {
+                        var (H, V, Wrap, Bold, FontSize, FontName, FontColor) = cellAlignFont[c];
+                        var d = t2.Cell(r, c).Style;
+                        d.Alignment.Horizontal = H;
+                        d.Alignment.Vertical   = V;
+                        d.Alignment.WrapText   = Wrap;
+                        d.Font.Bold      = Bold;
+                        d.Font.FontSize  = FontSize;
+                        d.Font.FontName  = FontName;
+                        d.Font.FontColor = FontColor;
+                    }
 
                     // Fill color: take from the row two positions below (r+2), clamped to header range.
                     int fillSrc = r + 2;
                     if (fillSrc > lastHeaderRow) fillSrc = lastHeaderRow;
                     if (fillSrc >= 1 && t2Count > 0)
                         CopyRowFillOnly(t2, fillSrc, r, lastCol);
-                    // else: no original header rows exist → leave fill unset
                 }
             }
             else if (diff < 0)
@@ -450,36 +537,7 @@ namespace ConfigExcelEnhancer.Core
             }
         }
 
-        // Copies borders, alignment and font from srcRow to destRow, but skips fill color.
-        // Used when fill should come from a different source row.
-        private static void CopyRowCellStylesExceptFill(IXLWorksheet ws, int srcRow, int destRow, int lastCol)
-        {
-            for (int c = 1; c <= lastCol; c++)
-            {
-                var s = ws.Cell(srcRow, c).Style;
-                var d = ws.Cell(destRow, c).Style;
 
-                d.Border.TopBorder          = s.Border.TopBorder;
-                d.Border.TopBorderColor     = s.Border.TopBorderColor;
-                d.Border.BottomBorder       = s.Border.BottomBorder;
-                d.Border.BottomBorderColor  = s.Border.BottomBorderColor;
-                d.Border.LeftBorder         = s.Border.LeftBorder;
-                d.Border.LeftBorderColor    = s.Border.LeftBorderColor;
-                d.Border.RightBorder        = s.Border.RightBorder;
-                d.Border.RightBorderColor   = s.Border.RightBorderColor;
-
-                d.Alignment.Horizontal = s.Alignment.Horizontal;
-                d.Alignment.Vertical   = s.Alignment.Vertical;
-                d.Alignment.WrapText   = s.Alignment.WrapText;
-
-                d.Font.Bold      = s.Font.Bold;
-                d.Font.FontSize  = s.Font.FontSize;
-                d.Font.FontName  = s.Font.FontName;
-                d.Font.FontColor = s.Font.FontColor;
-            }
-        }
-
-        // Copies only fill color (row-level and cell-level) from srcRow to destRow.
         // Used when borders/alignment/font come from a different source row.
         private static void CopyRowFillOnly(IXLWorksheet ws, int srcRow, int destRow, int lastCol)
         {
