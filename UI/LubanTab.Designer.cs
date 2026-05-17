@@ -39,13 +39,13 @@ namespace ConfigExcelEnhancer.UI
             pnlTop.Dock = DockStyle.Top;
             pnlTop.Location = new Point(0, 0);
             pnlTop.Name = "pnlTop";
-            pnlTop.Size = new Size(655, 43);
+            pnlTop.Size = new Size(665, 43);
             pnlTop.TabIndex = 3;
             // 
             // lblBatPath
             // 
             lblBatPath.AutoSize = true;
-            lblBatPath.Location = new Point(8, 12);
+            lblBatPath.Location = new Point(12, 12);
             lblBatPath.Name = "lblBatPath";
             lblBatPath.Size = new Size(64, 17);
             lblBatPath.TabIndex = 0;
@@ -54,16 +54,16 @@ namespace ConfigExcelEnhancer.UI
             // txtBatPath
             // 
             txtBatPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtBatPath.Location = new Point(72, 9);
+            txtBatPath.Location = new Point(90, 9);
             txtBatPath.Name = "txtBatPath";
             txtBatPath.ReadOnly = true;
-            txtBatPath.Size = new Size(569, 23);
+            txtBatPath.Size = new Size(480, 23);
             txtBatPath.TabIndex = 1;
             // 
             // btnBrowseBat
             // 
             btnBrowseBat.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseBat.Location = new Point(1015, 8);
+            btnBrowseBat.Location = new Point(578, 8);
             btnBrowseBat.Name = "btnBrowseBat";
             btnBrowseBat.Size = new Size(75, 28);
             btnBrowseBat.TabIndex = 2;
@@ -74,7 +74,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             btnReset.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnReset.Enabled = false;
-            btnReset.Location = new Point(1027, 9);
+            btnReset.Location = new Point(578, 7);
             btnReset.Name = "btnReset";
             btnReset.Size = new Size(75, 32);
             btnReset.TabIndex = 4;
@@ -87,7 +87,7 @@ namespace ConfigExcelEnhancer.UI
             tabsCommands.Location = new Point(0, 43);
             tabsCommands.Name = "tabsCommands";
             tabsCommands.SelectedIndex = 0;
-            tabsCommands.Size = new Size(655, 214);
+            tabsCommands.Size = new Size(665, 217);
             tabsCommands.TabIndex = 1;
             // 
             // pnlBottom
@@ -99,15 +99,15 @@ namespace ConfigExcelEnhancer.UI
             pnlBottom.Controls.Add(btnReset);
             pnlBottom.Controls.Add(txtLog);
             pnlBottom.Dock = DockStyle.Bottom;
-            pnlBottom.Location = new Point(0, 257);
+            pnlBottom.Location = new Point(0, 260);
             pnlBottom.Name = "pnlBottom";
-            pnlBottom.Size = new Size(655, 213);
+            pnlBottom.Size = new Size(665, 210);
             pnlBottom.TabIndex = 2;
             // 
             // btnSave
             // 
             btnSave.Enabled = false;
-            btnSave.Location = new Point(8, 9);
+            btnSave.Location = new Point(12, 7);
             btnSave.Name = "btnSave";
             btnSave.Size = new Size(100, 32);
             btnSave.TabIndex = 0;
@@ -116,7 +116,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // btnRun
             // 
-            btnRun.Location = new Point(116, 9);
+            btnRun.Location = new Point(120, 7);
             btnRun.Name = "btnRun";
             btnRun.Size = new Size(100, 32);
             btnRun.TabIndex = 1;
@@ -126,7 +126,7 @@ namespace ConfigExcelEnhancer.UI
             // btnCancel
             // 
             btnCancel.Enabled = false;
-            btnCancel.Location = new Point(224, 9);
+            btnCancel.Location = new Point(228, 7);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(75, 32);
             btnCancel.TabIndex = 2;
@@ -136,9 +136,9 @@ namespace ConfigExcelEnhancer.UI
             // pbRun
             // 
             pbRun.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            pbRun.Location = new Point(307, 12);
+            pbRun.Location = new Point(310, 11);
             pbRun.Name = "pbRun";
-            pbRun.Size = new Size(345, 25);
+            pbRun.Size = new Size(259, 23);
             pbRun.TabIndex = 3;
             pbRun.Visible = false;
             // 
@@ -149,18 +149,18 @@ namespace ConfigExcelEnhancer.UI
             txtLog.ContextMenuStrip = ctxLog;
             txtLog.Font = new Font("Consolas", 9F);
             txtLog.ForeColor = Color.LightGreen;
-            txtLog.Location = new Point(8, 50);
+            txtLog.Location = new Point(0, 50);
             txtLog.Name = "txtLog";
             txtLog.ReadOnly = true;
             txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
-            txtLog.Size = new Size(633, 154);
+            txtLog.Size = new Size(665, 150);
             txtLog.TabIndex = 5;
             txtLog.Text = "";
             // 
             // ctxLog
             // 
             ctxLog.Name = "ctxLog";
-            ctxLog.Size = new Size(125, 26);
+            ctxLog.Size = new Size(61, 4);
             // 
             // LubanTab
             // 
@@ -170,7 +170,7 @@ namespace ConfigExcelEnhancer.UI
             Controls.Add(pnlBottom);
             Controls.Add(pnlTop);
             Name = "LubanTab";
-            Size = new Size(655, 470);
+            Size = new Size(665, 470);
             pnlTop.ResumeLayout(false);
             pnlTop.PerformLayout();
             pnlBottom.ResumeLayout(false);

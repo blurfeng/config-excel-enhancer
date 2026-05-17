@@ -328,7 +328,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // btnApply
             // 
-            btnApply.Location = new Point(12, 313);
+            btnApply.Location = new Point(12, 316);
             btnApply.Name = "btnApply";
             btnApply.Size = new Size(120, 32);
             btnApply.TabIndex = 18;
@@ -338,9 +338,9 @@ namespace ConfigExcelEnhancer.UI
             // btnStop
             // 
             btnStop.Enabled = false;
-            btnStop.Location = new Point(140, 313);
+            btnStop.Location = new Point(140, 316);
             btnStop.Name = "btnStop";
-            btnStop.Size = new Size(65, 32);
+            btnStop.Size = new Size(75, 32);
             btnStop.TabIndex = 19;
             btnStop.Text = "停止";
             btnStop.Click += btnStop_Click;
@@ -348,9 +348,9 @@ namespace ConfigExcelEnhancer.UI
             // pbApply
             // 
             pbApply.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            pbApply.Location = new Point(213, 316);
+            pbApply.Location = new Point(223, 321);
             pbApply.Name = "pbApply";
-            pbApply.Size = new Size(440, 25);
+            pbApply.Size = new Size(430, 23);
             pbApply.TabIndex = 20;
             pbApply.Visible = false;
             // 
@@ -366,11 +366,11 @@ namespace ConfigExcelEnhancer.UI
             txtLog.ContextMenuStrip = ctxLog;
             txtLog.Font = new Font("Consolas", 9F);
             txtLog.ForeColor = Color.LightGreen;
-            txtLog.Location = new Point(12, 354);
+            txtLog.Location = new Point(0, 360);
             txtLog.Name = "txtLog";
             txtLog.ReadOnly = true;
             txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
-            txtLog.Size = new Size(641, 167);
+            txtLog.Size = new Size(665, 160);
             txtLog.TabIndex = 21;
             txtLog.Text = "";
             // 
@@ -400,7 +400,7 @@ namespace ConfigExcelEnhancer.UI
             Controls.Add(pbApply);
             Controls.Add(txtLog);
             Name = "TableDesignTab";
-            Size = new Size(665, 524);
+            Size = new Size(665, 530);
             pnlModeGroup.ResumeLayout(false);
             pnlModeGroup.PerformLayout();
             pnlDirMode.ResumeLayout(false);
@@ -443,6 +443,6 @@ namespace ConfigExcelEnhancer.UI
         private Button btnStop = null!;
         private ProgressBar pbApply = null!;
         private ContextMenuStrip ctxLog = null!;
-        private RichTextBox txtLog = null!;
+        private RichTextBox txtLog;
     }
 }

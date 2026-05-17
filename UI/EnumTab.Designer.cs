@@ -13,6 +13,7 @@ namespace ConfigExcelEnhancer.UI
 
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             lblXmlDir = new Label();
             txtXmlDir = new TextBox();
             btnBrowseXml = new Button();
@@ -23,93 +24,128 @@ namespace ConfigExcelEnhancer.UI
             btnUpdate = new Button();
             btnStop = new Button();
             pbUpdate = new ProgressBar();
-            ctxLog = new ContextMenuStrip();
+            ctxLog = new ContextMenuStrip(components);
             txtLog = new RichTextBox();
+            saveFileDialog1 = new SaveFileDialog();
             SuspendLayout();
-
+            // 
             // lblXmlDir
+            // 
             lblXmlDir.AutoSize = true;
             lblXmlDir.Location = new Point(12, 15);
+            lblXmlDir.Name = "lblXmlDir";
+            lblXmlDir.Size = new Size(74, 17);
+            lblXmlDir.TabIndex = 1;
             lblXmlDir.Text = "XML 目录：";
-
+            // 
             // txtXmlDir
-            txtXmlDir.Location = new Point(90, 12);
-            txtXmlDir.Size = new Size(480, 23);
+            // 
             txtXmlDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtXmlDir.Location = new Point(90, 12);
+            txtXmlDir.Name = "txtXmlDir";
+            txtXmlDir.Size = new Size(480, 23);
+            txtXmlDir.TabIndex = 2;
             txtXmlDir.TextChanged += txtXmlDir_TextChanged;
-
+            // 
             // btnBrowseXml
-            btnBrowseXml.Text = "浏览...";
-            btnBrowseXml.Location = new Point(578, 11);
-            btnBrowseXml.Size = new Size(75, 25);
+            // 
             btnBrowseXml.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBrowseXml.Location = new Point(578, 12);
+            btnBrowseXml.Name = "btnBrowseXml";
+            btnBrowseXml.Size = new Size(75, 28);
+            btnBrowseXml.TabIndex = 3;
+            btnBrowseXml.Text = "浏览...";
             btnBrowseXml.Click += btnBrowseXml_Click;
-
+            // 
             // lblExcelDir
+            // 
             lblExcelDir.AutoSize = true;
             lblExcelDir.Location = new Point(12, 48);
+            lblExcelDir.Name = "lblExcelDir";
+            lblExcelDir.Size = new Size(77, 17);
+            lblExcelDir.TabIndex = 4;
             lblExcelDir.Text = "Excel 目录：";
-
+            // 
             // txtExcelDir
-            txtExcelDir.Location = new Point(90, 45);
-            txtExcelDir.Size = new Size(480, 23);
+            // 
             txtExcelDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtExcelDir.Location = new Point(90, 45);
+            txtExcelDir.Name = "txtExcelDir";
+            txtExcelDir.Size = new Size(480, 23);
+            txtExcelDir.TabIndex = 5;
             txtExcelDir.TextChanged += txtExcelDir_TextChanged;
-
+            // 
             // btnBrowseExcel
-            btnBrowseExcel.Text = "浏览...";
-            btnBrowseExcel.Location = new Point(578, 44);
-            btnBrowseExcel.Size = new Size(75, 25);
+            // 
             btnBrowseExcel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBrowseExcel.Location = new Point(578, 45);
+            btnBrowseExcel.Name = "btnBrowseExcel";
+            btnBrowseExcel.Size = new Size(75, 28);
+            btnBrowseExcel.TabIndex = 6;
+            btnBrowseExcel.Text = "浏览...";
             btnBrowseExcel.Click += btnBrowseExcel_Click;
-
-            // chkHideEnumDataSheet  （第三行，更新按钮上方）
+            // 
+            // chkHideEnumDataSheet
+            // 
             chkHideEnumDataSheet.AutoSize = true;
             chkHideEnumDataSheet.Location = new Point(12, 80);
+            chkHideEnumDataSheet.Name = "chkHideEnumDataSheet";
+            chkHideEnumDataSheet.Size = new Size(111, 21);
+            chkHideEnumDataSheet.TabIndex = 7;
             chkHideEnumDataSheet.Text = "隐藏枚举数据表";
             chkHideEnumDataSheet.CheckedChanged += chkHideEnumDataSheet_CheckedChanged;
-
-            // btnUpdate  （第四行）
+            // 
+            // btnUpdate
+            // 
+            btnUpdate.Location = new Point(12, 107);
+            btnUpdate.Name = "btnUpdate";
+            btnUpdate.Size = new Size(130, 32);
+            btnUpdate.TabIndex = 8;
             btnUpdate.Text = "更新 Enum 验证";
-            btnUpdate.Location = new Point(12, 108);
-            btnUpdate.Size = new Size(130, 30);
             btnUpdate.Click += btnUpdate_Click;
-
+            // 
             // btnStop
-            btnStop.Text = "停止";
-            btnStop.Location = new Point(150, 108);
-            btnStop.Size = new Size(75, 30);
+            // 
             btnStop.Enabled = false;
+            btnStop.Location = new Point(150, 107);
+            btnStop.Name = "btnStop";
+            btnStop.Size = new Size(75, 32);
+            btnStop.TabIndex = 9;
+            btnStop.Text = "停止";
             btnStop.Click += btnStop_Click;
-
+            // 
             // pbUpdate
-            pbUpdate.Location = new Point(233, 111);
-            pbUpdate.Size = new Size(415, 22);
+            // 
             pbUpdate.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            pbUpdate.Minimum = 0;
-            pbUpdate.Maximum = 100;
-            pbUpdate.Value = 0;
+            pbUpdate.Location = new Point(233, 111);
+            pbUpdate.Name = "pbUpdate";
+            pbUpdate.Size = new Size(415, 23);
+            pbUpdate.TabIndex = 10;
             pbUpdate.Visible = false;
-
+            // 
             // ctxLog
-            var ctxClear = ctxLog.Items.Add("清空日志");
-            var ctxCopy  = ctxLog.Items.Add("复制全部");
-            ctxClear.Click += btnClearLog_Click;
-            ctxCopy.Click  += btnCopyLog_Click;
-
+            // 
+            ctxLog.Name = "ctxLog";
+            ctxLog.Size = new Size(61, 4);
+            // 
             // txtLog
-            txtLog.Location = new Point(12, 147);
-            txtLog.Size = new Size(641, 253);
-            txtLog.ContextMenuStrip = ctxLog;
+            // 
             txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            txtLog.ReadOnly = true;
             txtLog.BackColor = Color.FromArgb(30, 30, 30);
+            txtLog.ContextMenuStrip = ctxLog;
+            txtLog.Font = new Font("Consolas", 9F);
             txtLog.ForeColor = Color.LightGreen;
-            txtLog.Font = new Font("Consolas", 9f);
+            txtLog.Location = new Point(0, 150);
+            txtLog.Name = "txtLog";
+            txtLog.ReadOnly = true;
             txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
-
+            txtLog.Size = new Size(665, 310);
+            txtLog.TabIndex = 11;
+            txtLog.Text = "";
+            // 
             // EnumTab
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            // 
+            AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(lblXmlDir);
             Controls.Add(txtXmlDir);
@@ -122,7 +158,8 @@ namespace ConfigExcelEnhancer.UI
             Controls.Add(btnStop);
             Controls.Add(pbUpdate);
             Controls.Add(txtLog);
-            Size = new Size(665, 412);
+            Name = "EnumTab";
+            Size = new Size(665, 470);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -139,5 +176,6 @@ namespace ConfigExcelEnhancer.UI
         private ProgressBar pbUpdate = null!;
         private ContextMenuStrip ctxLog = null!;
         private RichTextBox txtLog = null!;
+        private SaveFileDialog saveFileDialog1;
     }
 }

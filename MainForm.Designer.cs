@@ -71,10 +71,10 @@ namespace ConfigExcelEnhancer
             settingsTab.Dock = DockStyle.Fill;
 
             // MainForm
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(700, 530);
-            MinimumSize = new Size(600, 490);
+            ClientSize = new Size(660, 600);
+            MinimumSize = new Size(600, 580);
             Controls.Add(tabControl);
             Text = "ConfigStudio";
             tabControl.ResumeLayout(false);

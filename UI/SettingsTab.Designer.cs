@@ -14,34 +14,46 @@ namespace ConfigExcelEnhancer.UI
         private void InitializeComponent()
         {
             groupBoxSettings = new GroupBox();
-            btnClearSettings = new Button();
             lblClearDesc = new Label();
+            btnClearSettings = new Button();
             groupBoxSettings.SuspendLayout();
             SuspendLayout();
-
+            // 
             // groupBoxSettings
-            groupBoxSettings.Text = "settings.json";
-            groupBoxSettings.Location = new Point(12, 12);
-            groupBoxSettings.Size = new Size(460, 100);
+            // 
             groupBoxSettings.Controls.Add(lblClearDesc);
             groupBoxSettings.Controls.Add(btnClearSettings);
-
+            groupBoxSettings.Location = new Point(12, 14);
+            groupBoxSettings.Name = "groupBoxSettings";
+            groupBoxSettings.Size = new Size(460, 113);
+            groupBoxSettings.TabIndex = 0;
+            groupBoxSettings.TabStop = false;
+            groupBoxSettings.Text = "settings.json";
+            // 
             // lblClearDesc
+            // 
+            lblClearDesc.Location = new Point(10, 27);
+            lblClearDesc.Name = "lblClearDesc";
+            lblClearDesc.Size = new Size(380, 41);
+            lblClearDesc.TabIndex = 0;
             lblClearDesc.Text = "清空后，所有工具设置将恢复为默认值。";
-            lblClearDesc.Location = new Point(10, 24);
-            lblClearDesc.Size = new Size(380, 36);
-            lblClearDesc.AutoSize = false;
-
+            // 
             // btnClearSettings
+            // 
+            btnClearSettings.Location = new Point(10, 68);
+            btnClearSettings.Name = "btnClearSettings";
+            btnClearSettings.Size = new Size(150, 32);
+            btnClearSettings.TabIndex = 1;
             btnClearSettings.Text = "清空 settings.json";
-            btnClearSettings.Location = new Point(10, 60);
-            btnClearSettings.Size = new Size(150, 28);
             btnClearSettings.Click += BtnClearSettings_Click;
-
+            // 
             // SettingsTab
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            // 
+            AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(groupBoxSettings);
+            Name = "SettingsTab";
+            Size = new Size(665, 470);
             groupBoxSettings.ResumeLayout(false);
             ResumeLayout(false);
         }
