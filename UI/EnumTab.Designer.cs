@@ -25,6 +25,8 @@ namespace ConfigExcelEnhancer.UI
             btnStop = new Button();
             pbUpdate = new ProgressBar();
             ctxLog = new ContextMenuStrip(components);
+            ctxMenuItemClearLog = new ToolStripMenuItem();
+            ctxMenuItemCopyLog = new ToolStripMenuItem();
             txtLog = new RichTextBox();
             saveFileDialog1 = new SaveFileDialog();
             SuspendLayout();
@@ -124,10 +126,25 @@ namespace ConfigExcelEnhancer.UI
             pbUpdate.Visible = false;
             // 
             // ctxLog
-            // 
+            //
+            ctxLog.Items.AddRange(new ToolStripItem[] { ctxMenuItemClearLog, ctxMenuItemCopyLog });
             ctxLog.Name = "ctxLog";
-            ctxLog.Size = new Size(61, 4);
-            // 
+            ctxLog.Size = new Size(100, 48);
+            //
+            // ctxMenuItemClearLog
+            //
+            ctxMenuItemClearLog.Name = "ctxMenuItemClearLog";
+            ctxMenuItemClearLog.Size = new Size(99, 22);
+            ctxMenuItemClearLog.Text = "清空";
+            ctxMenuItemClearLog.Click += new EventHandler(btnClearLog_Click);
+            //
+            // ctxMenuItemCopyLog
+            //
+            ctxMenuItemCopyLog.Name = "ctxMenuItemCopyLog";
+            ctxMenuItemCopyLog.Size = new Size(99, 22);
+            ctxMenuItemCopyLog.Text = "复制";
+            ctxMenuItemCopyLog.Click += new EventHandler(btnCopyLog_Click);
+            //
             // txtLog
             // 
             txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -175,6 +192,8 @@ namespace ConfigExcelEnhancer.UI
         private Button btnStop = null!;
         private ProgressBar pbUpdate = null!;
         private ContextMenuStrip ctxLog = null!;
+        private ToolStripMenuItem ctxMenuItemClearLog = null!;
+        private ToolStripMenuItem ctxMenuItemCopyLog = null!;
         private RichTextBox txtLog = null!;
         private SaveFileDialog saveFileDialog1;
     }
