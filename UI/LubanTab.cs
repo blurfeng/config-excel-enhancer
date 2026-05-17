@@ -20,6 +20,10 @@ namespace ConfigExcelEnhancer.UI
         // 是否有未保存的修改（一旦有改动就置 true，重置/保存后清除）
         private bool _isDirty;
 
+        public event EventHandler<bool>? ExecutionStateChanged;
+        private bool _preLockSaveEnabled;
+        private bool _preLockResetEnabled;
+
         public LubanTab()
         {
             InitializeComponent();
@@ -425,6 +429,26 @@ namespace ConfigExcelEnhancer.UI
 
         // ── 执行导表 ──────────────────────────────────────────
 
+        private void SetUILocked(bool locked)
+        {
+            if (locked)
+            {
+                _preLockSaveEnabled = btnSave.Enabled;
+                _preLockResetEnabled = btnReset.Enabled;
+                pnlTop.Enabled = false;
+                tabsCommands.Enabled = false;
+                btnSave.Enabled = false;
+                btnReset.Enabled = false;
+            }
+            else
+            {
+                pnlTop.Enabled = true;
+                tabsCommands.Enabled = true;
+                btnSave.Enabled = _preLockSaveEnabled;
+                btnReset.Enabled = _preLockResetEnabled;
+            }
+        }
+
         private void btnRun_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(Settings.GenBatPath) || !File.Exists(Settings.GenBatPath))
@@ -433,6 +457,8 @@ namespace ConfigExcelEnhancer.UI
                 return;
             }
 
+            SetUILocked(true);
+            ExecutionStateChanged?.Invoke(this, true);
             btnRun.Enabled = false;
             btnCancel.Enabled = true;
             int cmdCount = _config?.Commands.Count ?? 1;
@@ -463,6 +489,8 @@ namespace ConfigExcelEnhancer.UI
                 else
                     Log($"导表失败，退出码：{code}", LogLevel.Error);
                 pbRun.Value = 1000;
+                SetUILocked(false);
+                ExecutionStateChanged?.Invoke(this, false);
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
                 pbRun.Visible = false;
@@ -473,6 +501,8 @@ namespace ConfigExcelEnhancer.UI
             catch (Exception ex)
             {
                 Log($"启动失败：{ex.Message}", LogLevel.Error);
+                SetUILocked(false);
+                ExecutionStateChanged?.Invoke(this, false);
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
                 pbRun.Visible = false;

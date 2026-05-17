@@ -8,6 +8,8 @@ namespace ConfigExcelEnhancer.UI
     {
         private CancellationTokenSource? _cts;
 
+        public event EventHandler<bool>? ExecutionStateChanged;
+
         public TableDesignTab()
         {
             InitializeComponent();
@@ -173,6 +175,22 @@ namespace ConfigExcelEnhancer.UI
 
         // ── Main action ───────────────────────────────────────────────────
 
+        private void SetUILocked(bool locked)
+        {
+            txtSourceExcel.Enabled = !locked;
+            btnBrowseSource.Enabled = !locked;
+            pnlModeGroup.Enabled = !locked;
+            pnlDirMode.Enabled = !locked;
+            pnlListMode.Enabled = !locked;
+            chkIgnoreUnderscoreFiles.Enabled = !locked;
+            pnlScopeGroup.Enabled = !locked;
+            chkIgnoreUnderscoreSheets.Enabled = !locked;
+            txtHeaderSymbol.Enabled = !locked;
+            chkAutoColumnWidth.Enabled = !locked;
+            chkMergeHeaderCells.Enabled = !locked;
+            txtMergeKeywords.Enabled = !locked;
+        }
+
         private async void btnApply_Click(object sender, EventArgs e)
         {
             string sourcePath = txtSourceExcel.Text.Trim();
@@ -192,6 +210,8 @@ namespace ConfigExcelEnhancer.UI
             _cts = new CancellationTokenSource();
             var token = _cts.Token;
 
+            SetUILocked(true);
+            ExecutionStateChanged?.Invoke(this, true);
             btnApply.Enabled = false;
             btnStop.Enabled = true;
             pbApply.Maximum = 1000;
@@ -239,6 +259,8 @@ namespace ConfigExcelEnhancer.UI
             }
             finally
             {
+                SetUILocked(false);
+                ExecutionStateChanged?.Invoke(this, false);
                 btnApply.Enabled = true;
                 btnStop.Enabled = false;
                 pbApply.Visible = false;

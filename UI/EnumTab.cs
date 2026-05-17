@@ -10,6 +10,8 @@ namespace ConfigExcelEnhancer.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
+        public event EventHandler<bool>? ExecutionStateChanged;
+
         private CancellationTokenSource? _cts;
 
         public EnumTab()
@@ -75,6 +77,15 @@ namespace ConfigExcelEnhancer.UI
 
         // ── 核心流程 ──────────────────────────────────────────
 
+        private void SetUILocked(bool locked)
+        {
+            txtXmlDir.Enabled = !locked;
+            btnBrowseXml.Enabled = !locked;
+            txtExcelDir.Enabled = !locked;
+            btnBrowseExcel.Enabled = !locked;
+            chkHideEnumDataSheet.Enabled = !locked;
+        }
+
         private async void btnUpdate_Click(object sender, EventArgs e)
         {
             var xmlDir   = txtXmlDir.Text.Trim();
@@ -94,6 +105,8 @@ namespace ConfigExcelEnhancer.UI
             _cts = new CancellationTokenSource();
             var token = _cts.Token;
 
+            SetUILocked(true);
+            ExecutionStateChanged?.Invoke(this, true);
             btnUpdate.Enabled = false;
             btnStop.Enabled = true;
             pbUpdate.Maximum = 1000;
@@ -199,6 +212,8 @@ namespace ConfigExcelEnhancer.UI
             }
             finally
             {
+                SetUILocked(false);
+                ExecutionStateChanged?.Invoke(this, false);
                 btnUpdate.Enabled = true;
                 btnStop.Enabled = false;
                 pbUpdate.Visible = false;
