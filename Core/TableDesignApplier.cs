@@ -478,6 +478,22 @@ namespace ConfigExcelEnhancer.Core
                     destCell.FormulaA1 = cell.FormulaA1;
                 else
                     destCell.Value = cell.Value;
+
+                // 保留单元格注释
+                if (cell.HasComment)
+                {
+                    var srcComment = cell.GetComment();
+                    var dstComment = destCell.CreateComment();
+                    dstComment.SetAuthor(srcComment.Author);
+                    foreach (var richStr in srcComment)
+                    {
+                        var added = dstComment.AddText(richStr.Text);
+                        added.SetBold(richStr.Bold);
+                        added.SetFontSize(richStr.FontSize);
+                        added.SetFontName(richStr.FontName);
+                        added.SetFontColor(richStr.FontColor);
+                    }
+                }
             }
         }
 
