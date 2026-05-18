@@ -23,9 +23,10 @@ namespace ConfigExcelEnhancer.UI
             // 
             groupBoxSettings.Controls.Add(lblClearDesc);
             groupBoxSettings.Controls.Add(btnClearSettings);
+            groupBoxSettings.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             groupBoxSettings.Location = new Point(12, 14);
             groupBoxSettings.Name = "groupBoxSettings";
-            groupBoxSettings.Size = new Size(460, 113);
+            groupBoxSettings.Size = new Size(641, 113);
             groupBoxSettings.TabIndex = 0;
             groupBoxSettings.TabStop = false;
             groupBoxSettings.Text = "settings.json";

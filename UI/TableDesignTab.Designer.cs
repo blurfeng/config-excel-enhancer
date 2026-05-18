@@ -14,6 +14,7 @@ namespace ConfigExcelEnhancer.UI
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            pnlConfig = new Panel();
             lblSourceExcel = new Label();
             txtSourceExcel = new TextBox();
             btnBrowseSource = new Button();
@@ -29,6 +30,7 @@ namespace ConfigExcelEnhancer.UI
             btnAddFiles = new Button();
             btnRemoveFiles = new Button();
             btnClearFiles = new Button();
+            grpOptions = new GroupBox();
             chkIgnoreUnderscoreFiles = new CheckBox();
             lblSheetScope = new Label();
             pnlScopeGroup = new Panel();
@@ -48,12 +50,33 @@ namespace ConfigExcelEnhancer.UI
             ctxMenuItemClearLog = new ToolStripMenuItem();
             ctxMenuItemCopyLog = new ToolStripMenuItem();
             txtLog = new RichTextBox();
+            pnlConfig.SuspendLayout();
             pnlModeGroup.SuspendLayout();
             pnlDirMode.SuspendLayout();
             pnlListMode.SuspendLayout();
+            grpOptions.SuspendLayout();
             pnlScopeGroup.SuspendLayout();
             ctxLog.SuspendLayout();
             SuspendLayout();
+            // 
+            // pnlConfig
+            // 
+            pnlConfig.Controls.Add(lblSourceExcel);
+            pnlConfig.Controls.Add(txtSourceExcel);
+            pnlConfig.Controls.Add(btnBrowseSource);
+            pnlConfig.Controls.Add(lblTargetMode);
+            pnlConfig.Controls.Add(pnlModeGroup);
+            pnlConfig.Controls.Add(pnlDirMode);
+            pnlConfig.Controls.Add(pnlListMode);
+            pnlConfig.Controls.Add(grpOptions);
+            pnlConfig.Controls.Add(btnApply);
+            pnlConfig.Controls.Add(btnStop);
+            pnlConfig.Controls.Add(pbApply);
+            pnlConfig.Dock = DockStyle.Top;
+            pnlConfig.Location = new Point(0, 0);
+            pnlConfig.Name = "pnlConfig";
+            pnlConfig.Size = new Size(665, 382);
+            pnlConfig.TabIndex = 0;
             // 
             // lblSourceExcel
             // 
@@ -128,7 +151,7 @@ namespace ConfigExcelEnhancer.UI
             pnlDirMode.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             pnlDirMode.Controls.Add(txtTargetDir);
             pnlDirMode.Controls.Add(btnBrowseTargetDir);
-            pnlDirMode.Location = new Point(12, 77);
+            pnlDirMode.Location = new Point(12, 82);
             pnlDirMode.Name = "pnlDirMode";
             pnlDirMode.Size = new Size(641, 102);
             pnlDirMode.TabIndex = 6;
@@ -136,7 +159,7 @@ namespace ConfigExcelEnhancer.UI
             // txtTargetDir
             // 
             txtTargetDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtTargetDir.Location = new Point(0, 3);
+            txtTargetDir.Location = new Point(0, 4);
             txtTargetDir.Name = "txtTargetDir";
             txtTargetDir.Size = new Size(555, 23);
             txtTargetDir.TabIndex = 0;
@@ -159,7 +182,7 @@ namespace ConfigExcelEnhancer.UI
             pnlListMode.Controls.Add(btnAddFiles);
             pnlListMode.Controls.Add(btnRemoveFiles);
             pnlListMode.Controls.Add(btnClearFiles);
-            pnlListMode.Location = new Point(12, 77);
+            pnlListMode.Location = new Point(12, 82);
             pnlListMode.Name = "pnlListMode";
             pnlListMode.Size = new Size(641, 102);
             pnlListMode.TabIndex = 7;
@@ -178,9 +201,9 @@ namespace ConfigExcelEnhancer.UI
             // btnAddFiles
             // 
             btnAddFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnAddFiles.Location = new Point(561, 0);
+            btnAddFiles.Location = new Point(561, -4);
             btnAddFiles.Name = "btnAddFiles";
-            btnAddFiles.Size = new Size(75, 31);
+            btnAddFiles.Size = new Size(75, 28);
             btnAddFiles.TabIndex = 1;
             btnAddFiles.Text = "添加...";
             btnAddFiles.Click += btnAddFiles_Click;
@@ -188,9 +211,9 @@ namespace ConfigExcelEnhancer.UI
             // btnRemoveFiles
             // 
             btnRemoveFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnRemoveFiles.Location = new Point(561, 34);
+            btnRemoveFiles.Location = new Point(561, 28);
             btnRemoveFiles.Name = "btnRemoveFiles";
-            btnRemoveFiles.Size = new Size(75, 31);
+            btnRemoveFiles.Size = new Size(75, 28);
             btnRemoveFiles.TabIndex = 2;
             btnRemoveFiles.Text = "移除选中";
             btnRemoveFiles.Click += btnRemoveFiles_Click;
@@ -198,19 +221,39 @@ namespace ConfigExcelEnhancer.UI
             // btnClearFiles
             // 
             btnClearFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnClearFiles.Location = new Point(561, 68);
+            btnClearFiles.Location = new Point(561, 62);
             btnClearFiles.Name = "btnClearFiles";
-            btnClearFiles.Size = new Size(75, 31);
+            btnClearFiles.Size = new Size(75, 28);
             btnClearFiles.TabIndex = 3;
             btnClearFiles.Text = "清空";
             btnClearFiles.Click += btnClearFiles_Click;
+            // 
+            // grpOptions
+            // 
+            grpOptions.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            grpOptions.Controls.Add(chkIgnoreUnderscoreFiles);
+            grpOptions.Controls.Add(lblSheetScope);
+            grpOptions.Controls.Add(pnlScopeGroup);
+            grpOptions.Controls.Add(chkIgnoreUnderscoreSheets);
+            grpOptions.Controls.Add(lblHeaderSymbol);
+            grpOptions.Controls.Add(txtHeaderSymbol);
+            grpOptions.Controls.Add(chkAutoColumnWidth);
+            grpOptions.Controls.Add(chkMergeHeaderCells);
+            grpOptions.Controls.Add(lblMergeKeywords);
+            grpOptions.Controls.Add(txtMergeKeywords);
+            grpOptions.Location = new Point(12, 190);
+            grpOptions.Name = "grpOptions";
+            grpOptions.Size = new Size(641, 140);
+            grpOptions.TabIndex = 8;
+            grpOptions.TabStop = false;
+            grpOptions.Text = "选项";
             // 
             // chkIgnoreUnderscoreFiles
             // 
             chkIgnoreUnderscoreFiles.AutoSize = true;
             chkIgnoreUnderscoreFiles.Checked = true;
             chkIgnoreUnderscoreFiles.CheckState = CheckState.Checked;
-            chkIgnoreUnderscoreFiles.Location = new Point(12, 183);
+            chkIgnoreUnderscoreFiles.Location = new Point(10, 22);
             chkIgnoreUnderscoreFiles.Name = "chkIgnoreUnderscoreFiles";
             chkIgnoreUnderscoreFiles.Size = new Size(121, 21);
             chkIgnoreUnderscoreFiles.TabIndex = 8;
@@ -219,17 +262,18 @@ namespace ConfigExcelEnhancer.UI
             // 
             // lblSheetScope
             // 
-            lblSheetScope.Location = new Point(8, 215);
+            lblSheetScope.Location = new Point(8, 50);
             lblSheetScope.Name = "lblSheetScope";
-            lblSheetScope.Size = new Size(87, 19);
+            lblSheetScope.Size = new Size(87, 21);
             lblSheetScope.TabIndex = 9;
             lblSheetScope.Text = "Sheet 范围：";
+            lblSheetScope.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // pnlScopeGroup
             // 
             pnlScopeGroup.Controls.Add(rdoScopeAll);
             pnlScopeGroup.Controls.Add(rdoScopeFirst);
-            pnlScopeGroup.Location = new Point(95, 210);
+            pnlScopeGroup.Location = new Point(92, 45);
             pnlScopeGroup.Name = "pnlScopeGroup";
             pnlScopeGroup.Size = new Size(121, 29);
             pnlScopeGroup.TabIndex = 10;
@@ -261,7 +305,7 @@ namespace ConfigExcelEnhancer.UI
             chkIgnoreUnderscoreSheets.AutoSize = true;
             chkIgnoreUnderscoreSheets.Checked = true;
             chkIgnoreUnderscoreSheets.CheckState = CheckState.Checked;
-            chkIgnoreUnderscoreSheets.Location = new Point(237, 214);
+            chkIgnoreUnderscoreSheets.Location = new Point(230, 50);
             chkIgnoreUnderscoreSheets.Name = "chkIgnoreUnderscoreSheets";
             chkIgnoreUnderscoreSheets.Size = new Size(129, 21);
             chkIgnoreUnderscoreSheets.TabIndex = 11;
@@ -271,7 +315,7 @@ namespace ConfigExcelEnhancer.UI
             // lblHeaderSymbol
             // 
             lblHeaderSymbol.AutoSize = true;
-            lblHeaderSymbol.Location = new Point(9, 252);
+            lblHeaderSymbol.Location = new Point(10, 78);
             lblHeaderSymbol.Name = "lblHeaderSymbol";
             lblHeaderSymbol.Size = new Size(68, 17);
             lblHeaderSymbol.TabIndex = 12;
@@ -279,7 +323,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // txtHeaderSymbol
             // 
-            txtHeaderSymbol.Location = new Point(84, 249);
+            txtHeaderSymbol.Location = new Point(82, 75);
             txtHeaderSymbol.Name = "txtHeaderSymbol";
             txtHeaderSymbol.Size = new Size(65, 23);
             txtHeaderSymbol.TabIndex = 13;
@@ -291,7 +335,7 @@ namespace ConfigExcelEnhancer.UI
             chkAutoColumnWidth.AutoSize = true;
             chkAutoColumnWidth.Checked = true;
             chkAutoColumnWidth.CheckState = CheckState.Checked;
-            chkAutoColumnWidth.Location = new Point(169, 249);
+            chkAutoColumnWidth.Location = new Point(160, 78);
             chkAutoColumnWidth.Name = "chkAutoColumnWidth";
             chkAutoColumnWidth.Size = new Size(147, 21);
             chkAutoColumnWidth.TabIndex = 14;
@@ -303,7 +347,7 @@ namespace ConfigExcelEnhancer.UI
             chkMergeHeaderCells.AutoSize = true;
             chkMergeHeaderCells.Checked = true;
             chkMergeHeaderCells.CheckState = CheckState.Checked;
-            chkMergeHeaderCells.Location = new Point(12, 281);
+            chkMergeHeaderCells.Location = new Point(10, 106);
             chkMergeHeaderCells.Name = "chkMergeHeaderCells";
             chkMergeHeaderCells.Size = new Size(135, 21);
             chkMergeHeaderCells.TabIndex = 15;
@@ -313,7 +357,7 @@ namespace ConfigExcelEnhancer.UI
             // lblMergeKeywords
             // 
             lblMergeKeywords.AutoSize = true;
-            lblMergeKeywords.Location = new Point(175, 281);
+            lblMergeKeywords.Location = new Point(155, 109);
             lblMergeKeywords.Name = "lblMergeKeywords";
             lblMergeKeywords.Size = new Size(121, 17);
             lblMergeKeywords.TabIndex = 16;
@@ -321,19 +365,20 @@ namespace ConfigExcelEnhancer.UI
             // 
             // txtMergeKeywords
             // 
-            txtMergeKeywords.Location = new Point(303, 278);
+            txtMergeKeywords.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtMergeKeywords.Location = new Point(283, 106);
             txtMergeKeywords.Name = "txtMergeKeywords";
             txtMergeKeywords.PlaceholderText = "##type,1,2（逗号或分号分隔）";
-            txtMergeKeywords.Size = new Size(182, 23);
+            txtMergeKeywords.Size = new Size(346, 23);
             txtMergeKeywords.TabIndex = 17;
             txtMergeKeywords.Text = "##type";
             txtMergeKeywords.TextChanged += txtMergeKeywords_TextChanged;
             // 
             // btnApply
             // 
-            btnApply.Location = new Point(12, 316);
+            btnApply.Location = new Point(12, 342);
             btnApply.Name = "btnApply";
-            btnApply.Size = new Size(120, 32);
+            btnApply.Size = new Size(110, 32);
             btnApply.TabIndex = 18;
             btnApply.Text = "应用表设计";
             btnApply.Click += btnApply_Click;
@@ -341,9 +386,9 @@ namespace ConfigExcelEnhancer.UI
             // btnStop
             // 
             btnStop.Enabled = false;
-            btnStop.Location = new Point(140, 316);
+            btnStop.Location = new Point(130, 342);
             btnStop.Name = "btnStop";
-            btnStop.Size = new Size(75, 32);
+            btnStop.Size = new Size(80, 32);
             btnStop.TabIndex = 19;
             btnStop.Text = "停止";
             btnStop.Click += btnStop_Click;
@@ -351,9 +396,9 @@ namespace ConfigExcelEnhancer.UI
             // pbApply
             // 
             pbApply.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            pbApply.Location = new Point(223, 321);
+            pbApply.Location = new Point(220, 347);
             pbApply.Name = "pbApply";
-            pbApply.Size = new Size(430, 23);
+            pbApply.Size = new Size(433, 23);
             pbApply.TabIndex = 20;
             pbApply.Visible = false;
             // 
@@ -379,16 +424,16 @@ namespace ConfigExcelEnhancer.UI
             // 
             // txtLog
             // 
-            txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             txtLog.BackColor = Color.FromArgb(30, 30, 30);
             txtLog.ContextMenuStrip = ctxLog;
+            txtLog.Dock = DockStyle.Fill;
             txtLog.Font = new Font("Consolas", 9F);
             txtLog.ForeColor = Color.LightGreen;
-            txtLog.Location = new Point(0, 360);
+            txtLog.Location = new Point(0, 382);
             txtLog.Name = "txtLog";
             txtLog.ReadOnly = true;
             txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
-            txtLog.Size = new Size(665, 160);
+            txtLog.Size = new Size(665, 148);
             txtLog.TabIndex = 21;
             txtLog.Text = "";
             // 
@@ -396,41 +441,26 @@ namespace ConfigExcelEnhancer.UI
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(lblSourceExcel);
-            Controls.Add(txtSourceExcel);
-            Controls.Add(btnBrowseSource);
-            Controls.Add(lblTargetMode);
-            Controls.Add(pnlModeGroup);
-            Controls.Add(pnlDirMode);
-            Controls.Add(pnlListMode);
-            Controls.Add(chkIgnoreUnderscoreFiles);
-            Controls.Add(lblSheetScope);
-            Controls.Add(pnlScopeGroup);
-            Controls.Add(chkIgnoreUnderscoreSheets);
-            Controls.Add(lblHeaderSymbol);
-            Controls.Add(txtHeaderSymbol);
-            Controls.Add(chkAutoColumnWidth);
-            Controls.Add(chkMergeHeaderCells);
-            Controls.Add(lblMergeKeywords);
-            Controls.Add(txtMergeKeywords);
-            Controls.Add(btnApply);
-            Controls.Add(btnStop);
-            Controls.Add(pbApply);
             Controls.Add(txtLog);
+            Controls.Add(pnlConfig);
             Name = "TableDesignTab";
             Size = new Size(665, 530);
+            pnlConfig.ResumeLayout(false);
+            pnlConfig.PerformLayout();
             pnlModeGroup.ResumeLayout(false);
             pnlModeGroup.PerformLayout();
             pnlDirMode.ResumeLayout(false);
             pnlDirMode.PerformLayout();
             pnlListMode.ResumeLayout(false);
+            grpOptions.ResumeLayout(false);
+            grpOptions.PerformLayout();
             pnlScopeGroup.ResumeLayout(false);
             pnlScopeGroup.PerformLayout();
             ctxLog.ResumeLayout(false);
             ResumeLayout(false);
-            PerformLayout();
         }
 
+        private Panel pnlConfig = null!;
         private Label lblSourceExcel = null!;
         private TextBox txtSourceExcel = null!;
         private Button btnBrowseSource = null!;
@@ -446,6 +476,7 @@ namespace ConfigExcelEnhancer.UI
         private Button btnAddFiles = null!;
         private Button btnRemoveFiles = null!;
         private Button btnClearFiles = null!;
+        private GroupBox grpOptions = null!;
         private CheckBox chkIgnoreUnderscoreFiles = null!;
         private Label lblSheetScope = null!;
         private Panel pnlScopeGroup = null!;
@@ -464,6 +495,6 @@ namespace ConfigExcelEnhancer.UI
         private ContextMenuStrip ctxLog = null!;
         private ToolStripMenuItem ctxMenuItemClearLog = null!;
         private ToolStripMenuItem ctxMenuItemCopyLog = null!;
-        private RichTextBox txtLog;
+        private RichTextBox txtLog = null!;
     }
 }
