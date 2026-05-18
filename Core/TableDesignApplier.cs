@@ -21,7 +21,7 @@ namespace ConfigExcelEnhancer.Core
     {
         public static void Apply(
             TableDesignOptions options,
-            IProgress<(int current, int total, string fileName)> progress,
+            IProgress<string> progress,
             Action<string, LogLevel> log,
             CancellationToken token)
         {
@@ -40,7 +40,7 @@ namespace ConfigExcelEnhancer.Core
                 token.ThrowIfCancellationRequested();
                 string targetPath = options.TargetFiles[i];
                 string fileName = Path.GetFileName(targetPath);
-                progress.Report((i, total, fileName));
+                progress.Report(fileName);
 
                 if (options.IgnoreUnderscoreFiles && fileName.StartsWith("__"))
                 {
@@ -73,7 +73,7 @@ namespace ConfigExcelEnhancer.Core
                 }
             }
 
-            progress.Report((total, total, string.Empty));
+            progress.Report(string.Empty);
 
             // Enum 验证——应用表设计后强制重写所有枚举列验证规则
             if (!string.IsNullOrWhiteSpace(options.XmlDirectory) && savedFiles.Count > 0)

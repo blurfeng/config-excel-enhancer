@@ -3,10 +3,15 @@ using ConfigExcelEnhancer.Models;
 
 namespace ConfigExcelEnhancer.Core
 {
+    /// <summary>
+    /// 从 XML Schema 文件中扫描枚举（enum）定义。
+    /// 支持 Luban 格式的 &lt;var&gt; 和 &lt;option&gt; 两种子元素写法。
+    /// </summary>
     public class EnumScanner
     {
         /// <summary>
-        /// 扫描目录下所有 .xml 文件，读取所有 &lt;enum&gt; 定义。
+        /// 递归扫描目录下所有 .xml 文件，提取其中的 &lt;enum&gt; 定义。
+        /// 同名枚举以后读取的文件为准（后者覆盖前者）。
         /// </summary>
         public static List<EnumInfo> ScanDirectory(string xmlDirectory)
         {
@@ -29,6 +34,11 @@ namespace ConfigExcelEnhancer.Core
             return [.. result.Values];
         }
 
+        /// <summary>
+        /// 解析单个 XML 文件，提取所有 &lt;enum&gt; 元素及其选项。
+        /// 每个枚举的选项从 &lt;var&gt; 或 &lt;option&gt; 子元素的 name/value 属性读取；
+        /// 无选项的枚举（空 enum）会被忽略。
+        /// </summary>
         private static List<EnumInfo> ScanFile(string filePath)
         {
             var doc = XDocument.Load(filePath);
@@ -41,6 +51,7 @@ namespace ConfigExcelEnhancer.Core
 
                 var info = new EnumInfo { Name = name };
 
+                // 兼容两种子元素写法：Luban 新版用 <var>，旧版用 <option>
                 foreach (var optionEl in enumEl.Elements("var").Concat(enumEl.Elements("option")))
                 {
                     var optName = (string?)optionEl.Attribute("name");

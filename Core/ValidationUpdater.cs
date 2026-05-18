@@ -21,32 +21,7 @@ namespace ConfigExcelEnhancer.Core
             bool forceRewrite = false)
         {
             var enumMap = enums.ToDictionary(e => e.Name, StringComparer.Ordinal);
-            var results = new List<UpdateResult>();
-
-            foreach (var file in filePaths.Where(f => !Path.GetFileName(f).StartsWith("~$")))
-            {
-                var result = new UpdateResult { FilePath = file };
-
-                try
-                {
-                    UpdateWorkbook(file, enumMap, hideEnumDataSheet, result, forceRewrite);
-                }
-                catch (IOException ioEx)
-                {
-                    result.WasSkipped = true;
-                    result.SkipReason = ioEx.Message;
-                }
-                catch (Exception ex)
-                {
-                    result.HasError = true;
-                    result.ErrorMessage = ex.Message;
-                }
-
-                results.Add(result);
-                onFileProcessed(result);
-            }
-
-            return results;
+            return ProcessFiles(filePaths, enumMap, hideEnumDataSheet, onFileProcessed, forceRewrite);
         }
 
         /// <summary>
@@ -60,10 +35,24 @@ namespace ConfigExcelEnhancer.Core
             bool forceRewrite = false)
         {
             var enumMap = enums.ToDictionary(e => e.Name, StringComparer.Ordinal);
+            var files = Directory.EnumerateFiles(excelDirectory, "*.xlsx", SearchOption.AllDirectories);
+            return ProcessFiles(files, enumMap, hideEnumDataSheet, onFileProcessed, forceRewrite);
+        }
+
+        /// <summary>
+        /// 遍历文件序列，逐个调用 UpdateWorkbook，统一处理 try/catch 和结果收集。
+        /// 临时文件（~$ 开头）自动跳过。
+        /// </summary>
+        private static List<UpdateResult> ProcessFiles(
+            IEnumerable<string> files,
+            Dictionary<string, EnumInfo> enumMap,
+            bool hideEnumDataSheet,
+            Action<UpdateResult> onFileProcessed,
+            bool forceRewrite)
+        {
             var results = new List<UpdateResult>();
 
-            foreach (var file in Directory.EnumerateFiles(excelDirectory, "*.xlsx", SearchOption.AllDirectories)
-                                          .Where(f => !Path.GetFileName(f).StartsWith("~$")))
+            foreach (var file in files.Where(f => !Path.GetFileName(f).StartsWith("~$")))
             {
                 var result = new UpdateResult { FilePath = file };
 

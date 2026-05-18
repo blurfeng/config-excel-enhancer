@@ -4,10 +4,16 @@ using ConfigExcelEnhancer.Models;
 
 namespace ConfigExcelEnhancer.UI
 {
+    /// <summary>
+    /// 表格设计选项卡。从模板 Excel 将样式（表头行、列宽、单元格合并等）应用到目标 Excel 文件，
+    /// 并可选地在应用后强制更新枚举验证规则和刷新公式缓存。
+    /// </summary>
     public partial class TableDesignTab : UserControl
     {
+        // 当前运行任务的取消令牌源；未运行时为 null
         private CancellationTokenSource? _cts;
 
+        /// <summary>任务执行状态变化时触发（true = 开始执行，false = 执行结束）。</summary>
         public event EventHandler<bool>? ExecutionStateChanged;
 
         public TableDesignTab()
@@ -18,8 +24,10 @@ namespace ConfigExcelEnhancer.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
+        /// <summary>取消当前正在进行的任务（供窗口关闭时调用）。</summary>
         public void CancelRunningTask() => _cts?.Cancel();
 
+        /// <summary>将 AppSettings 的值同步到界面控件。</summary>
         public void LoadFromSettings()
         {
             txtSourceExcel.Text = Settings.TableDesignSourceExcel;
@@ -54,13 +62,14 @@ namespace ConfigExcelEnhancer.UI
             UpdateTargetModeVisibility();
         }
 
+        // 根据当前目标模式单选钮切换显示目录面板或列表面板
         private void UpdateTargetModeVisibility()
         {
             pnlDirMode.Visible = rdoDirectory.Checked;
             pnlListMode.Visible = rdoList.Checked;
         }
 
-        // ── Settings sync ─────────────────────────────────────────────────
+        // ── 设置同步 ──────────────────────────────────────────────────────
 
         private void txtSourceExcel_TextChanged(object sender, EventArgs e)
             => Settings.TableDesignSourceExcel = txtSourceExcel.Text;
@@ -116,7 +125,7 @@ namespace ConfigExcelEnhancer.UI
         private void txtMergeKeywords_TextChanged(object sender, EventArgs e)
             => Settings.TableDesignMergeHeaderKeywords = txtMergeKeywords.Text;
 
-        // ── Browse handlers ───────────────────────────────────────────────
+        // ── 文件 / 目录浏览 ───────────────────────────────────────────────
 
         private void btnBrowseSource_Click(object sender, EventArgs e)
         {
@@ -162,11 +171,13 @@ namespace ConfigExcelEnhancer.UI
             SyncTargetFilesToSettings();
         }
 
+        // 将列表框当前内容同步回 Settings，确保持久化时包含最新文件列表
         private void SyncTargetFilesToSettings()
             => Settings.TableDesignTargetFiles = lstTargetFiles.Items.Cast<string>().ToList();
 
-        // ── Main action ───────────────────────────────────────────────────
+        // ── 主流程 ────────────────────────────────────────────────────────
 
+        // 执行期间锁定所有输入控件，防止用户在任务运行时修改参数
         private void SetUILocked(bool locked)
         {
             txtSourceExcel.Enabled = !locked;
@@ -227,7 +238,7 @@ namespace ConfigExcelEnhancer.UI
 
             int processed = 0;
             int total = targetFiles.Count;
-            var progress = new Progress<(int current, int total, string fileName)>(p =>
+            var progress = new Progress<string>(_ =>
             {
                 processed++;
                 int v = total > 0 ? 100 + (int)(processed * 800.0 / total) : 900;
@@ -269,6 +280,11 @@ namespace ConfigExcelEnhancer.UI
             btnStop.Enabled = false;
         }
 
+        /// <summary>
+        /// 根据当前目标模式构建目标文件列表。
+        /// 目录模式：枚举目录顶层的 xlsx（排除临时文件和模板文件本身）；
+        /// 列表模式：过滤掉已被删除的文件后返回。
+        /// </summary>
         private List<string> BuildTargetFileList()
         {
             if (rdoDirectory.Checked)
@@ -292,7 +308,7 @@ namespace ConfigExcelEnhancer.UI
             }
         }
 
-        // ── Log helpers ───────────────────────────────────────────────────
+        // ── 日志工具 ──────────────────────────────────────────────────────
 
         private void Log(string message, LogLevel level = LogLevel.Ok)
             => LogLibrary.Write(txtLog, message, level);

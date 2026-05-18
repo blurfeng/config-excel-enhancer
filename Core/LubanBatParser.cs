@@ -4,8 +4,14 @@ using ConfigExcelEnhancer.Models;
 
 namespace ConfigExcelEnhancer.Core
 {
+    /// <summary>
+    /// 解析和写回 Luban gen.bat 文件。
+    /// 支持提取 set 变量、echo 标签和 dotnet 命令块（含多行续行符 ^）；
+    /// 保存时保留原始文件的格式和注释，只替换已知字段的值。
+    /// </summary>
     public partial class LubanBatParser
     {
+        // 匹配 set VAR=value 行，捕获前缀空白、变量名、等号和值四个分组
         [GeneratedRegex(@"^(\s*set\s+)(\w+)(=)(.*)$", RegexOptions.IgnoreCase)]
         private static partial Regex SetVarRegex();
 
@@ -13,6 +19,10 @@ namespace ConfigExcelEnhancer.Core
         [GeneratedRegex(@"-x\s+([\w.]+)=([^\s^]+)")]
         private static partial Regex XArgRegex();
 
+        /// <summary>
+        /// 解析 gen.bat 文件，提取全局 set 变量和所有 dotnet 命令块。
+        /// echo 行中的非分隔符文本会被捕获为紧随其后的 dotnet 命令块的标签。
+        /// </summary>
         public static LubanConfig Parse(string batFilePath)
         {
             var config = new LubanConfig { BatFilePath = batFilePath };
@@ -75,6 +85,9 @@ namespace ConfigExcelEnhancer.Core
             return config;
         }
 
+        /// <summary>
+        /// 从合并后的 dotnet 命令行字符串中提取标准参数（-t/-d/-c/--conf）和扩展参数（-x key=value）。
+        /// </summary>
         private static void ParseCommandArgs(string cmdLine, LubanDotnetCommand cmd)
         {
             var tokens = cmdLine.Split((char[])[' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
