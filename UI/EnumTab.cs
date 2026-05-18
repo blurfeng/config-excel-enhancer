@@ -225,6 +225,8 @@ namespace ConfigExcelEnhancer.UI
                 pbUpdate.Visible = false;
                 _cts?.Dispose();
                 _cts = null;
+                Log("─ 结束 ─", LogLevel.Info);
+                LogDivider();
             }
         }
 

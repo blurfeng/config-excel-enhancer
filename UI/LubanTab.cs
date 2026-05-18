@@ -494,6 +494,8 @@ namespace ConfigExcelEnhancer.UI
                 btnCancel.Enabled = false;
                 pbRun.Visible = false;
                 _runner = null;
+                Log("─ 结束 ─", LogLevel.Info);
+                LogDivider();
             });
 
             try { _runner.Run(Settings.GenBatPath); }
