@@ -63,12 +63,16 @@ namespace ConfigExcelEnhancer.UI
         private void chkForceRewrite_CheckedChanged(object sender, EventArgs e)
             => Settings.EnumForceRewrite = chkForceRewrite.Checked;
 
+        private void chkBoolValidation_CheckedChanged(object sender, EventArgs e)
+            => Settings.BoolValidation = chkBoolValidation.Checked;
+
         public void LoadFromSettings()
         {
             txtXmlDir.Text = Settings.XmlDirectory;
             txtExcelDir.Text = Settings.ExcelDirectory;
             chkHideEnumDataSheet.Checked = Settings.HideEnumDataSheet;
             chkForceRewrite.Checked = Settings.EnumForceRewrite;
+            chkBoolValidation.Checked = Settings.BoolValidation;
         }
 
         // ── 核心流程 ──────────────────────────────────────────
@@ -81,6 +85,7 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseExcel.Enabled = !locked;
             chkHideEnumDataSheet.Enabled = !locked;
             chkForceRewrite.Enabled = !locked;
+            chkBoolValidation.Enabled = !locked;
         }
 
         private async void btnUpdate_Click(object sender, EventArgs e)
@@ -90,12 +95,12 @@ namespace ConfigExcelEnhancer.UI
 
             if (!Directory.Exists(xmlDir))
             {
-                Log("XML 目录不存在。", LogLevel.Error);
+                Log("数据定义 XML 目录不存在。", LogLevel.Error);
                 return;
             }
             if (!Directory.Exists(excelDir))
             {
-                Log("Excel 目录不存在。", LogLevel.Error);
+                Log("Excel 配置目录不存在。", LogLevel.Error);
                 return;
             }
 
@@ -113,8 +118,8 @@ namespace ConfigExcelEnhancer.UI
 
             try
             {
-                // ── 步骤1：扫描 XML ──────────────────────────
-                Log("扫描 XML Enum 定义...", LogLevel.Info);
+                // ── 步骤1：扫描数据定义 XML ──────────────────────────
+                Log("扫描数据定义 XML Enum 定义...", LogLevel.Info);
                 var sw = Stopwatch.StartNew();
 
                 List<EnumInfo> enums = await Task.Run(() => EnumScanner.ScanDirectory(xmlDir), token);
@@ -124,7 +129,7 @@ namespace ConfigExcelEnhancer.UI
 
                 if (enums.Count == 0)
                 {
-                    Log("未找到任何 Enum 定义，请检查 XML 目录。", LogLevel.Warn);
+                    Log("未找到任何 Enum 定义，请检查数据定义 XML 目录。", LogLevel.Warn);
                     return;
                 }
 
@@ -144,11 +149,29 @@ namespace ConfigExcelEnhancer.UI
                         Log($"  ⚠ {ei.Name} 没有 value=0 的选项，默认将使用第一项：{ei.Options.FirstOrDefault()?.Name}", LogLevel.Warn);
                 }
 
-                // 扫描 bean 字段枚举映射（数据结构中使用了枚举类型的字段）
+                // 布尔值验证：注入合成 bool 枚举（Name="bool"，选项 FALSE/TRUE）
+                // 将 "bool" 加入 enumNameSet，使 ScanBeanEnumFields 也能识别 bean 内的 bool 字段
+                var enumsForValidation = enums.ToList();
+                if (Settings.BoolValidation)
+                {
+                    enumNameSet.Add("bool");
+                    enumsForValidation.Add(new EnumInfo
+                    {
+                        Name = "bool",
+                        Options =
+                        [
+                            new EnumOption { Name = "FALSE", Value = "0" },
+                            new EnumOption { Name = "TRUE",  Value = "1" }
+                        ]
+                    });
+                    Log("布尔值数据验证已启用（FALSE/TRUE）。", LogLevel.Info);
+                }
+
+                // 扫描 bean 字段枚举映射（数据结构中使用了枚举或 bool 类型的字段）
                 var beanFieldEnumMap = await Task.Run(
                     () => EnumScanner.ScanBeanEnumFields(xmlDir, enumNameSet), token);
                 if (beanFieldEnumMap.Count > 0)
-                    Log($"找到 {beanFieldEnumMap.Count} 个含枚举字段的 Bean。", LogLevel.Info);
+                    Log($"找到 {beanFieldEnumMap.Count} 个含枚举/布尔字段的 Bean。", LogLevel.Info);
 
                 pbUpdate.Value = 200;
 
@@ -163,7 +186,7 @@ namespace ConfigExcelEnhancer.UI
                 var results = await Task.Run(() =>
                     ValidationUpdater.UpdateDirectory(
                         excelDir,
-                        enums,
+                        enumsForValidation,
                         chkHideEnumDataSheet.Checked,
                         result =>
                         {

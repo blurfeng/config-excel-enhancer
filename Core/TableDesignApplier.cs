@@ -14,7 +14,8 @@ namespace ConfigExcelEnhancer.Core
         bool MergeHeaderCells,
         string MergeHeaderKeywords,
         string XmlDirectory = "",       // 指定时在表设计后自动强制更新 Enum 验证
-        bool HideEnumDataSheet = true   // 强制更新 Enum 验证时是否隐藏 __enum_data
+        bool HideEnumDataSheet = true,  // 强制更新 Enum 验证时是否隐藏 __enum_data
+        bool BoolValidation = true      // 是否为 bool 列添加 TRUE/FALSE 数据验证
     );
 
     public static class TableDesignApplier
@@ -84,10 +85,24 @@ namespace ConfigExcelEnhancer.Core
                 {
                     log($"找到 {enums.Count} 个 Enum，正在强制更新验证规则...", LogLevel.Info);
                     var enumNameSet = enums.Select(e => e.Name).ToHashSet(StringComparer.Ordinal);
+                    var enumsForValidation = enums.ToList();
+                    if (options.BoolValidation)
+                    {
+                        enumNameSet.Add("bool");
+                        enumsForValidation.Add(new EnumInfo
+                        {
+                            Name = "bool",
+                            Options =
+                            [
+                                new EnumOption { Name = "FALSE", Value = "0" },
+                                new EnumOption { Name = "TRUE",  Value = "1" }
+                            ]
+                        });
+                    }
                     var beanFieldEnumMap = EnumScanner.ScanBeanEnumFields(options.XmlDirectory, enumNameSet);
                     ValidationUpdater.UpdateFiles(
                         savedFiles,
-                        enums,
+                        enumsForValidation,
                         options.HideEnumDataSheet,
                         result =>
                         {

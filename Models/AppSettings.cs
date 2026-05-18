@@ -23,6 +23,9 @@ namespace ConfigExcelEnhancer.Models
         /// <summary>是否强制重写枚举验证规则（忽略 Schema 是否变化）。</summary>
         public bool EnumForceRewrite { get; set; } = false;
 
+        /// <summary>是否为 bool 类型列添加 TRUE/FALSE 数据验证下拉框。</summary>
+        public bool BoolValidation { get; set; } = true;
+
         // ── 表设计 ────────────────────────────────────────
 
         /// <summary>表格设计模板 Excel 文件路径（样式来源）。</summary>

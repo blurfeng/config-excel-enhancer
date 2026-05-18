@@ -139,7 +139,7 @@ namespace ConfigExcelEnhancer.UI
 
         private void btnBrowseTargetDir_Click(object sender, EventArgs e)
         {
-            if (DialogHelper.BrowseFolder("选择目标 Excel 目录", Settings.TableDesignTargetDirectory) is { } path)
+            if (DialogHelper.BrowseFolder("选择目标配置 Excel 目录", Settings.TableDesignTargetDirectory) is { } path)
                 txtTargetDir.Text = path;
         }
 
