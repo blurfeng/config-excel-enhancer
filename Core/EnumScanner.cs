@@ -35,6 +35,51 @@ namespace ConfigExcelEnhancer.Core
         }
 
         /// <summary>
+        /// 递归扫描目录下所有 .xml 文件，提取 &lt;bean&gt; 中使用枚举类型的字段。
+        /// 返回：beanName → (fieldName → enumTypeName)。
+        /// 只收录字段类型在 enumNames 中的字段；同名 bean 以后读取的文件为准。
+        /// </summary>
+        public static Dictionary<string, Dictionary<string, string>> ScanBeanEnumFields(
+            string xmlDirectory, HashSet<string> enumNames)
+        {
+            var result = new Dictionary<string, Dictionary<string, string>>(StringComparer.Ordinal);
+
+            foreach (var file in Directory.EnumerateFiles(xmlDirectory, "*.xml", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    var doc = XDocument.Load(file);
+                    foreach (var beanEl in doc.Descendants("bean"))
+                    {
+                        var beanName = (string?)beanEl.Attribute("name");
+                        if (string.IsNullOrWhiteSpace(beanName)) continue;
+
+                        Dictionary<string, string>? fieldMap = null;
+                        foreach (var varEl in beanEl.Elements("var"))
+                        {
+                            var fieldName = (string?)varEl.Attribute("name");
+                            var fieldType = (string?)varEl.Attribute("type");
+                            if (string.IsNullOrWhiteSpace(fieldName) || string.IsNullOrWhiteSpace(fieldType)) continue;
+                            if (!enumNames.Contains(fieldType)) continue;
+
+                            fieldMap ??= new Dictionary<string, string>(StringComparer.Ordinal);
+                            fieldMap[fieldName] = fieldType;
+                        }
+
+                        if (fieldMap != null)
+                            result[beanName] = fieldMap; // 同名后者覆盖前者
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"解析 XML 文件失败：{file}", ex);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// 解析单个 XML 文件，提取所有 &lt;enum&gt; 元素及其选项。
         /// 每个枚举的选项从 &lt;var&gt; 或 &lt;option&gt; 子元素的 name/value 属性读取；
         /// 无选项的枚举（空 enum）会被忽略。

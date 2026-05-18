@@ -18,10 +18,11 @@ namespace ConfigExcelEnhancer.Core
             List<EnumInfo> enums,
             bool hideEnumDataSheet,
             Action<UpdateResult> onFileProcessed,
-            bool forceRewrite = false)
+            bool forceRewrite = false,
+            Dictionary<string, Dictionary<string, string>>? beanFieldEnumMap = null)
         {
             var enumMap = enums.ToDictionary(e => e.Name, StringComparer.Ordinal);
-            return ProcessFiles(filePaths, enumMap, hideEnumDataSheet, onFileProcessed, forceRewrite);
+            return ProcessFiles(filePaths, enumMap, hideEnumDataSheet, onFileProcessed, forceRewrite, beanFieldEnumMap);
         }
 
         /// <summary>
@@ -32,11 +33,12 @@ namespace ConfigExcelEnhancer.Core
             List<EnumInfo> enums,
             bool hideEnumDataSheet,
             Action<UpdateResult> onFileProcessed,
-            bool forceRewrite = false)
+            bool forceRewrite = false,
+            Dictionary<string, Dictionary<string, string>>? beanFieldEnumMap = null)
         {
             var enumMap = enums.ToDictionary(e => e.Name, StringComparer.Ordinal);
             var files = Directory.EnumerateFiles(excelDirectory, "*.xlsx", SearchOption.AllDirectories);
-            return ProcessFiles(files, enumMap, hideEnumDataSheet, onFileProcessed, forceRewrite);
+            return ProcessFiles(files, enumMap, hideEnumDataSheet, onFileProcessed, forceRewrite, beanFieldEnumMap);
         }
 
         /// <summary>
@@ -48,7 +50,8 @@ namespace ConfigExcelEnhancer.Core
             Dictionary<string, EnumInfo> enumMap,
             bool hideEnumDataSheet,
             Action<UpdateResult> onFileProcessed,
-            bool forceRewrite)
+            bool forceRewrite,
+            Dictionary<string, Dictionary<string, string>>? beanFieldEnumMap = null)
         {
             var results = new List<UpdateResult>();
 
@@ -58,7 +61,7 @@ namespace ConfigExcelEnhancer.Core
 
                 try
                 {
-                    UpdateWorkbook(file, enumMap, hideEnumDataSheet, result, forceRewrite);
+                    UpdateWorkbook(file, enumMap, hideEnumDataSheet, result, forceRewrite, beanFieldEnumMap);
                 }
                 catch (IOException ioEx)
                 {
@@ -83,12 +86,13 @@ namespace ConfigExcelEnhancer.Core
             Dictionary<string, EnumInfo> enumMap,
             bool hideEnumDataSheet,
             UpdateResult result,
-            bool forceRewrite = false)
+            bool forceRewrite = false,
+            Dictionary<string, Dictionary<string, string>>? beanFieldEnumMap = null)
         {
             using var wb = new XLWorkbook(filePath);
 
             // 预扫描：若该文件没有任何枚举列，跳过，不创建/更新 __enum_data，不写盘
-            if (!WorkbookHasEnumUsage(wb, enumMap))
+            if (!WorkbookHasEnumUsage(wb, enumMap, beanFieldEnumMap))
                 return;
 
             var enumColumns = WriteEnumSheet(wb, enumMap, hideEnumDataSheet, result);
@@ -104,7 +108,7 @@ namespace ConfigExcelEnhancer.Core
                 foreach (var ws in wb.Worksheets.ToList())
                 {
                     if (ws.Name == EnumSheetName) continue;
-                    ApplyValidationToSheet(ws, enumMap, result, rewriteValidation: true);
+                    ApplyValidationToSheet(ws, enumMap, result, rewriteValidation: true, beanFieldEnumMap);
                 }
             }
             else
@@ -113,7 +117,7 @@ namespace ConfigExcelEnhancer.Core
                 foreach (var ws in wb.Worksheets.ToList())
                 {
                     if (ws.Name == EnumSheetName) continue;
-                    ApplyValidationToSheet(ws, enumMap, result, rewriteValidation: false);
+                    ApplyValidationToSheet(ws, enumMap, result, rewriteValidation: false, beanFieldEnumMap);
                 }
             }
 
@@ -270,7 +274,8 @@ namespace ConfigExcelEnhancer.Core
             IXLWorksheet ws,
             Dictionary<string, EnumInfo> enumMap,
             UpdateResult result,
-            bool rewriteValidation)
+            bool rewriteValidation,
+            Dictionary<string, Dictionary<string, string>>? beanFieldEnumMap = null)
         {
             int typeRow = FindTypeRow(ws);
             if (typeRow < 0) return;
@@ -296,7 +301,42 @@ namespace ConfigExcelEnhancer.Core
                 var typeName = ws.Cell(typeRow, col).GetString().Trim();
                 var colRange = ws.Range(dataStartRow, col, lastDataRow, col);
 
-                if (!enumMap.TryGetValue(typeName, out var enumInfo))
+                enumMap.TryGetValue(typeName, out var enumInfo);
+
+                // Fallback：处理 bean 数据结构中含枚举字段的列
+                // - Case 1：##type 行直接写了 bean 类型名（如 TargetSearchStats），在其他表头行找子字段名
+                // - Case 2：##type 行为空（bean 展开后的后续子列），向左找覆盖该列的 bean 类型，再找子字段名
+                if (enumInfo == null && beanFieldEnumMap != null)
+                {
+                    string? coveringBeanType = null;
+
+                    if (!string.IsNullOrEmpty(typeName) && beanFieldEnumMap.ContainsKey(typeName))
+                    {
+                        coveringBeanType = typeName;
+                    }
+                    else if (string.IsNullOrEmpty(typeName))
+                    {
+                        // 向左扫描 ##type 行，找到第一个非空值：若是 bean 类型则记录，否则停止
+                        for (int leftCol = col - 1; leftCol >= 2; leftCol--)
+                        {
+                            var leftType = ws.Cell(typeRow, leftCol).GetString().Trim();
+                            if (string.IsNullOrEmpty(leftType)) continue;
+                            if (beanFieldEnumMap.ContainsKey(leftType))
+                                coveringBeanType = leftType;
+                            break;
+                        }
+                    }
+
+                    if (coveringBeanType != null)
+                    {
+                        var fieldEnumMap = beanFieldEnumMap[coveringBeanType];
+                        var fieldName = FindFieldNameInOtherHeaderRows(ws, typeRow, dataStartRow, col, fieldEnumMap);
+                        if (fieldName != null && fieldEnumMap.TryGetValue(fieldName, out var enumTypeName))
+                            enumMap.TryGetValue(enumTypeName, out enumInfo);
+                    }
+                }
+
+                if (enumInfo == null)
                 {
                     if (!string.IsNullOrEmpty(typeName) && rewriteValidation)
                         ClearValidationForRange(ws, colRange);
@@ -409,22 +449,82 @@ namespace ConfigExcelEnhancer.Core
         /// 快速预扫描：workbook 中是否存在至少一列类型名匹配 enumMap 的枚举列。
         /// 无枚举列的文件不需要 __enum_data，也不应被写盘。
         /// </summary>
-        private static bool WorkbookHasEnumUsage(XLWorkbook wb, Dictionary<string, EnumInfo> enumMap)
+        private static bool WorkbookHasEnumUsage(
+            XLWorkbook wb,
+            Dictionary<string, EnumInfo> enumMap,
+            Dictionary<string, Dictionary<string, string>>? beanFieldEnumMap = null)
         {
             foreach (var ws in wb.Worksheets)
             {
                 if (ws.Name == EnumSheetName) continue;
                 int typeRow = FindTypeRow(ws);
                 if (typeRow < 0) continue;
+
+                int dataStartRow = beanFieldEnumMap != null ? FindDataStartRow(ws, typeRow + 1) : -1;
                 int lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 0;
+
                 for (int col = 2; col <= lastCol; col++)
                 {
                     var typeName = ws.Cell(typeRow, col).GetString().Trim();
                     if (enumMap.ContainsKey(typeName))
                         return true;
+
+                    // Fallback：检查 bean 字段枚举映射
+                    if (beanFieldEnumMap != null)
+                    {
+                        string? coveringBeanType = null;
+
+                        if (!string.IsNullOrEmpty(typeName) && beanFieldEnumMap.ContainsKey(typeName))
+                        {
+                            coveringBeanType = typeName;
+                        }
+                        else if (string.IsNullOrEmpty(typeName))
+                        {
+                            for (int leftCol = col - 1; leftCol >= 2; leftCol--)
+                            {
+                                var leftType = ws.Cell(typeRow, leftCol).GetString().Trim();
+                                if (string.IsNullOrEmpty(leftType)) continue;
+                                if (beanFieldEnumMap.ContainsKey(leftType))
+                                    coveringBeanType = leftType;
+                                break;
+                            }
+                        }
+
+                        if (coveringBeanType != null)
+                        {
+                            var fieldEnumMap = beanFieldEnumMap[coveringBeanType];
+                            var fieldName = FindFieldNameInOtherHeaderRows(ws, typeRow, dataStartRow, col, fieldEnumMap);
+                            if (fieldName != null) return true;
+                        }
+                    }
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// 在除 ##type 行之外的所有表头行中，查找 col 列的非空值，并判断是否为 fieldEnumMap 中的已知字段名。
+        /// 用于在 bean 展开列中，从其他 ##var 行定位实际的子字段名称。
+        /// dataStartRow 小于等于 0 时扫描全部行。
+        /// </summary>
+        private static string? FindFieldNameInOtherHeaderRows(
+            IXLWorksheet ws,
+            int typeRow,
+            int dataStartRow,
+            int col,
+            Dictionary<string, string> fieldEnumMap)
+        {
+            int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+            int endRow = dataStartRow > 0 ? dataStartRow - 1 : lastRow;
+
+            for (int r = 1; r <= endRow; r++)
+            {
+                if (r == typeRow) continue;
+                var value = ws.Cell(r, col).GetString().Trim();
+                if (!string.IsNullOrEmpty(value) && fieldEnumMap.ContainsKey(value))
+                    return value;
+            }
+            return null;
         }
     }
 }

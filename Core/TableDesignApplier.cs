@@ -83,6 +83,8 @@ namespace ConfigExcelEnhancer.Core
                 if (enums.Count > 0)
                 {
                     log($"找到 {enums.Count} 个 Enum，正在强制更新验证规则...", LogLevel.Info);
+                    var enumNameSet = enums.Select(e => e.Name).ToHashSet(StringComparer.Ordinal);
+                    var beanFieldEnumMap = EnumScanner.ScanBeanEnumFields(options.XmlDirectory, enumNameSet);
                     ValidationUpdater.UpdateFiles(
                         savedFiles,
                         enums,
@@ -94,7 +96,8 @@ namespace ConfigExcelEnhancer.Core
                             else if (result.WasSaved)
                                 log($"  [Enum] 已更新：{result.FileName}", LogLevel.Ok);
                         },
-                        forceRewrite: true);
+                        forceRewrite: true,
+                        beanFieldEnumMap: beanFieldEnumMap);
                     log("Enum 验证规则更新完成。", LogLevel.Ok);
                 }
                 else

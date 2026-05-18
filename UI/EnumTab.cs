@@ -130,7 +130,8 @@ namespace ConfigExcelEnhancer.UI
 
                 // 枚举列表（超过 8 个时截断显示）
                 const int maxShow = 8;
-                var enumNames = enums.Select(e => e.Name).ToList();
+                var enumNameSet = enums.Select(e => e.Name).ToHashSet(StringComparer.Ordinal);
+                var enumNames = enumNameSet.ToList();
                 var namesDisplay = enumNames.Count <= maxShow
                     ? string.Join("、", enumNames)
                     : string.Join("、", enumNames.Take(maxShow)) + $" (+{enumNames.Count - maxShow})";
@@ -142,6 +143,12 @@ namespace ConfigExcelEnhancer.UI
                     if (!ei.Options.Any(o => o.Value == "0"))
                         Log($"  ⚠ {ei.Name} 没有 value=0 的选项，默认将使用第一项：{ei.Options.FirstOrDefault()?.Name}", LogLevel.Warn);
                 }
+
+                // 扫描 bean 字段枚举映射（数据结构中使用了枚举类型的字段）
+                var beanFieldEnumMap = await Task.Run(
+                    () => EnumScanner.ScanBeanEnumFields(xmlDir, enumNameSet), token);
+                if (beanFieldEnumMap.Count > 0)
+                    Log($"找到 {beanFieldEnumMap.Count} 个含枚举字段的 Bean。", LogLevel.Info);
 
                 pbUpdate.Value = 200;
 
@@ -168,7 +175,8 @@ namespace ConfigExcelEnhancer.UI
                                 pbUpdate.Value = Math.Min(v, 800);
                             });
                         },
-                        forceRewrite: chkForceRewrite.Checked), token);
+                        forceRewrite: chkForceRewrite.Checked,
+                        beanFieldEnumMap: beanFieldEnumMap), token);
 
                 sw.Stop();
 
