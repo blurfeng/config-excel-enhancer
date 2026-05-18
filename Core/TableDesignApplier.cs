@@ -494,20 +494,20 @@ namespace ConfigExcelEnhancer.Core
                 else
                     destCell.Value = cell.Value;
 
-                // 保留单元格注释
                 if (cell.HasComment)
                 {
-                    var srcComment = cell.GetComment();
-                    var dstComment = destCell.CreateComment();
-                    dstComment.SetAuthor(srcComment.Author);
-                    foreach (var richStr in srcComment)
-                    {
-                        var added = dstComment.AddText(richStr.Text);
-                        added.SetBold(richStr.Bold);
-                        added.SetFontSize(richStr.FontSize);
-                        added.SetFontName(richStr.FontName);
-                        added.SetFontColor(richStr.FontColor);
-                    }
+                    var src = cell.GetComment();
+                    if (destCell.HasComment)
+                        destCell.GetComment().Delete();
+                    var dst = destCell.CreateComment();
+                    dst.SetAuthor(src.Author);
+                    dst.Visible = src.Visible;
+                    dst.CopyFrom(src);
+                    dst.Style.Size.SetAutomaticSize();
+                    dst.Position.Column       = src.Position.Column;
+                    dst.Position.ColumnOffset = src.Position.ColumnOffset;
+                    dst.Position.Row          = src.Position.Row;
+                    dst.Position.RowOffset    = src.Position.RowOffset;
                 }
             }
         }
