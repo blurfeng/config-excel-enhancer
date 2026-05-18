@@ -52,6 +52,7 @@ namespace ConfigExcelEnhancer.UI
             pnlDirMode.SuspendLayout();
             pnlListMode.SuspendLayout();
             pnlScopeGroup.SuspendLayout();
+            ctxLog.SuspendLayout();
             SuspendLayout();
             // 
             // lblSourceExcel
@@ -209,7 +210,7 @@ namespace ConfigExcelEnhancer.UI
             chkIgnoreUnderscoreFiles.AutoSize = true;
             chkIgnoreUnderscoreFiles.Checked = true;
             chkIgnoreUnderscoreFiles.CheckState = CheckState.Checked;
-            chkIgnoreUnderscoreFiles.Location = new Point(12, 185);
+            chkIgnoreUnderscoreFiles.Location = new Point(12, 183);
             chkIgnoreUnderscoreFiles.Name = "chkIgnoreUnderscoreFiles";
             chkIgnoreUnderscoreFiles.Size = new Size(121, 21);
             chkIgnoreUnderscoreFiles.TabIndex = 8;
@@ -218,9 +219,9 @@ namespace ConfigExcelEnhancer.UI
             // 
             // lblSheetScope
             // 
-            lblSheetScope.Location = new Point(12, 216);
+            lblSheetScope.Location = new Point(8, 215);
             lblSheetScope.Name = "lblSheetScope";
-            lblSheetScope.Size = new Size(90, 19);
+            lblSheetScope.Size = new Size(87, 19);
             lblSheetScope.TabIndex = 9;
             lblSheetScope.Text = "Sheet 范围：";
             // 
@@ -228,16 +229,16 @@ namespace ConfigExcelEnhancer.UI
             // 
             pnlScopeGroup.Controls.Add(rdoScopeAll);
             pnlScopeGroup.Controls.Add(rdoScopeFirst);
-            pnlScopeGroup.Location = new Point(105, 210);
+            pnlScopeGroup.Location = new Point(95, 210);
             pnlScopeGroup.Name = "pnlScopeGroup";
-            pnlScopeGroup.Size = new Size(145, 29);
+            pnlScopeGroup.Size = new Size(121, 29);
             pnlScopeGroup.TabIndex = 10;
             // 
             // rdoScopeAll
             // 
             rdoScopeAll.AutoSize = true;
             rdoScopeAll.Checked = true;
-            rdoScopeAll.Location = new Point(4, 3);
+            rdoScopeAll.Location = new Point(3, 3);
             rdoScopeAll.Name = "rdoScopeAll";
             rdoScopeAll.Size = new Size(50, 21);
             rdoScopeAll.TabIndex = 0;
@@ -248,7 +249,7 @@ namespace ConfigExcelEnhancer.UI
             // rdoScopeFirst
             // 
             rdoScopeFirst.AutoSize = true;
-            rdoScopeFirst.Location = new Point(55, 3);
+            rdoScopeFirst.Location = new Point(54, 3);
             rdoScopeFirst.Name = "rdoScopeFirst";
             rdoScopeFirst.Size = new Size(62, 21);
             rdoScopeFirst.TabIndex = 1;
@@ -260,7 +261,7 @@ namespace ConfigExcelEnhancer.UI
             chkIgnoreUnderscoreSheets.AutoSize = true;
             chkIgnoreUnderscoreSheets.Checked = true;
             chkIgnoreUnderscoreSheets.CheckState = CheckState.Checked;
-            chkIgnoreUnderscoreSheets.Location = new Point(257, 213);
+            chkIgnoreUnderscoreSheets.Location = new Point(237, 214);
             chkIgnoreUnderscoreSheets.Name = "chkIgnoreUnderscoreSheets";
             chkIgnoreUnderscoreSheets.Size = new Size(129, 21);
             chkIgnoreUnderscoreSheets.TabIndex = 11;
@@ -270,7 +271,7 @@ namespace ConfigExcelEnhancer.UI
             // lblHeaderSymbol
             // 
             lblHeaderSymbol.AutoSize = true;
-            lblHeaderSymbol.Location = new Point(395, 216);
+            lblHeaderSymbol.Location = new Point(9, 252);
             lblHeaderSymbol.Name = "lblHeaderSymbol";
             lblHeaderSymbol.Size = new Size(68, 17);
             lblHeaderSymbol.TabIndex = 12;
@@ -278,7 +279,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // txtHeaderSymbol
             // 
-            txtHeaderSymbol.Location = new Point(465, 213);
+            txtHeaderSymbol.Location = new Point(84, 249);
             txtHeaderSymbol.Name = "txtHeaderSymbol";
             txtHeaderSymbol.Size = new Size(65, 23);
             txtHeaderSymbol.TabIndex = 13;
@@ -290,7 +291,7 @@ namespace ConfigExcelEnhancer.UI
             chkAutoColumnWidth.AutoSize = true;
             chkAutoColumnWidth.Checked = true;
             chkAutoColumnWidth.CheckState = CheckState.Checked;
-            chkAutoColumnWidth.Location = new Point(12, 247);
+            chkAutoColumnWidth.Location = new Point(169, 249);
             chkAutoColumnWidth.Name = "chkAutoColumnWidth";
             chkAutoColumnWidth.Size = new Size(147, 21);
             chkAutoColumnWidth.TabIndex = 14;
@@ -302,7 +303,7 @@ namespace ConfigExcelEnhancer.UI
             chkMergeHeaderCells.AutoSize = true;
             chkMergeHeaderCells.Checked = true;
             chkMergeHeaderCells.CheckState = CheckState.Checked;
-            chkMergeHeaderCells.Location = new Point(12, 277);
+            chkMergeHeaderCells.Location = new Point(12, 281);
             chkMergeHeaderCells.Name = "chkMergeHeaderCells";
             chkMergeHeaderCells.Size = new Size(135, 21);
             chkMergeHeaderCells.TabIndex = 15;
@@ -312,7 +313,7 @@ namespace ConfigExcelEnhancer.UI
             // lblMergeKeywords
             // 
             lblMergeKeywords.AutoSize = true;
-            lblMergeKeywords.Location = new Point(175, 280);
+            lblMergeKeywords.Location = new Point(175, 281);
             lblMergeKeywords.Name = "lblMergeKeywords";
             lblMergeKeywords.Size = new Size(121, 17);
             lblMergeKeywords.TabIndex = 16;
@@ -320,7 +321,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // txtMergeKeywords
             // 
-            txtMergeKeywords.Location = new Point(303, 277);
+            txtMergeKeywords.Location = new Point(303, 278);
             txtMergeKeywords.Name = "txtMergeKeywords";
             txtMergeKeywords.PlaceholderText = "##type,1,2（逗号或分号分隔）";
             txtMergeKeywords.Size = new Size(182, 23);
@@ -357,25 +358,25 @@ namespace ConfigExcelEnhancer.UI
             pbApply.Visible = false;
             // 
             // ctxLog
-            //
+            // 
             ctxLog.Items.AddRange(new ToolStripItem[] { ctxMenuItemClearLog, ctxMenuItemCopyLog });
             ctxLog.Name = "ctxLog";
-            ctxLog.Size = new Size(100, 48);
-            //
+            ctxLog.Size = new Size(101, 48);
+            // 
             // ctxMenuItemClearLog
-            //
+            // 
             ctxMenuItemClearLog.Name = "ctxMenuItemClearLog";
-            ctxMenuItemClearLog.Size = new Size(99, 22);
+            ctxMenuItemClearLog.Size = new Size(100, 22);
             ctxMenuItemClearLog.Text = "清空";
-            ctxMenuItemClearLog.Click += new EventHandler(btnClearLog_Click);
-            //
+            ctxMenuItemClearLog.Click += btnClearLog_Click;
+            // 
             // ctxMenuItemCopyLog
-            //
+            // 
             ctxMenuItemCopyLog.Name = "ctxMenuItemCopyLog";
-            ctxMenuItemCopyLog.Size = new Size(99, 22);
+            ctxMenuItemCopyLog.Size = new Size(100, 22);
             ctxMenuItemCopyLog.Text = "复制";
-            ctxMenuItemCopyLog.Click += new EventHandler(btnCopyLog_Click);
-            //
+            ctxMenuItemCopyLog.Click += btnCopyLog_Click;
+            // 
             // txtLog
             // 
             txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -425,6 +426,7 @@ namespace ConfigExcelEnhancer.UI
             pnlListMode.ResumeLayout(false);
             pnlScopeGroup.ResumeLayout(false);
             pnlScopeGroup.PerformLayout();
+            ctxLog.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
