@@ -29,5 +29,25 @@ namespace ConfigExcelEnhancer.UI
             }
             return dlg.ShowDialog() == DialogResult.OK ? dlg.FileNames : Array.Empty<string>();
         }
+
+        /// <summary>
+        /// 弹出保存文件对话框。返回用户指定的路径，取消则返回 null。
+        /// </summary>
+        public static string? BrowseSaveFile(string title, string filter,
+            string? initialPath = null, string? defaultFileName = null)
+        {
+            using var dlg = new SaveFileDialog { Title = title, Filter = filter };
+            if (!string.IsNullOrEmpty(defaultFileName))
+                dlg.FileName = defaultFileName;
+            if (!string.IsNullOrEmpty(initialPath))
+            {
+                var dir = Directory.Exists(initialPath) ? initialPath : Path.GetDirectoryName(initialPath);
+                if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                    dlg.InitialDirectory = dir;
+                if (File.Exists(initialPath))
+                    dlg.FileName = Path.GetFileName(initialPath);
+            }
+            return dlg.ShowDialog() == DialogResult.OK ? dlg.FileName : null;
+        }
     }
 }

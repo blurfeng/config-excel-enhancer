@@ -69,5 +69,13 @@ namespace ConfigExcelEnhancer.Models
         /// 支持行号（如 "3"）或文本模式（如 "##type"）两种形式。
         /// </summary>
         public string TableDesignMergeHeaderKeywords { get; set; } = "##type";
+
+        // ── 导出模板类 ────────────────────────────────────────
+
+        /// <summary>Luban 生成的 Tables.cs 路径（全局一次性配置，用于自动推断表访问器和命名空间）。</summary>
+        public string TablesClassPath { get; set; } = string.Empty;
+
+        /// <summary>导出模板任务列表。</summary>
+        public List<TemplateExportJob> TemplateExportJobs { get; set; } = new();
     }
 }
