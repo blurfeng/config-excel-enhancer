@@ -85,8 +85,8 @@ namespace ConfigExcelEnhancer
             // MainForm
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 660);
-            MinimumSize = new Size(740, 600);
+            ClientSize = new Size(800, 700);
+            MinimumSize = new Size(740, 640);
             Controls.Add(tabControl);
             Text = "ConfigStudio";
             tabControl.ResumeLayout(false);

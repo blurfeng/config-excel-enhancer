@@ -1,0 +1,77 @@
+using {{$LubanNamespace}};
+using FixedMathSharp;
+using Source.Gameplay.Match.Logic.Components;
+using EAttackMode = Source.Gameplay.Match.Logic.Components.EAttackMode;
+using EMoveType = Source.Gameplay.GridMapSystem.Data.EMoveType;
+using RangedAttackStats = Source.Gameplay.Match.Logic.Components.RangedAttackStats;
+using SteeringStats = Source.Gameplay.Match.Logic.Components.SteeringStats;
+using TargetFilter = Source.Gameplay.Match.Logic.Components.TargetFilter;
+using TargetSearchStats = Source.Gameplay.Match.Logic.Components.TargetSearchStats;
+using TargetStickyMode = Source.Gameplay.Match.Logic.Components.TargetStickyMode;
+
+namespace {{$Namespace}}
+{
+    /// <summary>{{$ClassName}} 数值模板。</summary>
+    public sealed class {{$ClassName}} : IUnitTemplateProvider
+    {
+        public static readonly {{$ClassName}} Instance = new();
+        static {{$ClassName}}() => UnitTemplateManager.Register(Instance);
+
+        private {{$ClassName}}() { }
+
+        public {{$CfgType}} Cfg => {{$TableAccessor}}.Get(UnitId()) as {{$CfgType}};
+        public int UnitId() => UnitIds.{{$ClassName}};
+        public string Name() => Cfg.Name;
+        public EMoveType GetMoveType() => (EMoveType)Cfg.MoveType;
+        public EAttackMode GetAttackMode() => (EAttackMode)Cfg.AttackMode;
+
+        public UnitStats GetStats() => new UnitStats
+        {
+            MaxHp               = new Fixed64(Cfg.MaxHp),
+            CurrentHealth       = new Fixed64(Cfg.MaxHp),
+            AttackBaseDamage    = new Fixed64(Cfg.AttackBaseDamage),
+            AttackInterval      = new Fixed64(Cfg.AttackInterval) / new Fixed64(100),
+            SearchRange         = new Fixed64(Cfg.SearchRange) / new Fixed64(10),
+            CollisionRadius     = new Fixed64(Cfg.CollisionRadius) / new Fixed64(10),
+        };
+        public Fixed64 GetFlowFieldEngageRange() => new Fixed64(Cfg.FlowFieldEngageRange) / new Fixed64(10);
+        public bool IsWithoutFlowField() => Cfg.IsWithoutFlowField;
+        public SteeringStats GetSteering() => new SteeringStats
+        {
+            MaxSpeed             = new Fixed64(Cfg.SteeringStats.MaxSpeed) / new Fixed64(10),
+            MaxForce             = new Fixed64(Cfg.SteeringStats.MaxForce) / new Fixed64(10),
+            Mass                 = new Fixed64(Cfg.SteeringStats.Mass) / new Fixed64(10),
+            SeekWeight           = new Fixed64(Cfg.SteeringStats.SeekWeight) / new Fixed64(10),
+            SeparationWeight     = new Fixed64(Cfg.SteeringStats.SeparationWeight) / new Fixed64(10),
+            AvoidanceWeight      = new Fixed64(Cfg.SteeringStats.AvoidanceWeight) / new Fixed64(10),
+            UnitAvoidanceWeight  = new Fixed64(Cfg.SteeringStats.UnitAvoidanceWeight) / new Fixed64(10),
+            RetreatWeight        = new Fixed64(Cfg.SteeringStats.RetreatWeight) / new Fixed64(10),
+            TangentialSepWeight  = new Fixed64(Cfg.SteeringStats.TangentialSepWeight) / new Fixed64(10),
+        };
+
+        public TargetSearchStats GetTargetSearch() => new TargetSearchStats
+        {
+            StickyMode         = (TargetStickyMode)Cfg.TargetSearchStats.StickyMode,
+            Tier0              = new TargetPriorityTier((TargetFilter)Cfg.TargetSearchStats.Tier0Filter, Cfg.TargetSearchStats.Tier0Value),
+            Tier1              = new TargetPriorityTier((TargetFilter)Cfg.TargetSearchStats.Tier1Filter, Cfg.TargetSearchStats.Tier1Value),
+            Tier2              = new TargetPriorityTier((TargetFilter)Cfg.TargetSearchStats.Tier2Filter, Cfg.TargetSearchStats.Tier2Value),
+            Tier3              = new TargetPriorityTier((TargetFilter)Cfg.TargetSearchStats.Tier3Filter, Cfg.TargetSearchStats.Tier3Value),
+            DistanceWeight     = (byte)Cfg.TargetSearchStats.DistanceWeight,
+            AngleWeight        = (byte)Cfg.TargetSearchStats.AngleWeight,
+            ToleranceFraction  = new Fixed64(Cfg.TargetSearchStats.ToleranceFraction) / new Fixed64(1000),
+        };
+
+        public RangedAttackStats GetRangedAttack() => new RangedAttackStats
+        {
+            ProjectileId           = Cfg.RangedAttackStats.ProjectileId,
+            AttackRange            = new Fixed64(Cfg.RangedAttackStats.AttackRange) / new Fixed64(10),
+            ChaseRange             = Cfg.RangedAttackStats.ChaseRange == -1 ?
+                AttackData.ChaseRangeDefault(new Fixed64(Cfg.RangedAttackStats.AttackRange) / new Fixed64(10))
+                : new Fixed64(Cfg.RangedAttackStats.ChaseRange) / new Fixed64(10),
+            ChaseRangeInner        = Cfg.RangedAttackStats.ChaseRangeInner == -1 ?
+                AttackData.ChaseRangeInnerDefault(new Fixed64(Cfg.RangedAttackStats.AttackRange) / new Fixed64(10))
+                : new Fixed64(Cfg.RangedAttackStats.ChaseRangeInner) / new Fixed64(10),
+            RandomOffsetMultiplier = new Fixed64(Cfg.RangedAttackStats.RandomOffsetMultiplier) / new Fixed64(10),
+        };
+    }
+}

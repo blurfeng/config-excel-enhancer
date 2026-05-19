@@ -115,14 +115,25 @@ namespace ConfigExcelEnhancer.UI
 
         // ── 任务详情：UI → job 回写 ──────────────────────────────────────
 
-        private void txtDisplayName_TextChanged(object sender, EventArgs e)
+        private void CommitDisplayName()
         {
             if (_loadingJob || _currentJob is null) return;
             _currentJob.DisplayName = txtDisplayName.Text;
-            // 同步刷新列表项
             int idx = lstJobs.SelectedIndex;
             if (idx >= 0)
                 lstJobs.Items[idx] = txtDisplayName.Text.Length > 0 ? txtDisplayName.Text : "(未命名)";
+        }
+
+        private void txtDisplayName_Leave(object sender, EventArgs e)
+            => CommitDisplayName();
+
+        private void txtDisplayName_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                CommitDisplayName();
+                e.SuppressKeyPress = true;
+            }
         }
 
         private void txtJsonFile_TextChanged(object sender, EventArgs e)
@@ -213,8 +224,7 @@ namespace ConfigExcelEnhancer.UI
         private void btnAddBinding_Click(object sender, EventArgs e)
         {
             dgvBindings.Rows.Add("", "");
-            if (dgvBindings.Rows.Count > 1)
-                dgvBindings.CurrentCell = dgvBindings.Rows[dgvBindings.Rows.Count - 2].Cells[0];
+            dgvBindings.CurrentCell = dgvBindings.Rows[dgvBindings.Rows.Count - 1].Cells[0];
         }
 
         private void btnRemoveBinding_Click(object sender, EventArgs e)
@@ -371,7 +381,7 @@ namespace ConfigExcelEnhancer.UI
             pbRun.Value = pbRun.Maximum;
             Log("全部任务完成。", LogLevel.Ok);
 
-            Cleanup:
+        Cleanup:
             SetUILocked(false);
             ExecutionStateChanged?.Invoke(this, false);
             btnRunAll.Enabled = true;

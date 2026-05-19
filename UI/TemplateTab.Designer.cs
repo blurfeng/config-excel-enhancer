@@ -90,7 +90,7 @@ namespace ConfigExcelEnhancer.UI
             txtTablesClassPath.Location = new Point(90, 10);
             txtTablesClassPath.Name = "txtTablesClassPath";
             txtTablesClassPath.PlaceholderText = "Luban 生成的 Tables.cs 路径（全局一次性配置）";
-            txtTablesClassPath.Size = new Size(612, 23);
+            txtTablesClassPath.Size = new Size(637, 23);
             txtTablesClassPath.TabIndex = 1;
             toolTip.SetToolTip(txtTablesClassPath, "Luban 生成的 Tables.cs 绝对路径。\n工具通过解析该文件自动推断每张表的命名空间和访问器属性，\n无需手动填写 $TableAccessor、$LubanNamespace 等占位符。\n同一个项目只需配置一次，所有导出任务共用。");
             txtTablesClassPath.TextChanged += txtTablesClassPath_TextChanged;
@@ -98,7 +98,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseTablesClass
             // 
             btnBrowseTablesClass.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseTablesClass.Location = new Point(710, 8);
+            btnBrowseTablesClass.Location = new Point(735, 7);
             btnBrowseTablesClass.Name = "btnBrowseTablesClass";
             btnBrowseTablesClass.Size = new Size(75, 28);
             btnBrowseTablesClass.TabIndex = 2;
@@ -142,17 +142,18 @@ namespace ConfigExcelEnhancer.UI
             txtDisplayName.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtDisplayName.Location = new Point(90, 24);
             txtDisplayName.Name = "txtDisplayName";
-            txtDisplayName.Size = new Size(455, 23);
+            txtDisplayName.Size = new Size(513, 23);
             txtDisplayName.TabIndex = 0;
             toolTip.SetToolTip(txtDisplayName, "任务的显示名称，仅用于左侧列表的标识，不影响生成结果。");
-            txtDisplayName.TextChanged += txtDisplayName_TextChanged;
+            txtDisplayName.KeyDown += txtDisplayName_KeyDown;
+            txtDisplayName.Leave += txtDisplayName_Leave;
             // 
             // txtJsonFile
             // 
             txtJsonFile.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtJsonFile.Location = new Point(90, 51);
             txtJsonFile.Name = "txtJsonFile";
-            txtJsonFile.Size = new Size(373, 23);
+            txtJsonFile.Size = new Size(431, 23);
             txtJsonFile.TabIndex = 1;
             toolTip.SetToolTip(txtJsonFile, "Luban 导出的 JSON 配置文件路径。\n工具通过该文件名在 Tables.cs 中查找对应的表映射。\n例如：...\\output\\unit_tbpawn.json");
             txtJsonFile.TextChanged += txtJsonFile_TextChanged;
@@ -160,7 +161,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseJsonFile
             // 
             btnBrowseJsonFile.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseJsonFile.Location = new Point(469, 49);
+            btnBrowseJsonFile.Location = new Point(527, 49);
             btnBrowseJsonFile.Name = "btnBrowseJsonFile";
             btnBrowseJsonFile.Size = new Size(76, 26);
             btnBrowseJsonFile.TabIndex = 2;
@@ -173,7 +174,7 @@ namespace ConfigExcelEnhancer.UI
             txtOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtOutputDir.Location = new Point(90, 78);
             txtOutputDir.Name = "txtOutputDir";
-            txtOutputDir.Size = new Size(373, 23);
+            txtOutputDir.Size = new Size(431, 23);
             txtOutputDir.TabIndex = 3;
             toolTip.SetToolTip(txtOutputDir, "生成的模板类 .cs 文件的输出目录（绝对路径）。\n目录不存在时会自动创建。");
             txtOutputDir.TextChanged += txtOutputDir_TextChanged;
@@ -181,7 +182,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseOutputDir
             // 
             btnBrowseOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseOutputDir.Location = new Point(469, 76);
+            btnBrowseOutputDir.Location = new Point(528, 76);
             btnBrowseOutputDir.Name = "btnBrowseOutputDir";
             btnBrowseOutputDir.Size = new Size(76, 26);
             btnBrowseOutputDir.TabIndex = 4;
@@ -194,7 +195,7 @@ namespace ConfigExcelEnhancer.UI
             txtNamespace.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtNamespace.Location = new Point(90, 105);
             txtNamespace.Name = "txtNamespace";
-            txtNamespace.Size = new Size(455, 23);
+            txtNamespace.Size = new Size(513, 23);
             txtNamespace.TabIndex = 5;
             toolTip.SetToolTip(txtNamespace, "生成的 C# 类的命名空间，将填入模板中的 {{$Namespace}} 占位符。");
             txtNamespace.TextChanged += txtNamespace_TextChanged;
@@ -231,7 +232,7 @@ namespace ConfigExcelEnhancer.UI
             txtIdsOutputPath.Location = new Point(90, 51);
             txtIdsOutputPath.Name = "txtIdsOutputPath";
             txtIdsOutputPath.PlaceholderText = "如 ...\\UnitIds.Generated.cs";
-            txtIdsOutputPath.Size = new Size(373, 23);
+            txtIdsOutputPath.Size = new Size(431, 23);
             txtIdsOutputPath.TabIndex = 1;
             toolTip.SetToolTip(txtIdsOutputPath, "Ids.Generated.cs 的完整输出路径（含文件名）。");
             txtIdsOutputPath.TextChanged += txtIdsOutputPath_TextChanged;
@@ -239,7 +240,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseIdsOutput
             // 
             btnBrowseIdsOutput.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseIdsOutput.Location = new Point(469, 49);
+            btnBrowseIdsOutput.Location = new Point(527, 49);
             btnBrowseIdsOutput.Name = "btnBrowseIdsOutput";
             btnBrowseIdsOutput.Size = new Size(76, 26);
             btnBrowseIdsOutput.TabIndex = 2;
@@ -252,7 +253,7 @@ namespace ConfigExcelEnhancer.UI
             txtIdsNamespace.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtIdsNamespace.Location = new Point(90, 78);
             txtIdsNamespace.Name = "txtIdsNamespace";
-            txtIdsNamespace.Size = new Size(455, 23);
+            txtIdsNamespace.Size = new Size(513, 23);
             txtIdsNamespace.TabIndex = 3;
             toolTip.SetToolTip(txtIdsNamespace, "Ids.Generated.cs 使用的命名空间。");
             txtIdsNamespace.TextChanged += txtIdsNamespace_TextChanged;
@@ -278,7 +279,7 @@ namespace ConfigExcelEnhancer.UI
             dgvBindings.Name = "dgvBindings";
             dgvBindings.RowHeadersVisible = false;
             dgvBindings.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvBindings.Size = new Size(555, 112);
+            dgvBindings.Size = new Size(595, 79);
             dgvBindings.TabIndex = 0;
             toolTip.SetToolTip(dgvBindings, "$type 小一了千9 JSON 每条记录的类型字段。\n有绑定 -> 用模板渲染，每次运行均覆盖写入。\n无绑定 -> 目标文件不存在时生成最简骨架，已有文件不修改。");
             dgvBindings.CellValueChanged += dgvBindings_CellValueChanged;
@@ -336,7 +337,7 @@ namespace ConfigExcelEnhancer.UI
             pnlTablesPath.Dock = DockStyle.Top;
             pnlTablesPath.Location = new Point(0, 0);
             pnlTablesPath.Name = "pnlTablesPath";
-            pnlTablesPath.Size = new Size(800, 43);
+            pnlTablesPath.Size = new Size(820, 43);
             pnlTablesPath.TabIndex = 0;
             // 
             // lblTablesClass
@@ -406,7 +407,7 @@ namespace ConfigExcelEnhancer.UI
             pnlDetail.Location = new Point(200, 43);
             pnlDetail.Name = "pnlDetail";
             pnlDetail.Padding = new Padding(6, 4, 6, 4);
-            pnlDetail.Size = new Size(600, 457);
+            pnlDetail.Size = new Size(620, 457);
             pnlDetail.TabIndex = 3;
             // 
             // grpBindings
@@ -416,7 +417,7 @@ namespace ConfigExcelEnhancer.UI
             grpBindings.Controls.Add(pnlBindingButtons);
             grpBindings.Location = new Point(6, 310);
             grpBindings.Name = "grpBindings";
-            grpBindings.Size = new Size(571, 180);
+            grpBindings.Size = new Size(611, 143);
             grpBindings.TabIndex = 2;
             grpBindings.TabStop = false;
             grpBindings.Text = "$type 模板绑定（有绑定->覆盖；无绑定->仅新建骨架）";
@@ -427,9 +428,9 @@ namespace ConfigExcelEnhancer.UI
             pnlBindingButtons.Controls.Add(btnRemoveBinding);
             pnlBindingButtons.Controls.Add(btnBrowseBinding);
             pnlBindingButtons.Dock = DockStyle.Bottom;
-            pnlBindingButtons.Location = new Point(3, 146);
+            pnlBindingButtons.Location = new Point(3, 109);
             pnlBindingButtons.Name = "pnlBindingButtons";
-            pnlBindingButtons.Size = new Size(565, 31);
+            pnlBindingButtons.Size = new Size(605, 31);
             pnlBindingButtons.TabIndex = 1;
             // 
             // grpIds
@@ -445,7 +446,7 @@ namespace ConfigExcelEnhancer.UI
             grpIds.Controls.Add(txtIdsClassName);
             grpIds.Location = new Point(6, 167);
             grpIds.Name = "grpIds";
-            grpIds.Size = new Size(571, 140);
+            grpIds.Size = new Size(611, 140);
             grpIds.TabIndex = 1;
             grpIds.TabStop = false;
             grpIds.Text = "Ids 文件（*.Generated.cs）";
@@ -493,7 +494,7 @@ namespace ConfigExcelEnhancer.UI
             grpBasic.Controls.Add(chkPartialClass);
             grpBasic.Location = new Point(6, 4);
             grpBasic.Name = "grpBasic";
-            grpBasic.Size = new Size(571, 157);
+            grpBasic.Size = new Size(611, 157);
             grpBasic.TabIndex = 0;
             grpBasic.TabStop = false;
             grpBasic.Text = "基本设置";
@@ -541,7 +542,7 @@ namespace ConfigExcelEnhancer.UI
             pnlRunArea.Dock = DockStyle.Bottom;
             pnlRunArea.Location = new Point(200, 500);
             pnlRunArea.Name = "pnlRunArea";
-            pnlRunArea.Size = new Size(600, 160);
+            pnlRunArea.Size = new Size(620, 160);
             pnlRunArea.TabIndex = 2;
             // 
             // txtLog
@@ -555,7 +556,7 @@ namespace ConfigExcelEnhancer.UI
             txtLog.Name = "txtLog";
             txtLog.ReadOnly = true;
             txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
-            txtLog.Size = new Size(600, 122);
+            txtLog.Size = new Size(620, 122);
             txtLog.TabIndex = 1;
             txtLog.Text = "";
             // 
@@ -588,7 +589,7 @@ namespace ConfigExcelEnhancer.UI
             pnlRunButtons.Dock = DockStyle.Top;
             pnlRunButtons.Location = new Point(0, 0);
             pnlRunButtons.Name = "pnlRunButtons";
-            pnlRunButtons.Size = new Size(600, 38);
+            pnlRunButtons.Size = new Size(620, 38);
             pnlRunButtons.TabIndex = 0;
             // 
             // pbRun
@@ -596,7 +597,7 @@ namespace ConfigExcelEnhancer.UI
             pbRun.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             pbRun.Location = new Point(330, 9);
             pbRun.Name = "pbRun";
-            pbRun.Size = new Size(260, 20);
+            pbRun.Size = new Size(279, 20);
             pbRun.TabIndex = 3;
             pbRun.Visible = false;
             // 
@@ -609,7 +610,7 @@ namespace ConfigExcelEnhancer.UI
             Controls.Add(pnlLeft);
             Controls.Add(pnlTablesPath);
             Name = "TemplateTab";
-            Size = new Size(800, 660);
+            Size = new Size(820, 660);
             ((System.ComponentModel.ISupportInitialize)dgvBindings).EndInit();
             pnlTablesPath.ResumeLayout(false);
             pnlTablesPath.PerformLayout();
