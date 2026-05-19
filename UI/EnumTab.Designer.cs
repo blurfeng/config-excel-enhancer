@@ -18,9 +18,7 @@ namespace ConfigExcelEnhancer.UI
             lblXmlDir = new Label();
             txtXmlDir = new TextBox();
             btnBrowseXml = new Button();
-            lblExcelDir = new Label();
-            txtExcelDir = new TextBox();
-            btnBrowseExcel = new Button();
+            excelPicker = new ExcelPickerControl();
             grpOptions = new GroupBox();
             chkHideEnumDataSheet = new CheckBox();
             chkForceRewrite = new CheckBox();
@@ -43,9 +41,7 @@ namespace ConfigExcelEnhancer.UI
             pnlConfig.Controls.Add(lblXmlDir);
             pnlConfig.Controls.Add(txtXmlDir);
             pnlConfig.Controls.Add(btnBrowseXml);
-            pnlConfig.Controls.Add(lblExcelDir);
-            pnlConfig.Controls.Add(txtExcelDir);
-            pnlConfig.Controls.Add(btnBrowseExcel);
+            pnlConfig.Controls.Add(excelPicker);
             pnlConfig.Controls.Add(grpOptions);
             pnlConfig.Controls.Add(btnUpdate);
             pnlConfig.Controls.Add(btnStop);
@@ -53,7 +49,7 @@ namespace ConfigExcelEnhancer.UI
             pnlConfig.Dock = DockStyle.Top;
             pnlConfig.Location = new Point(0, 0);
             pnlConfig.Name = "pnlConfig";
-            pnlConfig.Size = new Size(665, 202);
+            pnlConfig.Size = new Size(665, 316);
             pnlConfig.TabIndex = 0;
             // 
             // lblXmlDir
@@ -68,49 +64,30 @@ namespace ConfigExcelEnhancer.UI
             // txtXmlDir
             // 
             txtXmlDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtXmlDir.Location = new Point(144, 12);
+            txtXmlDir.Location = new Point(141, 12);
             txtXmlDir.Name = "txtXmlDir";
-            txtXmlDir.Size = new Size(426, 23);
+            txtXmlDir.Size = new Size(431, 23);
             txtXmlDir.TabIndex = 2;
             txtXmlDir.TextChanged += txtXmlDir_TextChanged;
             // 
             // btnBrowseXml
             // 
             btnBrowseXml.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseXml.Location = new Point(578, 12);
+            btnBrowseXml.Location = new Point(578, 9);
             btnBrowseXml.Name = "btnBrowseXml";
             btnBrowseXml.Size = new Size(75, 28);
             btnBrowseXml.TabIndex = 3;
             btnBrowseXml.Text = "浏览...";
             btnBrowseXml.Click += btnBrowseXml_Click;
             // 
-            // lblExcelDir
+            // excelPicker
             // 
-            lblExcelDir.AutoSize = true;
-            lblExcelDir.Location = new Point(12, 48);
-            lblExcelDir.Name = "lblExcelDir";
-            lblExcelDir.Size = new Size(126, 17);
-            lblExcelDir.TabIndex = 4;
-            lblExcelDir.Text = "配置 Excel 目录：";
-            // 
-            // txtExcelDir
-            // 
-            txtExcelDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtExcelDir.Location = new Point(144, 45);
-            txtExcelDir.Name = "txtExcelDir";
-            txtExcelDir.Size = new Size(426, 23);
-            txtExcelDir.TabIndex = 5;
-            txtExcelDir.TextChanged += txtExcelDir_TextChanged;
-            // 
-            // btnBrowseExcel
-            // 
-            btnBrowseExcel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseExcel.Location = new Point(578, 45);
-            btnBrowseExcel.Name = "btnBrowseExcel";
-            btnBrowseExcel.Size = new Size(75, 28);
-            btnBrowseExcel.TabIndex = 6;
-            btnBrowseExcel.Text = "浏览...";
-            btnBrowseExcel.Click += btnBrowseExcel_Click;
+            excelPicker.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            excelPicker.Location = new Point(12, 45);
+            excelPicker.Name = "excelPicker";
+            excelPicker.Size = new Size(641, 136);
+            excelPicker.TabIndex = 4;
+            excelPicker.ValueChanged += excelPicker_ValueChanged;
             // 
             // grpOptions
             // 
@@ -118,7 +95,7 @@ namespace ConfigExcelEnhancer.UI
             grpOptions.Controls.Add(chkHideEnumDataSheet);
             grpOptions.Controls.Add(chkForceRewrite);
             grpOptions.Controls.Add(chkBoolValidation);
-            grpOptions.Location = new Point(12, 78);
+            grpOptions.Location = new Point(12, 190);
             grpOptions.Name = "grpOptions";
             grpOptions.Size = new Size(641, 80);
             grpOptions.TabIndex = 13;
@@ -159,7 +136,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // btnUpdate
             // 
-            btnUpdate.Location = new Point(12, 168);
+            btnUpdate.Location = new Point(12, 282);
             btnUpdate.Name = "btnUpdate";
             btnUpdate.Size = new Size(110, 32);
             btnUpdate.TabIndex = 8;
@@ -169,7 +146,7 @@ namespace ConfigExcelEnhancer.UI
             // btnStop
             // 
             btnStop.Enabled = false;
-            btnStop.Location = new Point(130, 168);
+            btnStop.Location = new Point(130, 282);
             btnStop.Name = "btnStop";
             btnStop.Size = new Size(80, 32);
             btnStop.TabIndex = 9;
@@ -179,7 +156,7 @@ namespace ConfigExcelEnhancer.UI
             // pbUpdate
             // 
             pbUpdate.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            pbUpdate.Location = new Point(220, 172);
+            pbUpdate.Location = new Point(220, 286);
             pbUpdate.Name = "pbUpdate";
             pbUpdate.Size = new Size(433, 23);
             pbUpdate.TabIndex = 10;
@@ -212,11 +189,11 @@ namespace ConfigExcelEnhancer.UI
             txtLog.Dock = DockStyle.Fill;
             txtLog.Font = new Font("Consolas", 9F);
             txtLog.ForeColor = Color.LightGreen;
-            txtLog.Location = new Point(0, 202);
+            txtLog.Location = new Point(0, 316);
             txtLog.Name = "txtLog";
             txtLog.ReadOnly = true;
             txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
-            txtLog.Size = new Size(665, 268);
+            txtLog.Size = new Size(665, 154);
             txtLog.TabIndex = 11;
             txtLog.Text = "";
             // 
@@ -240,9 +217,7 @@ namespace ConfigExcelEnhancer.UI
         private Label lblXmlDir = null!;
         private TextBox txtXmlDir = null!;
         private Button btnBrowseXml = null!;
-        private Label lblExcelDir = null!;
-        private TextBox txtExcelDir = null!;
-        private Button btnBrowseExcel = null!;
+        private ExcelPickerControl excelPicker = null!;
         private GroupBox grpOptions = null!;
         private CheckBox chkHideEnumDataSheet = null!;
         private CheckBox chkForceRewrite = null!;

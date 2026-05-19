@@ -18,18 +18,7 @@ namespace ConfigExcelEnhancer.UI
             lblSourceExcel = new Label();
             txtSourceExcel = new TextBox();
             btnBrowseSource = new Button();
-            lblTargetMode = new Label();
-            pnlModeGroup = new Panel();
-            rdoDirectory = new RadioButton();
-            rdoList = new RadioButton();
-            pnlDirMode = new Panel();
-            txtTargetDir = new TextBox();
-            btnBrowseTargetDir = new Button();
-            pnlListMode = new Panel();
-            lstTargetFiles = new ListBox();
-            btnAddFiles = new Button();
-            btnRemoveFiles = new Button();
-            btnClearFiles = new Button();
+            excelPicker = new ExcelPickerControl();
             grpOptions = new GroupBox();
             chkIgnoreUnderscoreFiles = new CheckBox();
             lblSheetScope = new Label();
@@ -51,9 +40,6 @@ namespace ConfigExcelEnhancer.UI
             ctxMenuItemCopyLog = new ToolStripMenuItem();
             txtLog = new RichTextBox();
             pnlConfig.SuspendLayout();
-            pnlModeGroup.SuspendLayout();
-            pnlDirMode.SuspendLayout();
-            pnlListMode.SuspendLayout();
             grpOptions.SuspendLayout();
             pnlScopeGroup.SuspendLayout();
             ctxLog.SuspendLayout();
@@ -64,10 +50,7 @@ namespace ConfigExcelEnhancer.UI
             pnlConfig.Controls.Add(lblSourceExcel);
             pnlConfig.Controls.Add(txtSourceExcel);
             pnlConfig.Controls.Add(btnBrowseSource);
-            pnlConfig.Controls.Add(lblTargetMode);
-            pnlConfig.Controls.Add(pnlModeGroup);
-            pnlConfig.Controls.Add(pnlDirMode);
-            pnlConfig.Controls.Add(pnlListMode);
+            pnlConfig.Controls.Add(excelPicker);
             pnlConfig.Controls.Add(grpOptions);
             pnlConfig.Controls.Add(btnApply);
             pnlConfig.Controls.Add(btnStop);
@@ -90,7 +73,7 @@ namespace ConfigExcelEnhancer.UI
             // txtSourceExcel
             // 
             txtSourceExcel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtSourceExcel.Location = new Point(90, 14);
+            txtSourceExcel.Location = new Point(92, 11);
             txtSourceExcel.Name = "txtSourceExcel";
             txtSourceExcel.Size = new Size(480, 23);
             txtSourceExcel.TabIndex = 2;
@@ -99,134 +82,21 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseSource
             // 
             btnBrowseSource.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseSource.Location = new Point(578, 12);
+            btnBrowseSource.Location = new Point(578, 9);
             btnBrowseSource.Name = "btnBrowseSource";
             btnBrowseSource.Size = new Size(75, 28);
             btnBrowseSource.TabIndex = 3;
             btnBrowseSource.Text = "浏览...";
             btnBrowseSource.Click += btnBrowseSource_Click;
             // 
-            // lblTargetMode
+            // excelPicker
             // 
-            lblTargetMode.AutoSize = true;
-            lblTargetMode.Location = new Point(12, 52);
-            lblTargetMode.Name = "lblTargetMode";
-            lblTargetMode.Size = new Size(56, 17);
-            lblTargetMode.TabIndex = 4;
-            lblTargetMode.Text = "目标表：";
-            // 
-            // pnlModeGroup
-            // 
-            pnlModeGroup.Controls.Add(rdoDirectory);
-            pnlModeGroup.Controls.Add(rdoList);
-            pnlModeGroup.Location = new Point(78, 45);
-            pnlModeGroup.Name = "pnlModeGroup";
-            pnlModeGroup.Size = new Size(210, 29);
-            pnlModeGroup.TabIndex = 5;
-            // 
-            // rdoDirectory
-            // 
-            rdoDirectory.AutoSize = true;
-            rdoDirectory.Checked = true;
-            rdoDirectory.Location = new Point(4, 3);
-            rdoDirectory.Name = "rdoDirectory";
-            rdoDirectory.Size = new Size(74, 21);
-            rdoDirectory.TabIndex = 0;
-            rdoDirectory.TabStop = true;
-            rdoDirectory.Text = "目录模式";
-            rdoDirectory.CheckedChanged += rdoDirectory_CheckedChanged;
-            // 
-            // rdoList
-            // 
-            rdoList.AutoSize = true;
-            rdoList.Location = new Point(94, 3);
-            rdoList.Name = "rdoList";
-            rdoList.Size = new Size(74, 21);
-            rdoList.TabIndex = 1;
-            rdoList.Text = "列表模式";
-            rdoList.CheckedChanged += rdoList_CheckedChanged;
-            // 
-            // pnlDirMode
-            // 
-            pnlDirMode.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            pnlDirMode.Controls.Add(txtTargetDir);
-            pnlDirMode.Controls.Add(btnBrowseTargetDir);
-            pnlDirMode.Location = new Point(12, 82);
-            pnlDirMode.Name = "pnlDirMode";
-            pnlDirMode.Size = new Size(641, 102);
-            pnlDirMode.TabIndex = 6;
-            // 
-            // txtTargetDir
-            // 
-            txtTargetDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtTargetDir.Location = new Point(0, 4);
-            txtTargetDir.Name = "txtTargetDir";
-            txtTargetDir.Size = new Size(555, 23);
-            txtTargetDir.TabIndex = 0;
-            txtTargetDir.TextChanged += txtTargetDir_TextChanged;
-            // 
-            // btnBrowseTargetDir
-            // 
-            btnBrowseTargetDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseTargetDir.Location = new Point(563, 2);
-            btnBrowseTargetDir.Name = "btnBrowseTargetDir";
-            btnBrowseTargetDir.Size = new Size(75, 28);
-            btnBrowseTargetDir.TabIndex = 1;
-            btnBrowseTargetDir.Text = "浏览...";
-            btnBrowseTargetDir.Click += btnBrowseTargetDir_Click;
-            // 
-            // pnlListMode
-            // 
-            pnlListMode.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            pnlListMode.Controls.Add(lstTargetFiles);
-            pnlListMode.Controls.Add(btnAddFiles);
-            pnlListMode.Controls.Add(btnRemoveFiles);
-            pnlListMode.Controls.Add(btnClearFiles);
-            pnlListMode.Location = new Point(12, 82);
-            pnlListMode.Name = "pnlListMode";
-            pnlListMode.Size = new Size(641, 102);
-            pnlListMode.TabIndex = 7;
-            pnlListMode.Visible = false;
-            // 
-            // lstTargetFiles
-            // 
-            lstTargetFiles.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            lstTargetFiles.HorizontalScrollbar = true;
-            lstTargetFiles.Location = new Point(0, 0);
-            lstTargetFiles.Name = "lstTargetFiles";
-            lstTargetFiles.SelectionMode = SelectionMode.MultiSimple;
-            lstTargetFiles.Size = new Size(553, 89);
-            lstTargetFiles.TabIndex = 0;
-            // 
-            // btnAddFiles
-            // 
-            btnAddFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnAddFiles.Location = new Point(561, -4);
-            btnAddFiles.Name = "btnAddFiles";
-            btnAddFiles.Size = new Size(75, 28);
-            btnAddFiles.TabIndex = 1;
-            btnAddFiles.Text = "添加...";
-            btnAddFiles.Click += btnAddFiles_Click;
-            // 
-            // btnRemoveFiles
-            // 
-            btnRemoveFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnRemoveFiles.Location = new Point(561, 28);
-            btnRemoveFiles.Name = "btnRemoveFiles";
-            btnRemoveFiles.Size = new Size(75, 28);
-            btnRemoveFiles.TabIndex = 2;
-            btnRemoveFiles.Text = "移除选中";
-            btnRemoveFiles.Click += btnRemoveFiles_Click;
-            // 
-            // btnClearFiles
-            // 
-            btnClearFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnClearFiles.Location = new Point(561, 62);
-            btnClearFiles.Name = "btnClearFiles";
-            btnClearFiles.Size = new Size(75, 28);
-            btnClearFiles.TabIndex = 3;
-            btnClearFiles.Text = "清空";
-            btnClearFiles.Click += btnClearFiles_Click;
+            excelPicker.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            excelPicker.Location = new Point(12, 45);
+            excelPicker.Name = "excelPicker";
+            excelPicker.Size = new Size(641, 136);
+            excelPicker.TabIndex = 4;
+            excelPicker.ValueChanged += excelPicker_ValueChanged;
             // 
             // grpOptions
             // 
@@ -447,11 +317,6 @@ namespace ConfigExcelEnhancer.UI
             Size = new Size(665, 530);
             pnlConfig.ResumeLayout(false);
             pnlConfig.PerformLayout();
-            pnlModeGroup.ResumeLayout(false);
-            pnlModeGroup.PerformLayout();
-            pnlDirMode.ResumeLayout(false);
-            pnlDirMode.PerformLayout();
-            pnlListMode.ResumeLayout(false);
             grpOptions.ResumeLayout(false);
             grpOptions.PerformLayout();
             pnlScopeGroup.ResumeLayout(false);
@@ -464,18 +329,7 @@ namespace ConfigExcelEnhancer.UI
         private Label lblSourceExcel = null!;
         private TextBox txtSourceExcel = null!;
         private Button btnBrowseSource = null!;
-        private Label lblTargetMode = null!;
-        private Panel pnlModeGroup = null!;
-        private RadioButton rdoDirectory = null!;
-        private RadioButton rdoList = null!;
-        private Panel pnlDirMode = null!;
-        private TextBox txtTargetDir = null!;
-        private Button btnBrowseTargetDir = null!;
-        private Panel pnlListMode = null!;
-        private ListBox lstTargetFiles = null!;
-        private Button btnAddFiles = null!;
-        private Button btnRemoveFiles = null!;
-        private Button btnClearFiles = null!;
+        private ExcelPickerControl excelPicker = null!;
         private GroupBox grpOptions = null!;
         private CheckBox chkIgnoreUnderscoreFiles = null!;
         private Label lblSheetScope = null!;

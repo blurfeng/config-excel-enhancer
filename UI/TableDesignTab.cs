@@ -10,7 +10,6 @@ namespace ConfigExcelEnhancer.UI
     /// </summary>
     public partial class TableDesignTab : UserControl
     {
-        // 当前运行任务的取消令牌源；未运行时为 null
         private CancellationTokenSource? _cts;
 
         /// <summary>任务执行状态变化时触发（true = 开始执行，false = 执行结束）。</summary>
@@ -32,16 +31,9 @@ namespace ConfigExcelEnhancer.UI
         {
             txtSourceExcel.Text = Settings.TableDesignSourceExcel;
 
-            if (Settings.TableDesignTargetMode == 1)
-                rdoList.Checked = true;
-            else
-                rdoDirectory.Checked = true;
-
-            txtTargetDir.Text = Settings.TableDesignTargetDirectory;
-
-            lstTargetFiles.Items.Clear();
-            foreach (var f in Settings.TableDesignTargetFiles)
-                lstTargetFiles.Items.Add(f);
+            excelPicker.Mode = Settings.TableDesignTargetMode;
+            excelPicker.ExcelDirectory = Settings.TableDesignTargetDirectory;
+            excelPicker.Files = Settings.TableDesignTargetFiles;
 
             chkIgnoreUnderscoreFiles.Checked = Settings.TableDesignIgnoreUnderscoreFiles;
 
@@ -58,15 +50,6 @@ namespace ConfigExcelEnhancer.UI
             chkMergeHeaderCells.Checked = Settings.TableDesignMergeHeaderCells;
             txtMergeKeywords.Text = string.IsNullOrEmpty(Settings.TableDesignMergeHeaderKeywords)
                 ? "##type" : Settings.TableDesignMergeHeaderKeywords;
-
-            UpdateTargetModeVisibility();
-        }
-
-        // 根据当前目标模式单选钮切换显示目录面板或列表面板
-        private void UpdateTargetModeVisibility()
-        {
-            pnlDirMode.Visible = rdoDirectory.Checked;
-            pnlListMode.Visible = rdoList.Checked;
         }
 
         // ── 设置同步 ──────────────────────────────────────────────────────
@@ -74,29 +57,12 @@ namespace ConfigExcelEnhancer.UI
         private void txtSourceExcel_TextChanged(object sender, EventArgs e)
             => Settings.TableDesignSourceExcel = txtSourceExcel.Text;
 
-        private void rdoDirectory_CheckedChanged(object sender, EventArgs e)
+        private void excelPicker_ValueChanged(object? sender, EventArgs e)
         {
-            if (rdoDirectory.Checked)
-            {
-                Settings.TableDesignTargetMode = 0;
-                UpdateTargetModeVisibility();
-            }
+            Settings.TableDesignTargetMode = excelPicker.Mode;
+            Settings.TableDesignTargetDirectory = excelPicker.ExcelDirectory;
+            Settings.TableDesignTargetFiles = excelPicker.Files;
         }
-
-        private void rdoList_CheckedChanged(object sender, EventArgs e)
-        {
-            if (rdoList.Checked)
-            {
-                Settings.TableDesignTargetMode = 1;
-                UpdateTargetModeVisibility();
-            }
-        }
-
-        private void txtTargetDir_TextChanged(object sender, EventArgs e)
-            => Settings.TableDesignTargetDirectory = txtTargetDir.Text;
-
-        private void chkIgnoreUnderscoreFiles_CheckedChanged(object sender, EventArgs e)
-            => Settings.TableDesignIgnoreUnderscoreFiles = chkIgnoreUnderscoreFiles.Checked;
 
         private void rdoScopeAll_CheckedChanged(object sender, EventArgs e)
         {
@@ -109,6 +75,9 @@ namespace ConfigExcelEnhancer.UI
             if (rdoScopeFirst.Checked)
                 Settings.TableDesignSheetScope = 1;
         }
+
+        private void chkIgnoreUnderscoreFiles_CheckedChanged(object sender, EventArgs e)
+            => Settings.TableDesignIgnoreUnderscoreFiles = chkIgnoreUnderscoreFiles.Checked;
 
         private void chkIgnoreUnderscoreSheets_CheckedChanged(object sender, EventArgs e)
             => Settings.TableDesignIgnoreUnderscoreSheets = chkIgnoreUnderscoreSheets.Checked;
@@ -137,54 +106,13 @@ namespace ConfigExcelEnhancer.UI
                 txtSourceExcel.Text = files[0];
         }
 
-        private void btnBrowseTargetDir_Click(object sender, EventArgs e)
-        {
-            if (DialogHelper.BrowseFolder("选择目标配置 Excel 目录", Settings.TableDesignTargetDirectory) is { } path)
-                txtTargetDir.Text = path;
-        }
-
-        private void btnAddFiles_Click(object sender, EventArgs e)
-        {
-            var files = DialogHelper.BrowseFiles(
-                "选择目标 Excel 文件",
-                "Excel 文件 (*.xlsx)|*.xlsx",
-                multiselect: true);
-            if (files.Length > 0)
-            {
-                foreach (var f in files)
-                    if (!lstTargetFiles.Items.Contains(f))
-                        lstTargetFiles.Items.Add(f);
-                SyncTargetFilesToSettings();
-            }
-        }
-
-        private void btnRemoveFiles_Click(object sender, EventArgs e)
-        {
-            foreach (var item in lstTargetFiles.SelectedItems.Cast<string>().ToList())
-                lstTargetFiles.Items.Remove(item);
-            SyncTargetFilesToSettings();
-        }
-
-        private void btnClearFiles_Click(object sender, EventArgs e)
-        {
-            lstTargetFiles.Items.Clear();
-            SyncTargetFilesToSettings();
-        }
-
-        // 将列表框当前内容同步回 Settings，确保持久化时包含最新文件列表
-        private void SyncTargetFilesToSettings()
-            => Settings.TableDesignTargetFiles = lstTargetFiles.Items.Cast<string>().ToList();
-
         // ── 主流程 ────────────────────────────────────────────────────────
 
-        // 执行期间锁定所有输入控件，防止用户在任务运行时修改参数
         private void SetUILocked(bool locked)
         {
             txtSourceExcel.Enabled = !locked;
             btnBrowseSource.Enabled = !locked;
-            pnlModeGroup.Enabled = !locked;
-            pnlDirMode.Enabled = !locked;
-            pnlListMode.Enabled = !locked;
+            excelPicker.Enabled = !locked;
             chkIgnoreUnderscoreFiles.Enabled = !locked;
             pnlScopeGroup.Enabled = !locked;
             chkIgnoreUnderscoreSheets.Enabled = !locked;
@@ -203,7 +131,7 @@ namespace ConfigExcelEnhancer.UI
                 return;
             }
 
-            var targetFiles = BuildTargetFileList();
+            var targetFiles = excelPicker.BuildFileList(sourcePath);
             if (targetFiles.Count == 0)
             {
                 Log("未找到任何目标文件。", LogLevel.Warn);
@@ -280,34 +208,6 @@ namespace ConfigExcelEnhancer.UI
         {
             _cts?.Cancel();
             btnStop.Enabled = false;
-        }
-
-        /// <summary>
-        /// 根据当前目标模式构建目标文件列表。
-        /// 目录模式：枚举目录顶层的 xlsx（排除临时文件和模板文件本身）；
-        /// 列表模式：过滤掉已被删除的文件后返回。
-        /// </summary>
-        private List<string> BuildTargetFileList()
-        {
-            if (rdoDirectory.Checked)
-            {
-                string dir = txtTargetDir.Text.Trim();
-                if (!Directory.Exists(dir))
-                    return new List<string>();
-
-                string sourceFull = Path.GetFullPath(txtSourceExcel.Text.Trim());
-                return Directory.EnumerateFiles(dir, "*.xlsx", SearchOption.TopDirectoryOnly)
-                    .Where(f => !Path.GetFileName(f).StartsWith("~$"))
-                    .Where(f => !string.Equals(Path.GetFullPath(f), sourceFull,
-                        StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-            }
-            else
-            {
-                return lstTargetFiles.Items.Cast<string>()
-                    .Where(File.Exists)
-                    .ToList();
-            }
         }
 
         // ── 日志工具 ──────────────────────────────────────────────────────

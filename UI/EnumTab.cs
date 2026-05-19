@@ -42,20 +42,15 @@ namespace ConfigExcelEnhancer.UI
             }
         }
 
-        private void btnBrowseExcel_Click(object sender, EventArgs e)
-        {
-            if (DialogHelper.BrowseFolder("选择 Excel 配置目录", Settings.ExcelDirectory) is { } path)
-            {
-                txtExcelDir.Text = path;
-                Settings.ExcelDirectory = path;
-            }
-        }
-
         private void txtXmlDir_TextChanged(object sender, EventArgs e)
             => Settings.XmlDirectory = txtXmlDir.Text;
 
-        private void txtExcelDir_TextChanged(object sender, EventArgs e)
-            => Settings.ExcelDirectory = txtExcelDir.Text;
+        private void excelPicker_ValueChanged(object? sender, EventArgs e)
+        {
+            Settings.EnumExcelMode = excelPicker.Mode;
+            Settings.ExcelDirectory = excelPicker.ExcelDirectory;
+            Settings.EnumExcelFiles = excelPicker.Files;
+        }
 
         private void chkHideEnumDataSheet_CheckedChanged(object sender, EventArgs e)
             => Settings.HideEnumDataSheet = chkHideEnumDataSheet.Checked;
@@ -69,7 +64,9 @@ namespace ConfigExcelEnhancer.UI
         public void LoadFromSettings()
         {
             txtXmlDir.Text = Settings.XmlDirectory;
-            txtExcelDir.Text = Settings.ExcelDirectory;
+            excelPicker.Mode = Settings.EnumExcelMode;
+            excelPicker.ExcelDirectory = Settings.ExcelDirectory;
+            excelPicker.Files = Settings.EnumExcelFiles;
             chkHideEnumDataSheet.Checked = Settings.HideEnumDataSheet;
             chkForceRewrite.Checked = Settings.EnumForceRewrite;
             chkBoolValidation.Checked = Settings.BoolValidation;
@@ -81,8 +78,7 @@ namespace ConfigExcelEnhancer.UI
         {
             txtXmlDir.Enabled = !locked;
             btnBrowseXml.Enabled = !locked;
-            txtExcelDir.Enabled = !locked;
-            btnBrowseExcel.Enabled = !locked;
+            excelPicker.Enabled = !locked;
             chkHideEnumDataSheet.Enabled = !locked;
             chkForceRewrite.Enabled = !locked;
             chkBoolValidation.Enabled = !locked;
@@ -90,18 +86,35 @@ namespace ConfigExcelEnhancer.UI
 
         private async void btnUpdate_Click(object sender, EventArgs e)
         {
-            var xmlDir   = txtXmlDir.Text.Trim();
-            var excelDir = txtExcelDir.Text.Trim();
+            var xmlDir = txtXmlDir.Text.Trim();
 
             if (!Directory.Exists(xmlDir))
             {
                 Log("数据定义 XML 目录不存在。", LogLevel.Error);
                 return;
             }
-            if (!Directory.Exists(excelDir))
+
+            // 验证 Excel 来源
+            bool useListMode = excelPicker.Mode == 1;
+            string excelDir = excelPicker.ExcelDirectory.Trim();
+            List<string>? listModeFiles = null;
+
+            if (useListMode)
             {
-                Log("Excel 配置目录不存在。", LogLevel.Error);
-                return;
+                listModeFiles = excelPicker.BuildFileList();
+                if (listModeFiles.Count == 0)
+                {
+                    Log("列表中没有有效的 Excel 文件。", LogLevel.Error);
+                    return;
+                }
+            }
+            else
+            {
+                if (!Directory.Exists(excelDir))
+                {
+                    Log("配置 Excel 目录不存在。", LogLevel.Error);
+                    return;
+                }
             }
 
             _cts = new CancellationTokenSource();
@@ -150,7 +163,6 @@ namespace ConfigExcelEnhancer.UI
                 }
 
                 // 布尔值验证：注入合成 bool 枚举（Name="bool"，选项 FALSE/TRUE）
-                // 将 "bool" 加入 enumNameSet，使 ScanBeanEnumFields 也能识别 bean 内的 bool 字段
                 var enumsForValidation = enums.ToList();
                 if (Settings.BoolValidation)
                 {
@@ -167,7 +179,7 @@ namespace ConfigExcelEnhancer.UI
                     Log("布尔值数据验证已启用（FALSE/TRUE）。", LogLevel.Info);
                 }
 
-                // 扫描 bean 字段枚举映射（数据结构中使用了枚举或 bool 类型的字段）
+                // 扫描 bean 字段枚举映射
                 var beanFieldEnumMap = await Task.Run(
                     () => EnumScanner.ScanBeanEnumFields(xmlDir, enumNameSet), token);
                 if (beanFieldEnumMap.Count > 0)
@@ -179,27 +191,53 @@ namespace ConfigExcelEnhancer.UI
                 Log("开始修改 Excel...", LogLevel.Info);
                 sw.Restart();
 
-                int totalFiles = Directory.EnumerateFiles(excelDir, "*.xlsx", SearchOption.AllDirectories)
-                    .Count(f => !Path.GetFileName(f).StartsWith("~$"));
+                int totalFiles;
                 int processed = 0;
+                List<UpdateResult> results;
 
-                var results = await Task.Run(() =>
-                    ValidationUpdater.UpdateDirectory(
-                        excelDir,
-                        enumsForValidation,
-                        chkHideEnumDataSheet.Checked,
-                        result =>
-                        {
-                            processed++;
-                            int v = totalFiles > 0 ? 200 + (int)(processed * 600.0 / totalFiles) : 800;
-                            BeginInvoke(() =>
+                if (useListMode)
+                {
+                    totalFiles = listModeFiles!.Count;
+                    results = await Task.Run(() =>
+                        ValidationUpdater.UpdateFiles(
+                            listModeFiles,
+                            enumsForValidation,
+                            chkHideEnumDataSheet.Checked,
+                            result =>
                             {
-                                LogFileResult(result);
-                                pbUpdate.Value = Math.Min(v, 800);
-                            });
-                        },
-                        forceRewrite: chkForceRewrite.Checked,
-                        beanFieldEnumMap: beanFieldEnumMap), token);
+                                processed++;
+                                int v = totalFiles > 0 ? 200 + (int)(processed * 600.0 / totalFiles) : 800;
+                                BeginInvoke(() =>
+                                {
+                                    LogFileResult(result);
+                                    pbUpdate.Value = Math.Min(v, 800);
+                                });
+                            },
+                            forceRewrite: chkForceRewrite.Checked,
+                            beanFieldEnumMap: beanFieldEnumMap), token);
+                }
+                else
+                {
+                    totalFiles = Directory.EnumerateFiles(excelDir, "*.xlsx", SearchOption.AllDirectories)
+                        .Count(f => !Path.GetFileName(f).StartsWith("~$"));
+                    results = await Task.Run(() =>
+                        ValidationUpdater.UpdateDirectory(
+                            excelDir,
+                            enumsForValidation,
+                            chkHideEnumDataSheet.Checked,
+                            result =>
+                            {
+                                processed++;
+                                int v = totalFiles > 0 ? 200 + (int)(processed * 600.0 / totalFiles) : 800;
+                                BeginInvoke(() =>
+                                {
+                                    LogFileResult(result);
+                                    pbUpdate.Value = Math.Min(v, 800);
+                                });
+                            },
+                            forceRewrite: chkForceRewrite.Checked,
+                            beanFieldEnumMap: beanFieldEnumMap), token);
+                }
 
                 sw.Stop();
 
@@ -286,13 +324,11 @@ namespace ConfigExcelEnhancer.UI
             }
             if (!r.WasProcessed)
             {
-                // WasSaved=true 但无枚举列：理论上修复后不再出现，保留为兜底警告
                 if (r.WasSaved)
                     Log($"{r.FileName}  —  已写盘但未发现枚举列", LogLevel.Warn);
                 return;
             }
 
-            // 构建变更描述（三种变更独立显示）
             var parts = new List<string>();
             if (r.HasSchemaChange)
                 parts.Add("Enum 定义已变更");
@@ -309,14 +345,14 @@ namespace ConfigExcelEnhancer.UI
 
         private void PrintSummary(int enumCount, List<UpdateResult> results, TimeSpan elapsed)
         {
-            int total          = results.Count;
-            int withEnum       = results.Count(r => r.WasProcessed);
-            int withSchema     = results.Count(r => r.WasProcessed && r.HasSchemaChange);
-            int withData       = results.Count(r => r.WasProcessed && r.HasDataChange);
+            int total = results.Count;
+            int withEnum = results.Count(r => r.WasProcessed);
+            int withSchema = results.Count(r => r.WasProcessed && r.HasSchemaChange);
+            int withData = results.Count(r => r.WasProcessed && r.HasDataChange);
             int withVisibility = results.Count(r => r.HasVisibilityChange);
-            int skipped        = results.Count(r => r.WasSkipped);
-            int errors         = results.Count(r => r.HasError);
-            bool anyUpdate     = withSchema > 0 || withData > 0 || withVisibility > 0;
+            int skipped = results.Count(r => r.WasSkipped);
+            int errors = results.Count(r => r.HasError);
+            bool anyUpdate = withSchema > 0 || withData > 0 || withVisibility > 0;
 
             LogDivider();
             Log($"枚举定义：{enumCount} 个", LogLevel.Info);
@@ -330,7 +366,7 @@ namespace ConfigExcelEnhancer.UI
             };
             if (withVisibility > 0) statParts.Add($"可见性修正：{withVisibility} 个");
             if (skipped > 0) statParts.Add($"跳过：{skipped} 个");
-            if (errors  > 0) statParts.Add($"错误：{errors} 个");
+            if (errors > 0) statParts.Add($"错误：{errors} 个");
             Log(string.Join("  |  ", statParts), LogLevel.Info);
             Log($"耗时 {elapsed.TotalSeconds:F1}s", LogLevel.Skip);
 
@@ -340,8 +376,8 @@ namespace ConfigExcelEnhancer.UI
             else if (anyUpdate)
             {
                 var updateDesc = new List<string>();
-                if (withSchema     > 0) updateDesc.Add($"Enum 定义变更 {withSchema} 个文件");
-                if (withData       > 0) updateDesc.Add($"数据变更 {withData} 个文件");
+                if (withSchema > 0) updateDesc.Add($"Enum 定义变更 {withSchema} 个文件");
+                if (withData > 0) updateDesc.Add($"数据变更 {withData} 个文件");
                 if (withVisibility > 0) updateDesc.Add($"可见性修正 {withVisibility} 个文件");
                 Log($"完成 | 有更新内容（{string.Join("，", updateDesc)}）", LogLevel.Ok);
             }

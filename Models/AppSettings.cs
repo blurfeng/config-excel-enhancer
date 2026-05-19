@@ -26,6 +26,12 @@ namespace ConfigExcelEnhancer.Models
         /// <summary>是否为 bool 类型列添加 TRUE/FALSE 数据验证下拉框。</summary>
         public bool BoolValidation { get; set; } = true;
 
+        /// <summary>配置 Excel 文件选择模式：0 = 目录扫描，1 = 手动列表。</summary>
+        public int EnumExcelMode { get; set; } = 0;
+
+        /// <summary>配置 Excel 文件列表（列表模式下使用）。</summary>
+        public List<string> EnumExcelFiles { get; set; } = new();
+
         // ── 表设计 ────────────────────────────────────────
 
         /// <summary>表格设计模板 Excel 文件路径（样式来源）。</summary>
