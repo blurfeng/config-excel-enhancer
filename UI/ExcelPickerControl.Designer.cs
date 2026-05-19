@@ -116,7 +116,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             lstFiles.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             lstFiles.HorizontalScrollbar = true;
-            lstFiles.Location = new Point(0, 0);
+            lstFiles.Location = new Point(0, 3);
             lstFiles.Name = "lstFiles";
             lstFiles.SelectionMode = SelectionMode.MultiSimple;
             lstFiles.Size = new Size(553, 89);
@@ -125,7 +125,7 @@ namespace ConfigExcelEnhancer.UI
             // btnAdd
             // 
             btnAdd.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnAdd.Location = new Point(561, -4);
+            btnAdd.Location = new Point(566, 2);
             btnAdd.Name = "btnAdd";
             btnAdd.Size = new Size(75, 28);
             btnAdd.TabIndex = 1;
@@ -135,7 +135,7 @@ namespace ConfigExcelEnhancer.UI
             // btnRemove
             // 
             btnRemove.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnRemove.Location = new Point(561, 28);
+            btnRemove.Location = new Point(566, 33);
             btnRemove.Name = "btnRemove";
             btnRemove.Size = new Size(75, 28);
             btnRemove.TabIndex = 2;
@@ -145,7 +145,7 @@ namespace ConfigExcelEnhancer.UI
             // btnClear
             // 
             btnClear.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnClear.Location = new Point(561, 62);
+            btnClear.Location = new Point(566, 64);
             btnClear.Name = "btnClear";
             btnClear.Size = new Size(75, 28);
             btnClear.TabIndex = 3;
