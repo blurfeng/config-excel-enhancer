@@ -457,7 +457,8 @@ namespace ConfigExcelEnhancer.UI
                         idsAccumulator[key] = existing with
                         {
                             Entries = existing.Entries.Concat(idsResult.Entries).ToList(),
-                            OwnedGroups = existing.OwnedGroups.Union(idsResult.OwnedGroups).ToHashSet()
+                            OwnedGroups = existing.OwnedGroups.Union(idsResult.OwnedGroups).ToHashSet(),
+                            TemplateNamespace = existing.TemplateNamespace
                         };
                     }
                     else
@@ -482,7 +483,8 @@ namespace ConfigExcelEnhancer.UI
                             result.UsePartialClass,
                             result.UseGeneratedSuffix,
                             result.Entries,
-                            result.OwnedGroups);
+                            result.OwnedGroups,
+                            result.TemplateNamespace);
                         TemplateExporter.GenerateIds(genOptions,
                             (msg, lvl) => LogLibrary.Write(txtLog, msg, lvl));
                     }

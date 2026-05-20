@@ -17,7 +17,8 @@ namespace ConfigExcelEnhancer.Core
         bool UsePartialClass,
         bool UseGeneratedSuffix,
         List<(string ClassName, long Id, string Group)> Entries,
-        IReadOnlySet<string> OwnedGroups
+        IReadOnlySet<string> OwnedGroups,
+        string TemplateNamespace
     );
 
     /// <summary>合并后的 Ids 生成参数，传给 GenerateIds。</summary>
@@ -28,7 +29,8 @@ namespace ConfigExcelEnhancer.Core
         bool UsePartialClass,
         bool UseGeneratedSuffix,
         List<(string ClassName, long Id, string Group)> Entries,
-        IReadOnlySet<string> OwnedGroups
+        IReadOnlySet<string> OwnedGroups,
+        string TemplateNamespace
     );
 
     public static class TemplateExporter
@@ -201,7 +203,8 @@ namespace ConfigExcelEnhancer.Core
                 job.IdsUsePartialClass,
                 job.IdsUseGeneratedSuffix,
                 idsEntries,
-                ownedGroups);
+                ownedGroups,
+                job.Namespace);
         }
 
         // ── Ids 文件生成（由 RunJobs 合并后统一调用）────────────────
@@ -278,7 +281,10 @@ namespace ConfigExcelEnhancer.Core
                 firstGroup = false;
                 sb.AppendLine($"        #region {groupName}");
                 foreach (var (className, id) in items)
+                {
+                    sb.AppendLine($"        /// <summary><see cref=\"{options.TemplateNamespace}.{className}\"/></summary>");
                     sb.AppendLine($"        public const int {className} = {id};");
+                }
                 sb.AppendLine($"        #endregion");
             }
 
