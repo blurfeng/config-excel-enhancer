@@ -133,7 +133,7 @@ namespace ConfigExcelEnhancer.UI
             // btnStop
             // 
             btnStop.Enabled = false;
-            btnStop.Location = new Point(245, 5);
+            btnStop.Location = new Point(245, 4);
             btnStop.Name = "btnStop";
             btnStop.Size = new Size(80, 28);
             btnStop.TabIndex = 2;

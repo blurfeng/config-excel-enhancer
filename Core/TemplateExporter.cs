@@ -192,9 +192,19 @@ namespace ConfigExcelEnhancer.Core
                 return null;
 
             // 推断本任务"拥有"的 group 名称集合（与 group 赋值逻辑保持一致）
-            IReadOnlySet<string> ownedGroups = job.TypeTemplates.Count > 0
-                ? (IReadOnlySet<string>)job.TypeTemplates.Keys.ToHashSet()
-                : new HashSet<string> { job.IdsClassName };
+            // 合并当前配置的 key 与上次导出的历史 key，确保改名后旧 group 也能被清除
+            IReadOnlySet<string> ownedGroups;
+            if (job.TypeTemplates.Count > 0)
+            {
+                var combinedGroups = job.TypeTemplates.Keys.ToHashSet();
+                foreach (var g in job.LastExportedOwnedGroups)
+                    combinedGroups.Add(g);
+                ownedGroups = combinedGroups;
+            }
+            else
+            {
+                ownedGroups = new HashSet<string> { job.IdsClassName };
+            }
 
             return new IdsCollectionResult(
                 job.IdsOutputDirectory,

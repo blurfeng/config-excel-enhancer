@@ -46,5 +46,16 @@ namespace ConfigExcelEnhancer.Models
 
         /// <summary>作为 ID 来源的 JSON 字段（默认 "id"）。</summary>
         public string IdField { get; set; } = "id";
+
+        // ── 导出缓存 ───────────────────────────────────────────────────
+
+        /// <summary>上次成功导出时使用的 Ids 类名（用于检测重命名）。</summary>
+        public string LastExportedIdsClassName { get; set; } = "";
+
+        /// <summary>上次成功导出时使用的 Ids 输出目录。</summary>
+        public string LastExportedIdsOutputDirectory { get; set; } = "";
+
+        /// <summary>上次成功导出时拥有的 group 名称列表（用于检测 $type 改名后清除旧 group）。</summary>
+        public List<string> LastExportedOwnedGroups { get; set; } = new();
     }
 }

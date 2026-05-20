@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using ConfigExcelEnhancer.Core;
 using ConfigExcelEnhancer.Models;
+using ConfigExcelEnhancer.Utils;
 
 namespace ConfigExcelEnhancer.UI
 {
@@ -427,6 +428,20 @@ namespace ConfigExcelEnhancer.UI
                     continue;
                 }
 
+                // 检查 Ids 类名是否发生了重命名
+                if (job.GenerateIds
+                    && !string.IsNullOrWhiteSpace(job.LastExportedIdsClassName)
+                    && job.LastExportedIdsClassName != job.IdsClassName)
+                {
+                    string suffix = job.IdsUseGeneratedSuffix ? ".Generated" : "";
+                    string oldFile = Path.Combine(
+                        job.LastExportedIdsOutputDirectory,
+                        $"{job.LastExportedIdsClassName}{suffix}.cs");
+                    Log($"任务「{job.DisplayName}」的 Ids 类名已从 \"{job.LastExportedIdsClassName}\" 改为 \"{job.IdsClassName}\"。" +
+                        $"请先手动删除旧文件（{oldFile}），再执行导出，否则会导致数据残留。", LogLevel.Error);
+                    continue;
+                }
+
                 Log($"── 任务：{job.DisplayName} ──", LogLevel.Section);
                 int jobBase = i * 100;
                 int processed = 0;
@@ -487,11 +502,36 @@ namespace ConfigExcelEnhancer.UI
                             result.TemplateNamespace);
                         TemplateExporter.GenerateIds(genOptions,
                             (msg, lvl) => LogLibrary.Write(txtLog, msg, lvl));
+
+                        // 更新缓存：遍历所有任务，标记成功导出的 Ids 类名、目录和 owned groups
+                        foreach (var j in jobs)
+                        {
+                            if (!j.GenerateIds) continue;
+                            var k = (j.IdsOutputDirectory, j.IdsClassName);
+                            if (idsAccumulator.ContainsKey(k))
+                            {
+                                j.LastExportedIdsClassName = j.IdsClassName;
+                                j.LastExportedIdsOutputDirectory = j.IdsOutputDirectory;
+                                j.LastExportedOwnedGroups = j.TypeTemplates.Count > 0
+                                    ? j.TypeTemplates.Keys.ToList()
+                                    : new List<string> { j.IdsClassName };
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
                         Log($"Ids 文件生成失败（{result.IdsClassName}）：{ex.Message}", LogLevel.Error);
                     }
+                }
+
+                // 持久化设置，保存缓存字段
+                try
+                {
+                    SettingsManager.Save(Settings);
+                }
+                catch (Exception ex)
+                {
+                    Log($"保存设置失败：{ex.Message}", LogLevel.Warn);
                 }
             }
 
