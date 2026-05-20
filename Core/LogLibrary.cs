@@ -98,6 +98,45 @@ namespace ConfigExcelEnhancer.Core
             else DoWrite();
         }
 
+        /// <summary>
+        /// 原地替换 RichTextBox 最后一行内容（不新增行），用于进度刷新。线程安全。
+        /// 若日志为空则等同于 Write。
+        /// </summary>
+        public static void UpdateLastLine(RichTextBox rtb, string message, LogLevel level = LogLevel.Ok)
+        {
+            void DoUpdate()
+            {
+                var (color, tag) = LevelMeta[level];
+                string newLine = $"[{DateTime.Now:HH:mm:ss}] [{tag}] {message}";
+
+                // 找最后一行的起始位置（最后一个换行符之后）
+                string text = rtb.Text;
+                // 末尾可能有 \n，去掉后找上一个换行
+                string trimmed = text.TrimEnd('\n').TrimEnd('\r');
+                int lastNl = trimmed.LastIndexOf('\n');
+                int lineStart = lastNl < 0 ? 0 : lastNl + 1;
+
+                rtb.SelectionStart  = lineStart;
+                rtb.SelectionLength = rtb.TextLength - lineStart;
+                rtb.SelectionColor  = color;
+                rtb.SelectedText    = newLine;
+
+                // 确保末尾有换行
+                if (!rtb.Text.EndsWith(Environment.NewLine))
+                {
+                    rtb.SelectionStart  = rtb.TextLength;
+                    rtb.SelectionLength = 0;
+                    rtb.AppendText(Environment.NewLine);
+                }
+                rtb.ScrollToCaret();
+            }
+
+            if (rtb.InvokeRequired)
+                rtb.BeginInvoke(DoUpdate);
+            else
+                DoUpdate();
+        }
+
         /// <summary>返回指定日志级别对应的显示颜色。</summary>
         public static Color LevelToColor(LogLevel level) => LevelMeta[level].color;
     }

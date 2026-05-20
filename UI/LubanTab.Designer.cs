@@ -112,7 +112,7 @@ namespace ConfigExcelEnhancer.UI
             btnRun.Name = "btnRun";
             btnRun.Size = new Size(110, 32);
             btnRun.TabIndex = 1;
-            btnRun.Text = "执行导表";
+            btnRun.Text = "▶ 执行导表";
             btnRun.Click += btnRun_Click;
             // 
             // btnCancel
@@ -122,7 +122,7 @@ namespace ConfigExcelEnhancer.UI
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(80, 32);
             btnCancel.TabIndex = 2;
-            btnCancel.Text = "取消";
+            btnCancel.Text = "■ 取消";
             btnCancel.Click += btnCancel_Click;
             // 
             // btnReset

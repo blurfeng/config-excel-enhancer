@@ -84,14 +84,18 @@ namespace ConfigExcelEnhancer.UI
             chkBoolValidation.Enabled = !locked;
         }
 
-        private async void btnUpdate_Click(object sender, EventArgs e)
+        /// <summary>
+        /// 公开的异步执行入口，供 HomeTab 等外部调用。
+        /// 返回 Task&lt;bool&gt;：true 表示成功，false 表示失败或取消。
+        /// </summary>
+        public async Task<bool> RunAsync()
         {
             var xmlDir = txtXmlDir.Text.Trim();
 
             if (!Directory.Exists(xmlDir))
             {
                 Log("数据定义 XML 目录不存在。", LogLevel.Error);
-                return;
+                return false;
             }
 
             // 验证 Excel 来源
@@ -105,7 +109,7 @@ namespace ConfigExcelEnhancer.UI
                 if (listModeFiles.Count == 0)
                 {
                     Log("列表中没有有效的 Excel 文件。", LogLevel.Error);
-                    return;
+                    return false;
                 }
             }
             else
@@ -113,7 +117,7 @@ namespace ConfigExcelEnhancer.UI
                 if (!Directory.Exists(excelDir))
                 {
                     Log("配置 Excel 目录不存在。", LogLevel.Error);
-                    return;
+                    return false;
                 }
             }
 
@@ -129,6 +133,8 @@ namespace ConfigExcelEnhancer.UI
             pbUpdate.Visible = true;
             LogDivider();
 
+            bool success = false;
+
             try
             {
                 // ── 步骤1：扫描数据定义 XML ──────────────────────────
@@ -143,7 +149,7 @@ namespace ConfigExcelEnhancer.UI
                 if (enums.Count == 0)
                 {
                     Log("未找到任何 Enum 定义，请检查数据定义 XML 目录。", LogLevel.Warn);
-                    return;
+                    return false;
                 }
 
                 // 枚举列表（超过 8 个时截断显示）
@@ -267,6 +273,7 @@ namespace ConfigExcelEnhancer.UI
                 }
 
                 pbUpdate.Value = 1000;
+                success = true;
             }
             catch (OperationCanceledException)
             {
@@ -289,6 +296,13 @@ namespace ConfigExcelEnhancer.UI
                 Log("─ 结束 ─", LogLevel.Info);
                 LogDivider();
             }
+
+            return success;
+        }
+
+        private async void btnUpdate_Click(object sender, EventArgs e)
+        {
+            await RunAsync();
         }
 
         private void btnStop_Click(object sender, EventArgs e)

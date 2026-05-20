@@ -16,6 +16,8 @@ namespace ConfigExcelEnhancer
         private void InitializeComponent()
         {
             tabControl = new TabControl();
+            tabHome = new TabPage();
+            homeTab = new HomeTab();
             tabEnum = new TabPage();
             enumTab = new EnumTab();
             tabLuban = new TabPage();
@@ -27,6 +29,7 @@ namespace ConfigExcelEnhancer
             tabSettings = new TabPage();
             settingsTab = new SettingsTab();
             tabControl.SuspendLayout();
+            tabHome.SuspendLayout();
             tabEnum.SuspendLayout();
             tabLuban.SuspendLayout();
             tabTableDesign.SuspendLayout();
@@ -36,11 +39,20 @@ namespace ConfigExcelEnhancer
 
             // tabControl
             tabControl.Dock = DockStyle.Fill;
+            tabControl.Controls.Add(tabHome);
             tabControl.Controls.Add(tabTemplate);
             tabControl.Controls.Add(tabLuban);
             tabControl.Controls.Add(tabEnum);
             tabControl.Controls.Add(tabTableDesign);
             tabControl.Controls.Add(tabSettings);
+
+            // tabHome
+            tabHome.Text = "主页";
+            tabHome.Padding = new Padding(4);
+            tabHome.Controls.Add(homeTab);
+
+            // homeTab
+            homeTab.Dock = DockStyle.Fill;
 
             // tabEnum
             tabEnum.Text = "Enum 验证";
@@ -85,11 +97,12 @@ namespace ConfigExcelEnhancer
             // MainForm
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 730);
-            MinimumSize = new Size(400, 300);
+            ClientSize = new Size(860, 600);
+            MinimumSize = new Size(800, 560);
             Controls.Add(tabControl);
             Text = "ConfigStudio";
             tabControl.ResumeLayout(false);
+            tabHome.ResumeLayout(false);
             tabEnum.ResumeLayout(false);
             tabLuban.ResumeLayout(false);
             tabTableDesign.ResumeLayout(false);
@@ -99,6 +112,8 @@ namespace ConfigExcelEnhancer
         }
 
         private TabControl tabControl = null!;
+        private TabPage tabHome = null!;
+        private HomeTab homeTab = null!;
         private TabPage tabEnum = null!;
         private EnumTab enumTab = null!;
         private TabPage tabLuban = null!;

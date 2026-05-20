@@ -140,7 +140,7 @@ namespace ConfigExcelEnhancer.UI
             btnUpdate.Name = "btnUpdate";
             btnUpdate.Size = new Size(110, 32);
             btnUpdate.TabIndex = 8;
-            btnUpdate.Text = "更新 Enum 验证";
+            btnUpdate.Text = "▶ 更新 Enum 验证";
             btnUpdate.Click += btnUpdate_Click;
             // 
             // btnStop
@@ -150,7 +150,7 @@ namespace ConfigExcelEnhancer.UI
             btnStop.Name = "btnStop";
             btnStop.Size = new Size(80, 32);
             btnStop.TabIndex = 9;
-            btnStop.Text = "停止";
+            btnStop.Text = "■ 停止";
             btnStop.Click += btnStop_Click;
             // 
             // pbUpdate

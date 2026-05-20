@@ -445,13 +445,19 @@ namespace ConfigExcelEnhancer.UI
             }
         }
 
-        private void btnRun_Click(object sender, EventArgs e)
+        /// <summary>
+        /// 公开的异步执行入口，供 HomeTab 等外部调用。
+        /// 返回 Task&lt;bool&gt;：true 表示成功，false 表示失败或取消。
+        /// </summary>
+        public Task<bool> RunAsync()
         {
             if (string.IsNullOrEmpty(Settings.GenBatPath) || !File.Exists(Settings.GenBatPath))
             {
                 Log("请先选择有效的 gen.bat 路径。", LogLevel.Error);
-                return;
+                return Task.FromResult(false);
             }
+
+            var tcs = new TaskCompletionSource<bool>();
 
             SetUILocked(true);
             ExecutionStateChanged?.Invoke(this, true);
@@ -483,7 +489,8 @@ namespace ConfigExcelEnhancer.UI
             });
             _runner.Finished += code => BeginInvoke(() =>
             {
-                if (code == 0 && !_hasError)
+                bool success = code == 0 && !_hasError;
+                if (success)
                     Log("导表完成。", LogLevel.Ok);
                 else
                     Log($"导表失败，退出码：{code}", LogLevel.Error);
@@ -496,9 +503,13 @@ namespace ConfigExcelEnhancer.UI
                 _runner = null;
                 Log("─ 结束 ─", LogLevel.Info);
                 LogDivider();
+                tcs.TrySetResult(success);
             });
 
-            try { _runner.Run(Settings.GenBatPath); }
+            try
+            {
+                _runner.Run(Settings.GenBatPath);
+            }
             catch (Exception ex)
             {
                 Log($"启动失败：{ex.Message}", LogLevel.Error);
@@ -507,7 +518,15 @@ namespace ConfigExcelEnhancer.UI
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
                 pbRun.Visible = false;
+                tcs.TrySetResult(false);
             }
+
+            return tcs.Task;
+        }
+
+        private async void btnRun_Click(object sender, EventArgs e)
+        {
+            await RunAsync();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

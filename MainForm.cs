@@ -21,8 +21,24 @@ namespace ConfigExcelEnhancer
             lubanTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
             tableDesignTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
             templateTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
+            homeTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
             tabControl.Selecting += (_, e) => { if (_isExecuting) e.Cancel = true; };
             LoadSettings();
+        }
+
+        /// <summary>
+        /// 将 HomeTab 依赖的引用注入。必须在 LoadSettings 之后调用，确保 Settings 已分发。
+        /// </summary>
+        private void InitializeHomeTab()
+        {
+            homeTab.Initialize(
+                lubanTab,
+                templateTab,
+                enumTab,
+                tabControl,
+                tabLuban,
+                tabTemplate,
+                enumTab.Settings);
         }
 
         /// <summary>
@@ -40,6 +56,7 @@ namespace ConfigExcelEnhancer
             lubanTab.LoadFromSettings();
             tableDesignTab.LoadFromSettings();
             templateTab.LoadFromSettings();
+            InitializeHomeTab();
         }
 
         /// <summary>
@@ -60,6 +77,7 @@ namespace ConfigExcelEnhancer
             lubanTab.CancelRunningTask();
             tableDesignTab.CancelRunningTask();
             templateTab.CancelRunningTask();
+            homeTab.CancelRunningTask();
             SaveSettings();
             base.OnFormClosing(e);
         }

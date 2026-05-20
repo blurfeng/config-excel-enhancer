@@ -356,7 +356,16 @@ namespace ConfigExcelEnhancer.UI
 
         private async void btnRunAll_Click(object sender, EventArgs e)
         {
-            await RunJobs(Settings.TemplateExportJobs);
+            await RunAllAsync();
+        }
+
+        /// <summary>
+        /// 公开的异步执行入口，供 HomeTab 等外部调用。
+        /// 执行所有导出模板任务，返回 Task&lt;bool&gt;：true 表示至少有一个任务成功执行。
+        /// </summary>
+        public Task<bool> RunAllAsync()
+        {
+            return RunJobs(Settings.TemplateExportJobs);
         }
 
         private async void btnRunSelected_Click(object sender, EventArgs e)
@@ -369,24 +378,24 @@ namespace ConfigExcelEnhancer.UI
             await RunJobs(new List<TemplateExportJob> { _currentJob });
         }
 
-        private async Task RunJobs(IReadOnlyList<TemplateExportJob> jobs)
+        private async Task<bool> RunJobs(IReadOnlyList<TemplateExportJob> jobs)
         {
             if (jobs.Count == 0)
             {
                 Log("没有可运行的任务。", LogLevel.Warn);
-                return;
+                return false;
             }
 
             if (string.IsNullOrWhiteSpace(Settings.TablesClassPath))
             {
                 Log("请先配置 Tables.cs 路径（全局设置），工具需要它来推断表访问器。", LogLevel.Error);
-                return;
+                return false;
             }
 
             if (!File.Exists(Settings.TablesClassPath))
             {
                 Log($"Tables.cs 文件不存在：{Settings.TablesClassPath}", LogLevel.Error);
-                return;
+                return false;
             }
 
             _cts = new CancellationTokenSource();
@@ -401,6 +410,8 @@ namespace ConfigExcelEnhancer.UI
             pbRun.Maximum = jobs.Count * 100;
             pbRun.Value = 0;
             LogDivider();
+
+            bool anySuccess = false;
 
             // 解析 Tables.cs（一次）
             Dictionary<string, TableMapping> tableMappings;
@@ -457,6 +468,7 @@ namespace ConfigExcelEnhancer.UI
                     var options = new TemplateExportOptions(job, tableMappings);
                     idsResult = await TemplateExporter.ExportAsync(options, progress,
                         (msg, lvl) => LogLibrary.Write(txtLog, msg, lvl), token);
+                    anySuccess = true;
                 }
                 catch (OperationCanceledException) { Log("操作已停止。", LogLevel.Warn); goto Cleanup; }
                 catch (Exception ex) { Log($"未预期的错误：{ex.Message}", LogLevel.Error); }
@@ -548,6 +560,7 @@ namespace ConfigExcelEnhancer.UI
             _cts?.Dispose();
             _cts = null;
             LogDivider();
+            return anySuccess;
         }
 
         private void btnStop_Click(object sender, EventArgs e)

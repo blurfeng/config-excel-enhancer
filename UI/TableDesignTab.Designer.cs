@@ -250,7 +250,7 @@ namespace ConfigExcelEnhancer.UI
             btnApply.Name = "btnApply";
             btnApply.Size = new Size(110, 32);
             btnApply.TabIndex = 18;
-            btnApply.Text = "应用表设计";
+            btnApply.Text = "▶ 应用表设计";
             btnApply.Click += btnApply_Click;
             // 
             // btnStop
@@ -260,7 +260,7 @@ namespace ConfigExcelEnhancer.UI
             btnStop.Name = "btnStop";
             btnStop.Size = new Size(80, 32);
             btnStop.TabIndex = 19;
-            btnStop.Text = "停止";
+            btnStop.Text = "■ 停止";
             btnStop.Click += btnStop_Click;
             // 
             // pbApply
