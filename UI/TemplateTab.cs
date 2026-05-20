@@ -456,7 +456,8 @@ namespace ConfigExcelEnhancer.UI
                             Log($"警告：Ids 类 \"{idsResult.IdsClassName}\" 的命名空间存在冲突，将使用先出现的 \"{existing.IdsNamespace}\"", LogLevel.Warn);
                         idsAccumulator[key] = existing with
                         {
-                            Entries = existing.Entries.Concat(idsResult.Entries).ToList()
+                            Entries = existing.Entries.Concat(idsResult.Entries).ToList(),
+                            OwnedGroups = existing.OwnedGroups.Union(idsResult.OwnedGroups).ToHashSet()
                         };
                     }
                     else
@@ -480,7 +481,8 @@ namespace ConfigExcelEnhancer.UI
                             result.IdsClassName,
                             result.UsePartialClass,
                             result.UseGeneratedSuffix,
-                            result.Entries);
+                            result.Entries,
+                            result.OwnedGroups);
                         TemplateExporter.GenerateIds(genOptions,
                             (msg, lvl) => LogLibrary.Write(txtLog, msg, lvl));
                     }

@@ -16,7 +16,8 @@ namespace ConfigExcelEnhancer.Core
         string IdsClassName,
         bool UsePartialClass,
         bool UseGeneratedSuffix,
-        List<(string ClassName, long Id, string Group)> Entries
+        List<(string ClassName, long Id, string Group)> Entries,
+        IReadOnlySet<string> OwnedGroups
     );
 
     /// <summary>合并后的 Ids 生成参数，传给 GenerateIds。</summary>
@@ -26,7 +27,8 @@ namespace ConfigExcelEnhancer.Core
         string IdsClassName,
         bool UsePartialClass,
         bool UseGeneratedSuffix,
-        List<(string ClassName, long Id, string Group)> Entries
+        List<(string ClassName, long Id, string Group)> Entries,
+        IReadOnlySet<string> OwnedGroups
     );
 
     public static class TemplateExporter
@@ -178,13 +180,19 @@ namespace ConfigExcelEnhancer.Core
                 string.IsNullOrWhiteSpace(job.IdsClassName))
                 return null;
 
+            // 推断本任务"拥有"的 group 名称集合（与 group 赋值逻辑保持一致）
+            IReadOnlySet<string> ownedGroups = job.TypeTemplates.Count > 0
+                ? (IReadOnlySet<string>)job.TypeTemplates.Keys.ToHashSet()
+                : new HashSet<string> { job.IdsClassName };
+
             return new IdsCollectionResult(
                 job.IdsOutputDirectory,
                 job.IdsNamespace,
                 job.IdsClassName,
                 job.IdsUsePartialClass,
                 job.IdsUseGeneratedSuffix,
-                idsEntries);
+                idsEntries,
+                ownedGroups);
         }
 
         // ── Ids 文件生成（由 RunJobs 合并后统一调用）────────────────
@@ -198,9 +206,50 @@ namespace ConfigExcelEnhancer.Core
             string fileName = $"{options.IdsClassName}{suffix}.cs";
             string outputPath = Path.Combine(options.IdsOutputDirectory, fileName);
 
+            // ── 读取已有文件，保留不属于本次任务的 group 条目 ────────
+            var preservedEntries = new List<(string ClassName, long Id, string Group)>();
+            if (File.Exists(outputPath))
+            {
+                try
+                {
+                    var lines = File.ReadAllLines(outputPath, Encoding.UTF8);
+                    string? currentGroup = null;
+                    var constPattern = new System.Text.RegularExpressions.Regex(
+                        @"^\s*public\s+const\s+int\s+(\w+)\s*=\s*(-?\d+)\s*;");
+                    foreach (var line in lines)
+                    {
+                        var trimmed = line.Trim();
+                        if (trimmed.StartsWith("#region "))
+                        {
+                            currentGroup = trimmed["#region ".Length..].Trim();
+                            continue;
+                        }
+                        if (trimmed == "#endregion") continue;
+                        var m = constPattern.Match(line);
+                        if (m.Success && currentGroup is not null)
+                        {
+                            // 只保留不属于 OwnedGroups 的条目
+                            if (!options.OwnedGroups.Contains(currentGroup))
+                            {
+                                if (long.TryParse(m.Groups[2].Value, out long existingId))
+                                    preservedEntries.Add((m.Groups[1].Value, existingId, currentGroup));
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log($"读取已有 Ids 文件失败，将完整覆盖：{ex.Message}", LogLevel.Warn);
+                    preservedEntries.Clear();
+                }
+            }
+
+            // 合并：已保留条目在前，本次新数据在后
+            var allEntries = preservedEntries.Concat(options.Entries).ToList();
+
             // 按 Group 分组
             var groups = new Dictionary<string, List<(string ClassName, long Id)>>(StringComparer.Ordinal);
-            foreach (var (className, id, group) in options.Entries)
+            foreach (var (className, id, group) in allEntries)
             {
                 if (!groups.ContainsKey(group)) groups[group] = new();
                 groups[group].Add((className, id));
@@ -218,9 +267,10 @@ namespace ConfigExcelEnhancer.Core
             {
                 if (!firstGroup) sb.AppendLine();
                 firstGroup = false;
-                sb.AppendLine($"        // {groupName}");
+                sb.AppendLine($"        #region {groupName}");
                 foreach (var (className, id) in items)
                     sb.AppendLine($"        public const int {className} = {id};");
+                sb.AppendLine($"        #endregion");
             }
 
             sb.AppendLine("    }");
@@ -228,7 +278,7 @@ namespace ConfigExcelEnhancer.Core
 
             Directory.CreateDirectory(options.IdsOutputDirectory);
             WriteFile(outputPath, sb.ToString());
-            log($"Ids 文件已生成：{fileName}（{options.Entries.Count} 条）", LogLevel.Ok);
+            log($"Ids 文件已生成：{fileName}（共 {allEntries.Count} 条，本次 {options.Entries.Count} 条）", LogLevel.Ok);
         }
 
         // ── 工具方法 ─────────────────────────────────────────────────
