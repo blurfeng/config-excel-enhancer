@@ -9,18 +9,38 @@ namespace ConfigExcelEnhancer.Core
         Dictionary<string, TableMapping> TableMappings
     );
 
+    /// <summary>单个任务收集到的 Ids 数据，供 RunJobs 合并后统一写文件。</summary>
+    public record IdsCollectionResult(
+        string IdsOutputDirectory,
+        string IdsNamespace,
+        string IdsClassName,
+        bool UsePartialClass,
+        bool UseGeneratedSuffix,
+        List<(string ClassName, long Id, string Group)> Entries
+    );
+
+    /// <summary>合并后的 Ids 生成参数，传给 GenerateIds。</summary>
+    public record IdsGenerateOptions(
+        string IdsOutputDirectory,
+        string IdsNamespace,
+        string IdsClassName,
+        bool UsePartialClass,
+        bool UseGeneratedSuffix,
+        List<(string ClassName, long Id, string Group)> Entries
+    );
+
     public static class TemplateExporter
     {
-        public static async Task ExportAsync(
+        public static async Task<IdsCollectionResult?> ExportAsync(
             TemplateExportOptions options,
             IProgress<string> progress,
             Action<string, LogLevel> log,
             CancellationToken token)
         {
-            await Task.Run(() => Export(options, progress, log, token), token);
+            return await Task.Run(() => Export(options, progress, log, token), token);
         }
 
-        private static void Export(
+        private static IdsCollectionResult? Export(
             TemplateExportOptions options,
             IProgress<string> progress,
             Action<string, LogLevel> log,
@@ -32,7 +52,7 @@ namespace ConfigExcelEnhancer.Core
             if (!File.Exists(job.JsonFilePath))
             {
                 log($"JSON 文件不存在：{job.JsonFilePath}", LogLevel.Error);
-                return;
+                return null;
             }
 
             // ── 推断 TableMapping ────────────────────────────────────
@@ -48,28 +68,26 @@ namespace ConfigExcelEnhancer.Core
             catch (Exception ex)
             {
                 log($"JSON 解析失败：{ex.Message}", LogLevel.Error);
-                return;
+                return null;
             }
 
             if (doc.RootElement.ValueKind != JsonValueKind.Array)
             {
                 log("JSON 根元素不是数组，跳过", LogLevel.Error);
-                return;
+                return null;
             }
 
             var entries = doc.RootElement.EnumerateArray().ToList();
             log($"读取到 {entries.Count} 条数据", LogLevel.Info);
-
-            // ── 生成 Ids.Generated.cs ────────────────────────────────
-            if (job.GenerateIds)
-                GenerateIds(job, entries, log, token);
 
             // ── 创建输出目录 ─────────────────────────────────────────
             if (!string.IsNullOrWhiteSpace(job.OutputDirectory))
                 Directory.CreateDirectory(job.OutputDirectory);
 
             // ── 逐条生成模板类 ────────────────────────────────────────
-            int created = 0, skipped = 0, overwritten = 0;
+            int rendered = 0, skipped = 0;
+            var idsEntries = new List<(string ClassName, long Id, string Group)>();
+
             foreach (var entry in entries)
             {
                 token.ThrowIfCancellationRequested();
@@ -86,76 +104,113 @@ namespace ConfigExcelEnhancer.Core
 
                 progress?.Report(className);
 
-                string targetPath = Path.Combine(job.OutputDirectory, $"{className}.cs");
-                bool hasTemplate = !string.IsNullOrWhiteSpace(typeValue)
-                    && job.TypeTemplates.TryGetValue(typeValue, out string? tmplPath)
-                    && File.Exists(tmplPath);
+                // 收集 Ids 数据
+                // 无 $type 时用唯一模板的 Key（即配置的类型名）作为分组注释，无模板则用 IdsClassName
+                string group = !string.IsNullOrWhiteSpace(typeValue)
+                    ? typeValue
+                    : (job.TypeTemplates.Count == 1 ? job.TypeTemplates.First().Key : job.IdsClassName);
+                idsEntries.Add((className, id, group));
 
-                if (hasTemplate)
+                // 有模板才生成类文件
+                // 若无 $type（非多态表），且模板列表只有一条，则直接使用该唯一模板
+                string? resolvedTemplateKey = null;
+                string? resolvedTemplatePath = null;
+
+                if (!string.IsNullOrWhiteSpace(typeValue))
                 {
-                    // 有模板：始终覆盖
-                    string rendered = TemplateRenderer.Render(
-                        job.TypeTemplates[typeValue!]!, entry, mapping,
-                        job.Namespace, typeValue!, className, id);
-                    var headerSb = new StringBuilder();
-                    AppendFileHeader(headerSb, null);
-                    string content = headerSb.ToString() + rendered;
-                    WriteFile(targetPath, content);
-                    log($"{className}.cs（{typeValue}）← 模板生成", LogLevel.Ok);
-                    overwritten++;
+                    // 有 $type，按类型匹配
+                    if (job.TypeTemplates.TryGetValue(typeValue, out string? matchedPath) && File.Exists(matchedPath))
+                    {
+                        resolvedTemplateKey = typeValue;
+                        resolvedTemplatePath = matchedPath;
+                    }
                 }
-                else if (!File.Exists(targetPath))
+                else if (job.TypeTemplates.Count == 1)
                 {
-                    // 无模板且文件不存在：写入骨架
-                    string scaffold = BuildScaffold(job, className, typeValue, id);
-                    WriteFile(targetPath, scaffold);
-                    log($"{className}.cs ← 骨架创建", LogLevel.Ok);
-                    created++;
+                    // 非多态：只有唯一模板，直接使用
+                    var sole = job.TypeTemplates.First();
+                    if (File.Exists(sole.Value))
+                    {
+                        resolvedTemplateKey = sole.Key;
+                        resolvedTemplatePath = sole.Value;
+                    }
+                }
+                else if (job.TypeTemplates.Count == 0)
+                {
+                    log($"[跳过] {className}：未配置任何模板", LogLevel.Warn);
+                    skipped++;
+                    continue;
                 }
                 else
                 {
-                    log($"{className}.cs — 已存在，跳过", LogLevel.Skip);
+                    // 多模板但缺少 $type，无法匹配
+                    log($"[跳过] {className}：条目缺少 \"$type\" 字段，无法匹配模板", LogLevel.Warn);
                     skipped++;
+                    continue;
                 }
+
+                if (resolvedTemplatePath is null)
+                {
+                    skipped++;
+                    continue;
+                }
+
+                string suffix = job.UseGeneratedSuffix ? ".Generated" : "";
+                string targetPath = Path.Combine(job.OutputDirectory, $"{className}{suffix}.cs");
+
+                string renderedContent = TemplateRenderer.Render(
+                    resolvedTemplatePath, entry, mapping,
+                    job.Namespace, resolvedTemplateKey!, className, id, job.IdsClassName);
+                var headerSb = new StringBuilder();
+                AppendFileHeader(headerSb, null);
+                string content = headerSb.ToString() + renderedContent;
+                WriteFile(targetPath, content);
+                log($"{className}{suffix}.cs（{resolvedTemplateKey}）← 模板生成", LogLevel.Ok);
+                rendered++;
             }
 
             log("─────────────────────────────────────────────────────────", LogLevel.Section);
-            log($"完成：新建 {created}，模板覆盖 {overwritten}，跳过 {skipped}", LogLevel.Ok);
+            log($"完成：模板生成 {rendered}，无模板跳过 {skipped}", LogLevel.Ok);
+
+            // ── 返回 Ids 收集结果（由调用方合并写文件）──────────────
+            if (!job.GenerateIds ||
+                string.IsNullOrWhiteSpace(job.IdsOutputDirectory) ||
+                string.IsNullOrWhiteSpace(job.IdsClassName))
+                return null;
+
+            return new IdsCollectionResult(
+                job.IdsOutputDirectory,
+                job.IdsNamespace,
+                job.IdsClassName,
+                job.IdsUsePartialClass,
+                job.IdsUseGeneratedSuffix,
+                idsEntries);
         }
 
-        // ── Ids 文件生成 ─────────────────────────────────────────────
+        // ── Ids 文件生成（由 RunJobs 合并后统一调用）────────────────
 
-        private static void GenerateIds(
-            TemplateExportJob job,
-            List<JsonElement> entries,
-            Action<string, LogLevel> log,
-            CancellationToken token)
+        public static void GenerateIds(
+            IdsGenerateOptions options,
+            Action<string, LogLevel> log)
         {
-            if (string.IsNullOrWhiteSpace(job.IdsOutputPath) ||
-                string.IsNullOrWhiteSpace(job.IdsClassName))
-            {
-                log("Ids 输出路径或类名未配置，跳过 Ids 生成", LogLevel.Warn);
-                return;
-            }
+            string partial = options.UsePartialClass ? "partial " : "";
+            string suffix = options.UseGeneratedSuffix ? ".Generated" : "";
+            string fileName = $"{options.IdsClassName}{suffix}.cs";
+            string outputPath = Path.Combine(options.IdsOutputDirectory, fileName);
 
-            // 按 $type 分组
-            var groups = new Dictionary<string, List<(string className, long id)>>(StringComparer.Ordinal);
-            foreach (var entry in entries)
+            // 按 Group 分组
+            var groups = new Dictionary<string, List<(string ClassName, long Id)>>(StringComparer.Ordinal);
+            foreach (var (className, id, group) in options.Entries)
             {
-                token.ThrowIfCancellationRequested();
-                if (!TryGetString(entry, job.NameField, out string name)) continue;
-                TryGetString(entry, "$type", out string typeValue);
-                long id = TryGetId(entry, job.IdField);
-                string group = string.IsNullOrWhiteSpace(typeValue) ? "(未知)" : typeValue;
                 if (!groups.ContainsKey(group)) groups[group] = new();
-                groups[group].Add((ToPascalCase(name), id));
+                groups[group].Add((className, id));
             }
 
             var sb = new StringBuilder();
             AppendFileHeader(sb, null);
-            sb.AppendLine($"namespace {job.IdsNamespace}");
+            sb.AppendLine($"namespace {options.IdsNamespace}");
             sb.AppendLine("{");
-            sb.AppendLine($"    public static partial class {job.IdsClassName}");
+            sb.AppendLine($"    public static {partial}class {options.IdsClassName}");
             sb.AppendLine("    {");
 
             bool firstGroup = true;
@@ -171,36 +226,13 @@ namespace ConfigExcelEnhancer.Core
             sb.AppendLine("    }");
             sb.AppendLine("}");
 
-            string dir = Path.GetDirectoryName(job.IdsOutputPath)!;
-            if (!string.IsNullOrWhiteSpace(dir)) Directory.CreateDirectory(dir);
-            WriteFile(job.IdsOutputPath, sb.ToString());
-            log($"Ids 文件已生成：{Path.GetFileName(job.IdsOutputPath)}（{entries.Count} 条）", LogLevel.Ok);
-        }
-
-        // ── 骨架生成 ─────────────────────────────────────────────────
-
-        private static string BuildScaffold(TemplateExportJob job, string className, string typeValue, long id)
-        {
-            string partial = job.UsePartialClass ? "partial " : "";
-            string typeComment = string.IsNullOrWhiteSpace(typeValue) ? "" : $" | $type: {typeValue}";
-            var sb = new StringBuilder();
-            AppendFileHeader(sb, $"骨架由工具自动生成，请手动填写实现逻辑。id: {id}{typeComment}");
-            sb.AppendLine($"namespace {job.Namespace}");
-            sb.AppendLine("{");
-            sb.AppendLine($"    public {partial}class {className}");
-            sb.AppendLine("    {");
-            sb.AppendLine("    }");
-            sb.AppendLine("}");
-            return sb.ToString();
+            Directory.CreateDirectory(options.IdsOutputDirectory);
+            WriteFile(outputPath, sb.ToString());
+            log($"Ids 文件已生成：{fileName}（{options.Entries.Count} 条）", LogLevel.Ok);
         }
 
         // ── 工具方法 ─────────────────────────────────────────────────
 
-        /// <summary>
-        /// 向 StringBuilder 追加统一的规范化文件头部注释。
-        /// </summary>
-        /// <param name="sb">目标 StringBuilder。</param>
-        /// <param name="extraInfo">附加说明行，为 null 则省略。</param>
         private static void AppendFileHeader(StringBuilder sb, string? extraInfo)
         {
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");

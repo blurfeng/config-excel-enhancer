@@ -13,20 +13,26 @@ namespace ConfigExcelEnhancer.Models
         /// <summary>生成类的 C# 命名空间。</summary>
         public string Namespace { get; set; } = "";
 
-        /// <summary>是否为 partial 类（默认 true）。</summary>
-        public bool UsePartialClass { get; set; } = true;
+        /// <summary>生成的模板类文件名是否带 .Generated 后缀（默认 false）。</summary>
+        public bool UseGeneratedSuffix { get; set; } = false;
 
         // ── Ids 文件 ──────────────────────────────────────────────────
 
         public bool GenerateIds { get; set; } = true;
 
-        /// <summary>Ids.Generated.cs 输出完整路径（含文件名）。</summary>
-        public string IdsOutputPath { get; set; } = "";
+        /// <summary>Ids 文件输出目录（不含文件名）。</summary>
+        public string IdsOutputDirectory { get; set; } = "";
 
         public string IdsNamespace { get; set; } = "";
 
         /// <summary>Ids 类名，如 "UnitIds"。</summary>
         public string IdsClassName { get; set; } = "";
+
+        /// <summary>Ids 类是否声明为 partial（默认 true）。</summary>
+        public bool IdsUsePartialClass { get; set; } = true;
+
+        /// <summary>Ids 文件名是否带 .Generated 后缀（默认 false）。</summary>
+        public bool IdsUseGeneratedSuffix { get; set; } = false;
 
         // ── $type → .tmpl 文件路径绑定 ────────────────────────────────
 

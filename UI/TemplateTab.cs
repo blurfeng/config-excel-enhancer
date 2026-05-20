@@ -7,7 +7,7 @@ namespace ConfigExcelEnhancer.UI
     /// <summary>
     /// 导出模板类选项卡。
     /// 读取 Luban 生成的 JSON 配置，结合 Tables.cs 自动推断表访问器，
-    /// 生成/更新 C# 模板类骨架和 Ids.Generated.cs。
+    /// 生成/更新 C# 模板类和 Ids 文件。
     /// </summary>
     public partial class TemplateTab : UserControl
     {
@@ -93,15 +93,18 @@ namespace ConfigExcelEnhancer.UI
                 txtJsonFile.Text = job.JsonFilePath;
                 txtOutputDir.Text = job.OutputDirectory;
                 txtNamespace.Text = job.Namespace;
-                chkPartialClass.Checked = job.UsePartialClass;
+                chkUseGeneratedSuffix.Checked = job.UseGeneratedSuffix;
 
                 chkGenerateIds.Checked = job.GenerateIds;
-                txtIdsOutputPath.Text = job.IdsOutputPath;
+                txtIdsOutputDir.Text = job.IdsOutputDirectory;
                 txtIdsNamespace.Text = job.IdsNamespace;
                 txtIdsClassName.Text = job.IdsClassName;
+                chkIdsUsePartialClass.Checked = job.IdsUsePartialClass;
+                chkIdsUseGeneratedSuffix.Checked = job.IdsUseGeneratedSuffix;
 
                 LoadBindingsToGrid(job);
                 UpdateIdsGroupEnabled(job.GenerateIds);
+                RefreshTemplatePreview();
             }
             finally { _loadingJob = false; }
         }
@@ -154,10 +157,10 @@ namespace ConfigExcelEnhancer.UI
             _currentJob.Namespace = txtNamespace.Text.Trim();
         }
 
-        private void chkPartialClass_CheckedChanged(object sender, EventArgs e)
+        private void chkUseGeneratedSuffix_CheckedChanged(object sender, EventArgs e)
         {
             if (_loadingJob || _currentJob is null) return;
-            _currentJob.UsePartialClass = chkPartialClass.Checked;
+            _currentJob.UseGeneratedSuffix = chkUseGeneratedSuffix.Checked;
         }
 
         private void chkGenerateIds_CheckedChanged(object sender, EventArgs e)
@@ -169,16 +172,18 @@ namespace ConfigExcelEnhancer.UI
 
         private void UpdateIdsGroupEnabled(bool enabled)
         {
-            txtIdsOutputPath.Enabled = enabled;
-            btnBrowseIdsOutput.Enabled = enabled;
+            txtIdsOutputDir.Enabled = enabled;
+            btnBrowseIdsOutputDir.Enabled = enabled;
             txtIdsNamespace.Enabled = enabled;
             txtIdsClassName.Enabled = enabled;
+            chkIdsUsePartialClass.Enabled = enabled;
+            chkIdsUseGeneratedSuffix.Enabled = enabled;
         }
 
-        private void txtIdsOutputPath_TextChanged(object sender, EventArgs e)
+        private void txtIdsOutputDir_TextChanged(object sender, EventArgs e)
         {
             if (_loadingJob || _currentJob is null) return;
-            _currentJob.IdsOutputPath = txtIdsOutputPath.Text.Trim();
+            _currentJob.IdsOutputDirectory = txtIdsOutputDir.Text.Trim();
         }
 
         private void txtIdsNamespace_TextChanged(object sender, EventArgs e)
@@ -193,12 +198,30 @@ namespace ConfigExcelEnhancer.UI
             _currentJob.IdsClassName = txtIdsClassName.Text.Trim();
         }
 
+        private void chkIdsUsePartialClass_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_loadingJob || _currentJob is null) return;
+            _currentJob.IdsUsePartialClass = chkIdsUsePartialClass.Checked;
+        }
+
+        private void chkIdsUseGeneratedSuffix_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_loadingJob || _currentJob is null) return;
+            _currentJob.IdsUseGeneratedSuffix = chkIdsUseGeneratedSuffix.Checked;
+        }
+
         // ── 绑定表格管理 ──────────────────────────────────────────────────
 
         private void dgvBindings_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             if (_loadingJob || _currentJob is null || e.RowIndex < 0) return;
             SyncBindingsFromGrid();
+            RefreshTemplatePreview();
+        }
+
+        private void dgvBindings_SelectionChanged(object sender, EventArgs e)
+        {
+            RefreshTemplatePreview();
         }
 
         private void dgvBindings_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
@@ -244,6 +267,48 @@ namespace ConfigExcelEnhancer.UI
             {
                 dgvBindings.CurrentRow.Cells[1].Value = files[0];
                 SyncBindingsFromGrid();
+                RefreshTemplatePreview();
+            }
+        }
+
+        // ── 模板预览 ──────────────────────────────────────────────────────
+
+        private static readonly System.Text.RegularExpressions.Regex ClassDeclPattern =
+            new(@"^\s*(public|internal|private|protected)(\s+(sealed|abstract|static|partial))*\s+class\s+\S.*",
+                System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        private void RefreshTemplatePreview()
+        {
+            var row = dgvBindings.CurrentRow;
+            if (row is null || row.IsNewRow)
+            {
+                lblTemplatePreview.Text = "未选中绑定行";
+                return;
+            }
+
+            string tmplPath = (row.Cells[1].Value as string ?? "").Trim();
+            if (string.IsNullOrEmpty(tmplPath) || !File.Exists(tmplPath))
+            {
+                lblTemplatePreview.Text = string.IsNullOrEmpty(tmplPath) ? "模板路径为空" : "模板文件不存在";
+                return;
+            }
+
+            try
+            {
+                string? decl = null;
+                foreach (string line in File.ReadLines(tmplPath, System.Text.Encoding.UTF8))
+                {
+                    if (ClassDeclPattern.IsMatch(line))
+                    {
+                        decl = line.Trim();
+                        break;
+                    }
+                }
+                lblTemplatePreview.Text = decl is not null ? $"类声明：{decl}" : "未检测到类声明";
+            }
+            catch
+            {
+                lblTemplatePreview.Text = "读取模板文件失败";
             }
         }
 
@@ -269,12 +334,11 @@ namespace ConfigExcelEnhancer.UI
             if (!string.IsNullOrEmpty(dir)) txtOutputDir.Text = dir;
         }
 
-        private void btnBrowseIdsOutput_Click(object sender, EventArgs e)
+        private void btnBrowseIdsOutputDir_Click(object sender, EventArgs e)
         {
             if (_currentJob is null) return;
-            var files = DialogHelper.BrowseSaveFile("Ids Generated 输出路径", "C# 文件 (*.cs)|*.cs",
-                _currentJob.IdsOutputPath, "UnitIds.Generated.cs");
-            if (!string.IsNullOrEmpty(files)) txtIdsOutputPath.Text = files;
+            string? dir = DialogHelper.BrowseFolder("选择 Ids 文件输出目录", _currentJob.IdsOutputDirectory);
+            if (!string.IsNullOrEmpty(dir)) txtIdsOutputDir.Text = dir;
         }
 
         // ── 执行 ─────────────────────────────────────────────────────────
@@ -350,6 +414,10 @@ namespace ConfigExcelEnhancer.UI
                 goto Cleanup;
             }
 
+            // key = (IdsOutputDirectory, IdsClassName)
+            var idsAccumulator = new Dictionary<(string Dir, string ClassName), IdsCollectionResult>(
+                EqualityComparer<(string, string)>.Default);
+
             for (int i = 0; i < jobs.Count; i++)
             {
                 var job = jobs[i];
@@ -368,14 +436,59 @@ namespace ConfigExcelEnhancer.UI
                     pbRun.Value = Math.Min(jobBase + processed, pbRun.Maximum);
                 });
 
+                IdsCollectionResult? idsResult = null;
                 try
                 {
                     var options = new TemplateExportOptions(job, tableMappings);
-                    await TemplateExporter.ExportAsync(options, progress,
+                    idsResult = await TemplateExporter.ExportAsync(options, progress,
                         (msg, lvl) => LogLibrary.Write(txtLog, msg, lvl), token);
                 }
                 catch (OperationCanceledException) { Log("操作已停止。", LogLevel.Warn); goto Cleanup; }
                 catch (Exception ex) { Log($"未预期的错误：{ex.Message}", LogLevel.Error); }
+
+                // 累积 Ids 数据
+                if (idsResult is not null)
+                {
+                    var key = (idsResult.IdsOutputDirectory, idsResult.IdsClassName);
+                    if (idsAccumulator.TryGetValue(key, out var existing))
+                    {
+                        if (existing.IdsNamespace != idsResult.IdsNamespace)
+                            Log($"警告：Ids 类 \"{idsResult.IdsClassName}\" 的命名空间存在冲突，将使用先出现的 \"{existing.IdsNamespace}\"", LogLevel.Warn);
+                        idsAccumulator[key] = existing with
+                        {
+                            Entries = existing.Entries.Concat(idsResult.Entries).ToList()
+                        };
+                    }
+                    else
+                    {
+                        idsAccumulator[key] = idsResult;
+                    }
+                }
+            }
+
+            // 统一写 Ids 文件
+            if (idsAccumulator.Count > 0)
+            {
+                Log("── 生成 Ids 文件 ──", LogLevel.Section);
+                foreach (var result in idsAccumulator.Values)
+                {
+                    try
+                    {
+                        var genOptions = new IdsGenerateOptions(
+                            result.IdsOutputDirectory,
+                            result.IdsNamespace,
+                            result.IdsClassName,
+                            result.UsePartialClass,
+                            result.UseGeneratedSuffix,
+                            result.Entries);
+                        TemplateExporter.GenerateIds(genOptions,
+                            (msg, lvl) => LogLibrary.Write(txtLog, msg, lvl));
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"Ids 文件生成失败（{result.IdsClassName}）：{ex.Message}", LogLevel.Error);
+                    }
+                }
             }
 
             pbRun.Value = pbRun.Maximum;

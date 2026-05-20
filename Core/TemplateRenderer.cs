@@ -19,10 +19,11 @@ namespace ConfigExcelEnhancer.Core
             string targetNamespace,
             string typeValue,
             string className,
-            long id)
+            long id,
+            string idsClassName = "")
         {
             string template = File.ReadAllText(templatePath, Encoding.UTF8);
-            return Replace(template, entry, mapping, targetNamespace, typeValue, className, id);
+            return Replace(template, entry, mapping, targetNamespace, typeValue, className, id, idsClassName);
         }
 
         /// <summary>
@@ -35,12 +36,13 @@ namespace ConfigExcelEnhancer.Core
             string targetNamespace,
             string typeValue,
             string className,
-            long id)
+            long id,
+            string idsClassName)
         {
             return PlaceholderPattern.Replace(template, m =>
             {
                 string key = m.Groups[1].Value.Trim();
-                return ResolveValue(key, entry, mapping, targetNamespace, typeValue, className, id);
+                return ResolveValue(key, entry, mapping, targetNamespace, typeValue, className, id, idsClassName);
             });
         }
 
@@ -51,11 +53,13 @@ namespace ConfigExcelEnhancer.Core
             string ns,
             string typeValue,
             string className,
-            long id)
+            long id,
+            string idsClassName)
         {
             // Built-in $ placeholders
             switch (key)
             {
+                case "$Ids":            return idsClassName;
                 case "$ClassName":      return className;
                 case "$Id":             return id.ToString();
                 case "$Type":           return typeValue;
