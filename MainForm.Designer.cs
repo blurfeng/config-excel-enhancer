@@ -36,10 +36,10 @@ namespace ConfigExcelEnhancer
 
             // tabControl
             tabControl.Dock = DockStyle.Fill;
-            tabControl.Controls.Add(tabEnum);
-            tabControl.Controls.Add(tabLuban);
-            tabControl.Controls.Add(tabTableDesign);
             tabControl.Controls.Add(tabTemplate);
+            tabControl.Controls.Add(tabLuban);
+            tabControl.Controls.Add(tabEnum);
+            tabControl.Controls.Add(tabTableDesign);
             tabControl.Controls.Add(tabSettings);
 
             // tabEnum
