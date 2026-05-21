@@ -106,9 +106,9 @@ namespace ConfigExcelEnhancer.UI
             // btnGoTemplate1
             // 
             btnGoTemplate1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnGoTemplate1.Location = new Point(710, 50);
+            btnGoTemplate1.Location = new Point(700, 50);
             btnGoTemplate1.Name = "btnGoTemplate1";
-            btnGoTemplate1.Size = new Size(100, 23);
+            btnGoTemplate1.Size = new Size(110, 23);
             btnGoTemplate1.TabIndex = 6;
             btnGoTemplate1.Text = "→ 导出模板类";
             toolTip.SetToolTip(btnGoTemplate1, "跳转到导出模板类选项卡");
@@ -118,9 +118,9 @@ namespace ConfigExcelEnhancer.UI
             // btnGoTemplate2
             // 
             btnGoTemplate2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnGoTemplate2.Location = new Point(710, 78);
+            btnGoTemplate2.Location = new Point(700, 78);
             btnGoTemplate2.Name = "btnGoTemplate2";
-            btnGoTemplate2.Size = new Size(100, 23);
+            btnGoTemplate2.Size = new Size(110, 23);
             btnGoTemplate2.TabIndex = 7;
             btnGoTemplate2.Text = "→ 导出模板类";
             toolTip.SetToolTip(btnGoTemplate2, "跳转到导出模板类选项卡");

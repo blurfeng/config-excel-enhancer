@@ -112,9 +112,9 @@ namespace ConfigExcelEnhancer.UI
             // 
             // btnRunAll
             // 
-            btnRunAll.Location = new Point(13, 5);
+            btnRunAll.Location = new Point(13, 3);
             btnRunAll.Name = "btnRunAll";
-            btnRunAll.Size = new Size(110, 28);
+            btnRunAll.Size = new Size(110, 32);
             btnRunAll.TabIndex = 0;
             btnRunAll.Text = "▶ 导出全部";
             toolTip.SetToolTip(btnRunAll, "导出左侧列表中的全部任务。");
@@ -122,9 +122,9 @@ namespace ConfigExcelEnhancer.UI
             // 
             // btnRunSelected
             // 
-            btnRunSelected.Location = new Point(129, 4);
+            btnRunSelected.Location = new Point(129, 3);
             btnRunSelected.Name = "btnRunSelected";
-            btnRunSelected.Size = new Size(110, 28);
+            btnRunSelected.Size = new Size(110, 32);
             btnRunSelected.TabIndex = 1;
             btnRunSelected.Text = "▶ 导出选中";
             toolTip.SetToolTip(btnRunSelected, "仅导出当前在左侧列表中选中的任务。");
@@ -133,9 +133,9 @@ namespace ConfigExcelEnhancer.UI
             // btnStop
             // 
             btnStop.Enabled = false;
-            btnStop.Location = new Point(245, 4);
+            btnStop.Location = new Point(245, 3);
             btnStop.Name = "btnStop";
-            btnStop.Size = new Size(80, 28);
+            btnStop.Size = new Size(80, 32);
             btnStop.TabIndex = 2;
             btnStop.Text = "■ 停止";
             toolTip.SetToolTip(btnStop, "取消正在执行的任务（当前文件写完后停止）。");
@@ -632,7 +632,7 @@ namespace ConfigExcelEnhancer.UI
             pnlRunButtons.Dock = DockStyle.Top;
             pnlRunButtons.Location = new Point(0, 2);
             pnlRunButtons.Name = "pnlRunButtons";
-            pnlRunButtons.Size = new Size(620, 38);
+            pnlRunButtons.Size = new Size(620, 42);
             pnlRunButtons.TabIndex = 0;
             // 
             // pbRun
@@ -640,7 +640,7 @@ namespace ConfigExcelEnhancer.UI
             pbRun.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             pbRun.Location = new Point(331, 9);
             pbRun.Name = "pbRun";
-            pbRun.Size = new Size(278, 20);
+            pbRun.Size = new Size(278, 22);
             pbRun.TabIndex = 3;
             pbRun.Visible = false;
             // 

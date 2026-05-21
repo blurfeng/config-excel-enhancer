@@ -138,7 +138,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             btnUpdate.Location = new Point(12, 282);
             btnUpdate.Name = "btnUpdate";
-            btnUpdate.Size = new Size(110, 32);
+            btnUpdate.Size = new Size(140, 32);
             btnUpdate.TabIndex = 8;
             btnUpdate.Text = "▶ 更新 Enum 验证";
             btnUpdate.Click += btnUpdate_Click;
@@ -146,7 +146,7 @@ namespace ConfigExcelEnhancer.UI
             // btnStop
             // 
             btnStop.Enabled = false;
-            btnStop.Location = new Point(130, 282);
+            btnStop.Location = new Point(160, 282);
             btnStop.Name = "btnStop";
             btnStop.Size = new Size(80, 32);
             btnStop.TabIndex = 9;
@@ -156,9 +156,9 @@ namespace ConfigExcelEnhancer.UI
             // pbUpdate
             // 
             pbUpdate.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            pbUpdate.Location = new Point(220, 286);
+            pbUpdate.Location = new Point(250, 286);
             pbUpdate.Name = "pbUpdate";
-            pbUpdate.Size = new Size(433, 23);
+            pbUpdate.Size = new Size(403, 23);
             pbUpdate.TabIndex = 10;
             pbUpdate.Visible = false;
             // 
