@@ -85,7 +85,7 @@ namespace ConfigExcelEnhancer.UI
             foreach (var kv in _config.SetVariables)
             {
                 var displayVal = FormatSetVarForDisplay(kv.Key, kv.Value, batDir, workspace);
-                var rowIdx = gridGlobal.Rows.Add(kv.Key, displayVal);
+                var rowIdx = gridGlobal.Rows.Add(false, kv.Key, displayVal);
                 var valCell = gridGlobal.Rows[rowIdx].Cells["colValue"];
                 valCell.Tag = displayVal;
                 gridGlobal.Rows[rowIdx].Cells["colBrowse"].Value = IsPathLike(kv.Key, kv.Value) ? BrowseMarker : "";
@@ -119,7 +119,7 @@ namespace ConfigExcelEnhancer.UI
                 var grid = CreateGrid(allowEdit: true);
                 foreach (var kv in cmd.XArgs)
                 {
-                    var rowIdx = grid.Rows.Add(kv.Key, kv.Value);
+                    var rowIdx = grid.Rows.Add(false, kv.Key, kv.Value);
                     var keyCell = grid.Rows[rowIdx].Cells["colKey"];
                     var valCell = grid.Rows[rowIdx].Cells["colValue"];
                     keyCell.Tag = kv.Key;
@@ -150,6 +150,16 @@ namespace ConfigExcelEnhancer.UI
 
         private static DataGridView CreateGrid(bool allowEdit)
         {
+            var colDirty = new DataGridViewCheckBoxColumn
+            {
+                HeaderText = "已修改",
+                Name = "colDirty",
+                ReadOnly = true,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 54,
+                Resizable = DataGridViewTriState.False,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
             var colKey = new DataGridViewTextBoxColumn
             {
                 HeaderText = "键",
@@ -182,7 +192,7 @@ namespace ConfigExcelEnhancer.UI
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2
             };
-            grid.Columns.AddRange(colKey, colValue, colBrowse);
+            grid.Columns.AddRange(colDirty, colKey, colValue, colBrowse);
             return grid;
         }
 
@@ -194,8 +204,7 @@ namespace ConfigExcelEnhancer.UI
             var colName = grid.Columns[e.ColumnIndex].Name;
             if (colName != "colKey" && colName != "colValue") return;
 
-            var cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
-            RefreshCellDirtyVisual(cell);
+            RefreshRowDirtyVisual(grid.Rows[e.RowIndex]);
             _isDirty = true;
             UpdateButtonStates();
         }
@@ -214,18 +223,40 @@ namespace ConfigExcelEnhancer.UI
             UpdateButtonStates();
         }
 
-        private static void RefreshCellDirtyVisual(DataGridViewCell cell)
+        private static void RefreshRowDirtyVisual(DataGridViewRow row)
         {
-            var original = cell.Tag?.ToString();
-            var current = cell.Value?.ToString() ?? "";
-            bool isDirty = original == null ? !string.IsNullOrEmpty(current) : current != original;
-            cell.Style.BackColor = isDirty ? DirtyBackColor : SystemColors.Window;
+            bool rowIsDirty = false;
+
+            foreach (DataGridViewCell cell in row.Cells)
+            {
+                var colName = cell.OwningColumn?.Name;
+                if (colName != "colKey" && colName != "colValue") continue;
+
+                var original = cell.Tag?.ToString();
+                var current = cell.Value?.ToString() ?? "";
+                bool cellIsDirty = original == null ? !string.IsNullOrEmpty(current) : current != original;
+
+                if (cellIsDirty)
+                {
+                    rowIsDirty = true;
+                    break;
+                }
+            }
+
+            if (row.Cells["colDirty"] is DataGridViewCheckBoxCell dirtyCell)
+                dirtyCell.Value = rowIsDirty;
+
+            row.DefaultCellStyle.BackColor = rowIsDirty ? DirtyBackColor : SystemColors.Window;
+            row.DefaultCellStyle.SelectionBackColor = rowIsDirty
+                ? Color.FromArgb(200, 195, 120)
+                : SystemColors.Highlight;
         }
 
         private void UpdateButtonStates()
         {
             btnSave.Enabled = _isDirty;
             btnReset.Enabled = _isDirty;
+            btnSave.Text = _isDirty ? "● 保存配置" : "保存配置";
         }
 
         // ── 目录 / 文件浏览 ───────────────────────────────────
@@ -330,16 +361,20 @@ namespace ConfigExcelEnhancer.UI
 
         private void ApplyCellChange(DataGridViewCell cell)
         {
-            RefreshCellDirtyVisual(cell);
+            RefreshRowDirtyVisual(cell.OwningRow);
             _isDirty = true;
             UpdateButtonStates();
         }
 
         // ── 保存 / 重置 ───────────────────────────────────────
 
-        private void btnSave_Click(object sender, EventArgs e)
+        private bool SaveConfig()
         {
-            if (_config == null) { Log("未加载 gen.bat。", LogLevel.Warn); return; }
+            if (_config == null)
+            {
+                Log("未加载 gen.bat。", LogLevel.Warn);
+                return false;
+            }
 
             ReadFromGrids();
             try
@@ -347,11 +382,18 @@ namespace ConfigExcelEnhancer.UI
                 LubanBatParser.Save(_config);
                 PopulateTabs(); // 重置 dirty 状态
                 Log("配置已写回 gen.bat。", LogLevel.Ok);
+                return true;
             }
             catch (Exception ex)
             {
                 Log($"保存失败：{ex.Message}", LogLevel.Error);
+                return false;
             }
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            SaveConfig();
         }
 
         private void btnReset_Click(object sender, EventArgs e)
@@ -433,6 +475,7 @@ namespace ConfigExcelEnhancer.UI
                 _preLockSaveEnabled = btnSave.Enabled;
                 _preLockResetEnabled = btnReset.Enabled;
                 pnlTop.Enabled = false;
+                pnlConfigActions.Enabled = false;
                 tabsCommands.Enabled = false;
                 btnSave.Enabled = false;
                 btnReset.Enabled = false;
@@ -440,6 +483,7 @@ namespace ConfigExcelEnhancer.UI
             else
             {
                 pnlTop.Enabled = true;
+                pnlConfigActions.Enabled = true;
                 tabsCommands.Enabled = true;
                 btnSave.Enabled = _preLockSaveEnabled;
                 btnReset.Enabled = _preLockResetEnabled;
@@ -456,6 +500,17 @@ namespace ConfigExcelEnhancer.UI
             {
                 Log("请先选择有效的 gen.bat 路径。", LogLevel.Error);
                 return Task.FromResult(false);
+            }
+
+            // 如果有未保存的修改，先自动保存
+            if (_isDirty)
+            {
+                Log("检测到未保存的配置修改，正在自动保存...", LogLevel.Info);
+                if (!SaveConfig())
+                {
+                    Log("自动保存失败，已取消执行导表。", LogLevel.Error);
+                    return Task.FromResult(false);
+                }
             }
 
             var tcs = new TaskCompletionSource<bool>();

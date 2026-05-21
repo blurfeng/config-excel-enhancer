@@ -18,18 +18,20 @@ namespace ConfigExcelEnhancer.UI
             lblBatPath = new Label();
             txtBatPath = new TextBox();
             btnBrowseBat = new Button();
+            pnlConfigActions = new Panel();
+            btnSave = new Button();
+            btnReset = new Button();
             tabsCommands = new TabControl();
             pnlBottom = new Panel();
-            btnSave = new Button();
             btnRun = new Button();
             btnCancel = new Button();
-            btnReset = new Button();
             pbRun = new ProgressBar();
             txtLog = new RichTextBox();
             ctxLog = new ContextMenuStrip(components);
             ctxMenuItemClearLog = new ToolStripMenuItem();
             ctxMenuItemCopyLog = new ToolStripMenuItem();
             pnlTop.SuspendLayout();
+            pnlConfigActions.SuspendLayout();
             pnlBottom.SuspendLayout();
             ctxLog.SuspendLayout();
             SuspendLayout();
@@ -73,21 +75,49 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseBat.Text = "浏览...";
             btnBrowseBat.Click += btnBrowseBat_Click;
             // 
+            // pnlConfigActions
+            // 
+            pnlConfigActions.Controls.Add(btnSave);
+            pnlConfigActions.Controls.Add(btnReset);
+            pnlConfigActions.Dock = DockStyle.Top;
+            pnlConfigActions.Location = new Point(0, 43);
+            pnlConfigActions.Name = "pnlConfigActions";
+            pnlConfigActions.Size = new Size(665, 40);
+            pnlConfigActions.TabIndex = 4;
+            // 
+            // btnSave
+            // 
+            btnSave.Enabled = false;
+            btnSave.Location = new Point(12, 5);
+            btnSave.Name = "btnSave";
+            btnSave.Size = new Size(110, 28);
+            btnSave.TabIndex = 0;
+            btnSave.Text = "保存配置";
+            btnSave.Click += btnSave_Click;
+            // 
+            // btnReset
+            // 
+            btnReset.Enabled = false;
+            btnReset.Location = new Point(130, 5);
+            btnReset.Name = "btnReset";
+            btnReset.Size = new Size(80, 28);
+            btnReset.TabIndex = 1;
+            btnReset.Text = "重置";
+            btnReset.Click += btnReset_Click;
+            // 
             // tabsCommands
             // 
             tabsCommands.Dock = DockStyle.Fill;
-            tabsCommands.Location = new Point(0, 43);
+            tabsCommands.Location = new Point(0, 83);
             tabsCommands.Name = "tabsCommands";
             tabsCommands.SelectedIndex = 0;
-            tabsCommands.Size = new Size(665, 217);
+            tabsCommands.Size = new Size(665, 177);
             tabsCommands.TabIndex = 1;
             // 
             // pnlBottom
             // 
-            pnlBottom.Controls.Add(btnSave);
             pnlBottom.Controls.Add(btnRun);
             pnlBottom.Controls.Add(btnCancel);
-            pnlBottom.Controls.Add(btnReset);
             pnlBottom.Controls.Add(pbRun);
             pnlBottom.Controls.Add(txtLog);
             pnlBottom.Dock = DockStyle.Bottom;
@@ -96,19 +126,9 @@ namespace ConfigExcelEnhancer.UI
             pnlBottom.Size = new Size(665, 210);
             pnlBottom.TabIndex = 2;
             // 
-            // btnSave
-            // 
-            btnSave.Enabled = false;
-            btnSave.Location = new Point(12, 7);
-            btnSave.Name = "btnSave";
-            btnSave.Size = new Size(110, 32);
-            btnSave.TabIndex = 0;
-            btnSave.Text = "保存配置";
-            btnSave.Click += btnSave_Click;
-            // 
             // btnRun
             // 
-            btnRun.Location = new Point(130, 7);
+            btnRun.Location = new Point(12, 7);
             btnRun.Name = "btnRun";
             btnRun.Size = new Size(110, 32);
             btnRun.TabIndex = 1;
@@ -118,29 +138,19 @@ namespace ConfigExcelEnhancer.UI
             // btnCancel
             // 
             btnCancel.Enabled = false;
-            btnCancel.Location = new Point(248, 7);
+            btnCancel.Location = new Point(130, 7);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(80, 32);
             btnCancel.TabIndex = 2;
             btnCancel.Text = "■ 取消";
             btnCancel.Click += btnCancel_Click;
             // 
-            // btnReset
-            // 
-            btnReset.Enabled = false;
-            btnReset.Location = new Point(336, 7);
-            btnReset.Name = "btnReset";
-            btnReset.Size = new Size(80, 32);
-            btnReset.TabIndex = 4;
-            btnReset.Text = "重置";
-            btnReset.Click += btnReset_Click;
-            // 
             // pbRun
             // 
             pbRun.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            pbRun.Location = new Point(424, 11);
+            pbRun.Location = new Point(218, 11);
             pbRun.Name = "pbRun";
-            pbRun.Size = new Size(229, 23);
+            pbRun.Size = new Size(435, 23);
             pbRun.TabIndex = 3;
             pbRun.Visible = false;
             // 
@@ -184,12 +194,14 @@ namespace ConfigExcelEnhancer.UI
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(tabsCommands);
+            Controls.Add(pnlConfigActions);
             Controls.Add(pnlBottom);
             Controls.Add(pnlTop);
             Name = "LubanTab";
             Size = new Size(665, 470);
             pnlTop.ResumeLayout(false);
             pnlTop.PerformLayout();
+            pnlConfigActions.ResumeLayout(false);
             pnlBottom.ResumeLayout(false);
             ctxLog.ResumeLayout(false);
             ResumeLayout(false);
@@ -199,13 +211,14 @@ namespace ConfigExcelEnhancer.UI
         private Label lblBatPath = null!;
         private TextBox txtBatPath = null!;
         private Button btnBrowseBat = null!;
+        private Panel pnlConfigActions = null!;
+        private Button btnSave = null!;
+        private Button btnReset = null!;
         private TabControl tabsCommands = null!;
         private Panel pnlBottom = null!;
-        private Button btnSave = null!;
         private Button btnRun = null!;
         private Button btnCancel = null!;
         private ProgressBar pbRun = null!;
-        private Button btnReset = null!;
         private ContextMenuStrip ctxLog = null!;
         private ToolStripMenuItem ctxMenuItemClearLog = null!;
         private ToolStripMenuItem ctxMenuItemCopyLog = null!;
