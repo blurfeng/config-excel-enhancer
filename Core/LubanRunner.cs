@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace ConfigExcelEnhancer.Core
 {
@@ -35,7 +36,9 @@ namespace ConfigExcelEnhancer.Core
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     RedirectStandardInput = true,   // 重定向 stdin 以防止子进程等待用户输入
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = Encoding.GetEncoding(936),   // GBK，与 cmd.exe 默认代码页一致
+                    StandardErrorEncoding = Encoding.GetEncoding(936)
                 },
                 EnableRaisingEvents = true          // 启用 Exited 事件
             };
