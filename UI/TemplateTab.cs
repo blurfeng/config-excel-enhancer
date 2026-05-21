@@ -406,9 +406,7 @@ namespace ConfigExcelEnhancer.UI
             btnRunAll.Enabled = false;
             btnRunSelected.Enabled = false;
             btnStop.Enabled = true;
-            pbRun.Visible = true;
-            pbRun.Maximum = jobs.Count * 100;
-            pbRun.Value = 0;
+            ProgressBarHelper.SetProgressBegin(pbRun);
             LogDivider();
 
             bool anySuccess = false;
@@ -454,12 +452,15 @@ namespace ConfigExcelEnhancer.UI
                 }
 
                 Log($"── 任务：{job.DisplayName} ──", LogLevel.Section);
-                int jobBase = i * 100;
+                int segStart = jobs.Count > 0 ? 10 + i * 80 / jobs.Count : 10;
+                int segEnd   = jobs.Count > 0 ? 10 + (i + 1) * 80 / jobs.Count : 90;
                 int processed = 0;
-                var progress = new Progress<string>(name =>
+                var progress = new Progress<string>(_ =>
                 {
                     processed++;
-                    pbRun.Value = Math.Min(jobBase + processed, pbRun.Maximum);
+                    // 在本任务段内线性推进，最多到 segEnd-1（下一任务开始时才到 segEnd）
+                    int v = segStart + (segEnd - segStart) * processed / Math.Max(1, processed + 1);
+                    ProgressBarHelper.SetProgress(pbRun, Math.Min(v, segEnd - 1));
                 });
 
                 IdsCollectionResult? idsResult = null;
@@ -547,7 +548,7 @@ namespace ConfigExcelEnhancer.UI
                 }
             }
 
-            pbRun.Value = pbRun.Maximum;
+            ProgressBarHelper.SetProgress(pbRun, 100);
             Log("全部任务完成。", LogLevel.Ok);
 
         Cleanup:
@@ -556,7 +557,6 @@ namespace ConfigExcelEnhancer.UI
             btnRunAll.Enabled = true;
             btnRunSelected.Enabled = true;
             btnStop.Enabled = false;
-            pbRun.Visible = false;
             _cts?.Dispose();
             _cts = null;
             LogDivider();

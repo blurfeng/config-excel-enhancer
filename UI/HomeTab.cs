@@ -229,20 +229,24 @@ namespace ConfigExcelEnhancer.UI
             btnLubanOnly.Enabled = !locked;
             btnCancel.Enabled = locked;
             chkIncludeEnum.Enabled = !locked;
-            pbOverall.Visible = locked;
-            if (!locked) pbOverall.Value = 0;
+            if (locked) ProgressBarHelper.SetProgressBegin(pbOverall);
             _isExecuting = locked;
         }
 
         private void SetOverallProgress(int done, int total)
         {
-            if (pbOverall.InvokeRequired)
+            if (done <= 0)
             {
-                pbOverall.BeginInvoke(() => SetOverallProgress(done, total));
+                ProgressBarHelper.SetProgressBegin(pbOverall);
                 return;
             }
-            pbOverall.Maximum = total > 0 ? total : 1;
-            pbOverall.Value   = Math.Clamp(done, 0, pbOverall.Maximum);
+            int t = total > 0 ? total : 1;
+            if (done >= t)
+            {
+                ProgressBarHelper.SetProgress(pbOverall, 100);
+                return;
+            }
+            ProgressBarHelper.SetProgress(pbOverall, 10 + done * 80 / t);
         }
 
         /// <summary>

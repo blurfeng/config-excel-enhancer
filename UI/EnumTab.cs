@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using ConfigExcelEnhancer.Core;
 using ConfigExcelEnhancer.Models;
+using ConfigExcelEnhancer.Utils;
 
 namespace ConfigExcelEnhancer.UI
 {
@@ -128,9 +129,7 @@ namespace ConfigExcelEnhancer.UI
             ExecutionStateChanged?.Invoke(this, true);
             btnUpdate.Enabled = false;
             btnStop.Enabled = true;
-            pbUpdate.Maximum = 1000;
-            pbUpdate.Value = 100;
-            pbUpdate.Visible = true;
+            ProgressBarHelper.SetProgressBegin(pbUpdate);
             LogDivider();
 
             bool success = false;
@@ -191,7 +190,7 @@ namespace ConfigExcelEnhancer.UI
                 if (beanFieldEnumMap.Count > 0)
                     Log($"找到 {beanFieldEnumMap.Count} 个含枚举/布尔字段的 Bean。", LogLevel.Info);
 
-                pbUpdate.Value = 200;
+                ProgressBarHelper.SetProgress(pbUpdate, 20);
 
                 // ── 步骤2：修改 Excel ────────────────────────
                 Log("开始修改 Excel...", LogLevel.Info);
@@ -212,11 +211,11 @@ namespace ConfigExcelEnhancer.UI
                             result =>
                             {
                                 processed++;
-                                int v = totalFiles > 0 ? 200 + (int)(processed * 600.0 / totalFiles) : 800;
+                                int v = totalFiles > 0 ? 20 + (int)(processed * 50.0 / totalFiles) : 70;
                                 BeginInvoke(() =>
                                 {
                                     LogFileResult(result);
-                                    pbUpdate.Value = Math.Min(v, 800);
+                                    ProgressBarHelper.SetProgress(pbUpdate, Math.Min(v, 70));
                                 });
                             },
                             forceRewrite: chkForceRewrite.Checked,
@@ -234,11 +233,11 @@ namespace ConfigExcelEnhancer.UI
                             result =>
                             {
                                 processed++;
-                                int v = totalFiles > 0 ? 200 + (int)(processed * 600.0 / totalFiles) : 800;
+                                int v = totalFiles > 0 ? 20 + (int)(processed * 50.0 / totalFiles) : 70;
                                 BeginInvoke(() =>
                                 {
                                     LogFileResult(result);
-                                    pbUpdate.Value = Math.Min(v, 800);
+                                    ProgressBarHelper.SetProgress(pbUpdate, Math.Min(v, 70));
                                 });
                             },
                             forceRewrite: chkForceRewrite.Checked,
@@ -249,7 +248,7 @@ namespace ConfigExcelEnhancer.UI
 
                 token.ThrowIfCancellationRequested();
 
-                pbUpdate.Value = 850;
+                ProgressBarHelper.SetProgress(pbUpdate, 75);
 
                 // ── 步骤3：汇总
                 PrintSummary(enums.Count, results, sw.Elapsed);
@@ -258,7 +257,7 @@ namespace ConfigExcelEnhancer.UI
                 var savedFiles = results.Where(r => r.WasSaved).Select(r => r.FilePath).ToList();
                 if (savedFiles.Count > 0)
                 {
-                    pbUpdate.Value = 900;
+                    ProgressBarHelper.SetProgress(pbUpdate, 85);
                     Log($"正在通过 Excel 刷新 {savedFiles.Count} 个文件的公式缓存值...", LogLevel.Info);
                     bool excelAvailable = await Task.Run(
                         () => FunctionLibrary.RefreshFormulasViaSTA(savedFiles), token);
@@ -269,16 +268,16 @@ namespace ConfigExcelEnhancer.UI
                 }
                 else
                 {
-                    pbUpdate.Value = 900;
+                    ProgressBarHelper.SetProgress(pbUpdate, 85);
                 }
 
-                pbUpdate.Value = 1000;
+                ProgressBarHelper.SetProgress(pbUpdate, 100);
                 success = true;
             }
             catch (OperationCanceledException)
             {
                 Log("操作已停止。", LogLevel.Warn);
-                pbUpdate.Visible = false;
+                ProgressBarHelper.SetProgress(pbUpdate, 100);
             }
             catch (Exception ex)
             {
@@ -290,7 +289,6 @@ namespace ConfigExcelEnhancer.UI
                 ExecutionStateChanged?.Invoke(this, false);
                 btnUpdate.Enabled = true;
                 btnStop.Enabled = false;
-                pbUpdate.Visible = false;
                 _cts?.Dispose();
                 _cts = null;
                 Log("─ 结束 ─", LogLevel.Info);

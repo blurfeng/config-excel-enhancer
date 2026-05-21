@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using ConfigExcelEnhancer.Core;
 using ConfigExcelEnhancer.Models;
+using ConfigExcelEnhancer.Utils;
 
 namespace ConfigExcelEnhancer.UI
 {
@@ -464,9 +465,7 @@ namespace ConfigExcelEnhancer.UI
             btnRun.Enabled = false;
             btnCancel.Enabled = true;
             int cmdCount = _config?.Commands.Count ?? 1;
-            pbRun.Maximum = 1000;
-            pbRun.Value = 100;
-            pbRun.Visible = true;
+            ProgressBarHelper.SetProgressBegin(pbRun);
             txtLog.Clear();
             Log("开始执行导表...", LogLevel.Info);
 
@@ -482,10 +481,10 @@ namespace ConfigExcelEnhancer.UI
                 if (isError) _hasError = true;
                 LogLibrary.WriteRaw(txtLog, msg, isError ? LogLibrary.ClrError : LogLibrary.ClrOk);
                 _lineCount++;
-                int v = totalEstLines > 0 ? 100 + (int)(_lineCount * 800.0 / totalEstLines) : 900;
-                v = Math.Min(v, 900);
+                int v = totalEstLines > 0 ? 10 + (int)(_lineCount * 80.0 / totalEstLines) : 90;
+                v = Math.Min(v, 90);
                 if (v > pbRun.Value)
-                    pbRun.Value = v;
+                    ProgressBarHelper.SetProgress(pbRun, v);
             });
             _runner.Finished += code => BeginInvoke(() =>
             {
@@ -494,12 +493,11 @@ namespace ConfigExcelEnhancer.UI
                     Log("导表完成。", LogLevel.Ok);
                 else
                     Log($"导表失败，退出码：{code}", LogLevel.Error);
-                pbRun.Value = 1000;
+                ProgressBarHelper.SetProgress(pbRun, 100);
                 SetUILocked(false);
                 ExecutionStateChanged?.Invoke(this, false);
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
-                pbRun.Visible = false;
                 _runner = null;
                 Log("─ 结束 ─", LogLevel.Info);
                 LogDivider();
@@ -517,7 +515,7 @@ namespace ConfigExcelEnhancer.UI
                 ExecutionStateChanged?.Invoke(this, false);
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
-                pbRun.Visible = false;
+                ProgressBarHelper.SetProgress(pbRun, 100);
                 tcs.TrySetResult(false);
             }
 

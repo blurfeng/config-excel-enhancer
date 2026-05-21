@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using ConfigExcelEnhancer.Core;
 using ConfigExcelEnhancer.Models;
+using ConfigExcelEnhancer.Utils;
 
 namespace ConfigExcelEnhancer.UI
 {
@@ -145,9 +146,7 @@ namespace ConfigExcelEnhancer.UI
             ExecutionStateChanged?.Invoke(this, true);
             btnApply.Enabled = false;
             btnStop.Enabled = true;
-            pbApply.Maximum = 1000;
-            pbApply.Value = 100;
-            pbApply.Visible = true;
+            ProgressBarHelper.SetProgressBegin(pbApply);
             LogDivider();
 
             var options = new TableDesignOptions(
@@ -169,8 +168,8 @@ namespace ConfigExcelEnhancer.UI
             var progress = new Progress<string>(_ =>
             {
                 processed++;
-                int v = total > 0 ? 100 + (int)(processed * 800.0 / total) : 900;
-                pbApply.Value = Math.Min(v, 900);
+                int v = total > 0 ? 10 + (int)(processed * 80.0 / total) : 90;
+                ProgressBarHelper.SetProgress(pbApply, Math.Min(v, 90));
             });
 
             try
@@ -179,7 +178,7 @@ namespace ConfigExcelEnhancer.UI
                     (msg, level) => LogLibrary.Write(txtLog, msg, level),
                     token), token);
 
-                pbApply.Value = 1000;
+                ProgressBarHelper.SetProgress(pbApply, 100);
                 Log("完成。", LogLevel.Ok);
             }
             catch (OperationCanceledException)
@@ -196,7 +195,6 @@ namespace ConfigExcelEnhancer.UI
                 ExecutionStateChanged?.Invoke(this, false);
                 btnApply.Enabled = true;
                 btnStop.Enabled = false;
-                pbApply.Visible = false;
                 _cts?.Dispose();
                 _cts = null;
                 Log("─ 结束 ─", LogLevel.Info);
