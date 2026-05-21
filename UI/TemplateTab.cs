@@ -411,6 +411,9 @@ namespace ConfigExcelEnhancer.UI
 
             bool anySuccess = false;
 
+            try
+            {
+
             // 解析 Tables.cs（一次）
             Dictionary<string, TableMapping> tableMappings;
             try
@@ -421,7 +424,7 @@ namespace ConfigExcelEnhancer.UI
             catch (Exception ex)
             {
                 Log($"Tables.cs 解析失败：{ex.Message}", LogLevel.Error);
-                goto Cleanup;
+                return anySuccess;
             }
 
             // key = (IdsOutputDirectory, IdsClassName)
@@ -471,7 +474,7 @@ namespace ConfigExcelEnhancer.UI
                         (msg, lvl) => LogLibrary.Write(txtLog, msg, lvl), token);
                     anySuccess = true;
                 }
-                catch (OperationCanceledException) { Log("操作已停止。", LogLevel.Warn); goto Cleanup; }
+                catch (OperationCanceledException) { Log("操作已停止。", LogLevel.Warn); return anySuccess; }
                 catch (Exception ex) { Log($"未预期的错误：{ex.Message}", LogLevel.Error); }
 
                 // 累积 Ids 数据
@@ -551,15 +554,18 @@ namespace ConfigExcelEnhancer.UI
             ProgressBarHelper.SetProgress(pbRun, 100);
             Log("全部任务完成。", LogLevel.Ok);
 
-        Cleanup:
-            SetUILocked(false);
-            ExecutionStateChanged?.Invoke(this, false);
-            btnRunAll.Enabled = true;
-            btnRunSelected.Enabled = true;
-            btnStop.Enabled = false;
-            _cts?.Dispose();
-            _cts = null;
-            LogDivider();
+            } // try
+            finally
+            {
+                SetUILocked(false);
+                ExecutionStateChanged?.Invoke(this, false);
+                btnRunAll.Enabled = true;
+                btnRunSelected.Enabled = true;
+                btnStop.Enabled = false;
+                _cts?.Dispose();
+                _cts = null;
+                LogDivider();
+            }
             return anySuccess;
         }
 

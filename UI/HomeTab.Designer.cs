@@ -21,7 +21,6 @@ namespace ConfigExcelEnhancer.UI
             chkIncludeEnum = new CheckBox();
             btnGoLuban = new Button();
             btnGoTemplate1 = new Button();
-            btnGoTemplate2 = new Button();
             ctxLog = new ContextMenuStrip(components);
             ctxMenuItemClearLog = new ToolStripMenuItem();
             ctxMenuItemCopyLog = new ToolStripMenuItem();
@@ -114,19 +113,7 @@ namespace ConfigExcelEnhancer.UI
             toolTip.SetToolTip(btnGoTemplate1, "跳转到导出模板类选项卡");
             btnGoTemplate1.UseVisualStyleBackColor = true;
             btnGoTemplate1.Click += btnGoTemplate_Click;
-            // 
-            // btnGoTemplate2
-            // 
-            btnGoTemplate2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnGoTemplate2.Location = new Point(700, 78);
-            btnGoTemplate2.Name = "btnGoTemplate2";
-            btnGoTemplate2.Size = new Size(110, 23);
-            btnGoTemplate2.TabIndex = 7;
-            btnGoTemplate2.Text = "→ 导出模板类";
-            toolTip.SetToolTip(btnGoTemplate2, "跳转到导出模板类选项卡");
-            btnGoTemplate2.UseVisualStyleBackColor = true;
-            btnGoTemplate2.Click += btnGoTemplate_Click;
-            // 
+            //
             // ctxLog
             // 
             ctxLog.Items.AddRange(new ToolStripItem[] { ctxMenuItemClearLog, ctxMenuItemCopyLog });
@@ -179,7 +166,6 @@ namespace ConfigExcelEnhancer.UI
             grpStatus.Controls.Add(btnGoTemplate1);
             grpStatus.Controls.Add(lblTablesCsDot);
             grpStatus.Controls.Add(lblTablesCs);
-            grpStatus.Controls.Add(btnGoTemplate2);
             grpStatus.Controls.Add(lblLastExportDot);
             grpStatus.Controls.Add(lblLastExport);
             grpStatus.Dock = DockStyle.Top;
@@ -339,7 +325,6 @@ namespace ConfigExcelEnhancer.UI
         private Button btnGoTemplate1;
         private Label lblTablesCsDot;
         private Label lblTablesCs;
-        private Button btnGoTemplate2;
         private Label lblLastExportDot;
         private Label lblLastExport;
 

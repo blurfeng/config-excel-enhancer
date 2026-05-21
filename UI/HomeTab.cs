@@ -105,7 +105,7 @@ namespace ConfigExcelEnhancer.UI
         private static string ShortenPath(string path, int maxLength)
         {
             if (path.Length <= maxLength) return path;
-            return "..." + path.Substring(path.Length - maxLength + 3);
+            return "..." + path[(path.Length - maxLength + 3)..];
         }
 
         // ── 快速操作 ──────────────────────────────────────────
@@ -125,7 +125,6 @@ namespace ConfigExcelEnhancer.UI
 
             int totalSteps = chkIncludeEnum.Checked ? 3 : 2;
             int currentStep = 0;
-            bool allSuccess = true;
 
             void BeginStep(string title)
             {
@@ -143,33 +142,33 @@ namespace ConfigExcelEnhancer.UI
 
             SetOverallProgress(0, totalSteps);
 
-            // 步骤 1：Enum 验证（可选）
-            if (chkIncludeEnum.Checked)
+            try
             {
-                BeginStep("执行 Enum 验证...");
-                bool enumSuccess = await _enumTab.RunAsync();
-                EndStep(enumSuccess, "Enum 验证完成。", "Enum 验证失败，已终止后续步骤。");
-                if (!enumSuccess) { allSuccess = false; goto Cleanup; }
+                // 步骤 1：Enum 验证（可选）
+                if (chkIncludeEnum.Checked)
+                {
+                    BeginStep("执行 Enum 验证...");
+                    bool enumSuccess = await _enumTab.RunAsync();
+                    EndStep(enumSuccess, "Enum 验证完成。", "Enum 验证失败，已终止后续步骤。");
+                    if (!enumSuccess) return;
+                    LogDivider();
+                }
+
+                // 步骤：Luban 导表
+                BeginStep("执行 Luban 导表...");
+                bool lubanSuccess = await _lubanTab.RunAsync();
+                EndStep(lubanSuccess, "Luban 导表完成。", "Luban 导表失败，已终止后续步骤。");
+                if (!lubanSuccess) return;
                 LogDivider();
-            }
 
-            // 步骤：Luban 导表
-            BeginStep("执行 Luban 导表...");
-            bool lubanSuccess = await _lubanTab.RunAsync();
-            EndStep(lubanSuccess, "Luban 导表完成。", "Luban 导表失败，已终止后续步骤。");
-            if (!lubanSuccess) { allSuccess = false; goto Cleanup; }
-            LogDivider();
+                // 步骤：导出模板类
+                BeginStep("导出模板类...");
+                bool templateSuccess = await _templateTab.RunAllAsync();
+                EndStep(templateSuccess, "导出模板类完成。", "导出模板类失败。");
+                if (!templateSuccess) return;
+                LogDivider();
 
-            // 步骤：导出模板类
-            BeginStep("导出模板类...");
-            bool templateSuccess = await _templateTab.RunAllAsync();
-            EndStep(templateSuccess, "导出模板类完成。", "导出模板类失败。");
-            if (!templateSuccess) { allSuccess = false; goto Cleanup; }
-            LogDivider();
-
-            // 全部成功：更新导出时间
-            if (allSuccess)
-            {
+                // 全部成功：更新导出时间
                 _settings.LastExportTime = DateTime.Now;
                 try
                 {
@@ -182,11 +181,12 @@ namespace ConfigExcelEnhancer.UI
                     Log($"保存导出时间失败：{ex.Message}", LogLevel.Warn);
                 }
             }
-
-        Cleanup:
-            SetUILocked(false);
-            ExecutionStateChanged?.Invoke(this, false);
-            LogDivider();
+            finally
+            {
+                SetUILocked(false);
+                ExecutionStateChanged?.Invoke(this, false);
+                LogDivider();
+            }
         }
 
         private async void btnLubanOnly_Click(object sender, EventArgs e)
@@ -230,6 +230,7 @@ namespace ConfigExcelEnhancer.UI
             btnCancel.Enabled = locked;
             chkIncludeEnum.Enabled = !locked;
             if (locked) ProgressBarHelper.SetProgressBegin(pbOverall);
+            else ProgressBarHelper.SetProgress(pbOverall, 100);
             _isExecuting = locked;
         }
 

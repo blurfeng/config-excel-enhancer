@@ -7,8 +7,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyVersion></AssemblyVersion>
-    <FileVersion>0.2.1.0</FileVersion>
-    <AssemblyInformationalVersion>0.2.1-beta</AssemblyInformationalVersion>
+    <FileVersion>0.2.2.0</FileVersion>
+    <AssemblyInformationalVersion>0.2.2-beta</AssemblyInformationalVersion>
     <Authors>BlurFeng</Authors>
     <PackageIcon></PackageIcon>
     <ApplicationIcon>Icon\ConfigExcelEnhancer.ico</ApplicationIcon>

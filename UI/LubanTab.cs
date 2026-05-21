@@ -593,6 +593,7 @@ namespace ConfigExcelEnhancer.UI
             {
                 if (Path.IsPathRooted(displayValue) && !string.IsNullOrEmpty(batDir))
                 {
+                    // 跨驱动器时 GetRelativePath 会抛出，fallback 到原始绝对路径
                     try { return Path.GetRelativePath(batDir, displayValue); }
                     catch { }
                 }
@@ -604,6 +605,7 @@ namespace ConfigExcelEnhancer.UI
 
             if (Path.IsPathRooted(displayValue) && !string.IsNullOrEmpty(batDir))
             {
+                // 跨驱动器时 GetRelativePath 会抛出，fallback 到原始绝对路径
                 try { return Path.GetRelativePath(batDir, displayValue); }
                 catch { }
             }
@@ -616,6 +618,7 @@ namespace ConfigExcelEnhancer.UI
             if (string.IsNullOrEmpty(value) || string.IsNullOrEmpty(basePath)) return value;
             if (Path.IsPathRooted(value)) return value;
             if (value.Contains('%')) return value;
+            // 路径格式非法时 GetFullPath 会抛出，fallback 到原始值
             try { return Path.GetFullPath(Path.Combine(basePath, value)); }
             catch { return value; }
         }

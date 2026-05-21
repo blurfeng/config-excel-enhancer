@@ -11,6 +11,8 @@ namespace ConfigExcelEnhancer
         [STAThread]
         static void Main()
         {
+            // .NET 5+ 默认不含代码页编码，注册后才能使用 GBK(936) 等代码页
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             ApplicationConfiguration.Initialize();
             Application.Run(new MainForm());
         }
