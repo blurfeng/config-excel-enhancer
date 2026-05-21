@@ -124,6 +124,14 @@ namespace ConfigExcelEnhancer.Core
             // 只有确实发生了数据变更时才写盘，避免 git 误报和 xlsx 结构被意外改动
             if (result.HasSchemaChange || result.HasDataChange || result.HasVisibilityChange)
             {
+                // ClosedXML 保存时会重写 VML 注释文件，导致注释尺寸被重置为默认值。
+                // 在保存前对所有注释设置自动尺寸，保存后注释会根据内容自适应大小。
+                foreach (var ws in wb.Worksheets)
+                {
+                    foreach (var cell in ws.CellsUsed(c => c.HasComment))
+                        cell.GetComment().Style.Size.SetAutomaticSize();
+                }
+
                 wb.Save();
                 result.WasSaved = true;
                 // ClosedXML 不评估公式，保存后公式单元格的缓存值为空。
