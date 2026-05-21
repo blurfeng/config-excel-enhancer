@@ -77,10 +77,5 @@ namespace ConfigExcelEnhancer.Models
 
         /// <summary>导出模板任务列表。</summary>
         public List<TemplateExportJob> TemplateExportJobs { get; set; } = new();
-
-        // ── 主页（HomeTab）────────────────────────────────────────
-
-        /// <summary>上次执行"一键导出"的时间（包含 Luban 导表 + 导出模板类）。</summary>
-        public DateTime? LastExportTime { get; set; }
     }
 }

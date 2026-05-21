@@ -16,6 +16,7 @@ namespace ConfigExcelEnhancer.UI
         private TabPage? _tabLuban;
         private TabPage? _tabTemplate;
         private AppSettings? _settings;
+        private LocalState? _localState;
 
         private bool _isExecuting;
 
@@ -37,7 +38,8 @@ namespace ConfigExcelEnhancer.UI
             TabControl tabControl,
             TabPage tabLuban,
             TabPage tabTemplate,
-            AppSettings settings)
+            AppSettings settings,
+            LocalState localState)
         {
             _lubanTab = lubanTab;
             _templateTab = templateTab;
@@ -46,6 +48,7 @@ namespace ConfigExcelEnhancer.UI
             _tabLuban = tabLuban;
             _tabTemplate = tabTemplate;
             _settings = settings;
+            _localState = localState;
         }
 
         /// <summary>
@@ -86,14 +89,14 @@ namespace ConfigExcelEnhancer.UI
             SetDot(lblTablesCsDot, tablesValid);
 
             // 上次导出时间（仅显示，不指示配置对错）
-            if (_settings.LastExportTime.HasValue)
+            if (_localState?.LastExportTime.HasValue == true)
             {
-                lblLastExport.Text = $"上次导出：{_settings.LastExportTime.Value:yyyy-MM-dd HH:mm}";
+                lblLastExport.Text = $"本地上次导出：{_localState.LastExportTime.Value:yyyy-MM-dd HH:mm}";
                 lblLastExportDot.ForeColor = Color.LightGreen;
             }
             else
             {
-                lblLastExport.Text = "上次导出：从未导出";
+                lblLastExport.Text = "本地上次导出：从未导出";
                 lblLastExportDot.ForeColor = Color.Gray;
             }
         }
@@ -169,16 +172,23 @@ namespace ConfigExcelEnhancer.UI
                 LogDivider();
 
                 // 全部成功：更新导出时间
-                _settings.LastExportTime = DateTime.Now;
-                try
+                if (_localState != null)
                 {
-                    SettingsManager.Save(_settings);
-                    Log("一键导出全部完成！", LogLevel.Ok);
-                    RefreshStatus();
+                    _localState.LastExportTime = DateTime.Now;
+                    try
+                    {
+                        LocalStateManager.Save(_localState);
+                        Log("一键导出全部完成！", LogLevel.Ok);
+                        RefreshStatus();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"保存导出时间失败：{ex.Message}", LogLevel.Warn);
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    Log($"保存导出时间失败：{ex.Message}", LogLevel.Warn);
+                    Log("一键导出全部完成！", LogLevel.Ok);
                 }
             }
             finally

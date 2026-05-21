@@ -1,3 +1,4 @@
+using ConfigExcelEnhancer.Models;
 using ConfigExcelEnhancer.Utils;
 
 namespace ConfigExcelEnhancer
@@ -9,6 +10,9 @@ namespace ConfigExcelEnhancer
     {
         // 当前是否有任务正在执行（任意 Tab 运行中均为 true），用于阻止 Tab 切换
         private bool _isExecuting;
+
+        // 本地状态（不进入版本控制）
+        private LocalState _localState = LocalStateManager.Load();
 
         /// <summary>
         /// 初始化主窗体。订阅各 Tab 的执行状态事件，阻止执行期间切换 Tab，并加载持久化设置。
@@ -38,7 +42,8 @@ namespace ConfigExcelEnhancer
                 tabControl,
                 tabLuban,
                 tabTemplate,
-                enumTab.Settings);
+                enumTab.Settings,
+                _localState);
         }
 
         /// <summary>
