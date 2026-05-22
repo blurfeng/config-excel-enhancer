@@ -77,5 +77,10 @@ namespace ConfigExcelEnhancer.Models
 
         /// <summary>导出模板任务列表。</summary>
         public List<TemplateExportJob> TemplateExportJobs { get; set; } = new();
+
+        // ── 主页 ──────────────────────────────────────────
+
+        /// <summary>主页"一键导出"是否包含 Enum 验证步骤。</summary>
+        public bool HomeIncludeEnum { get; set; } = true;
     }
 }

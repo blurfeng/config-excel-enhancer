@@ -49,6 +49,10 @@ namespace ConfigExcelEnhancer.UI
             _tabTemplate = tabTemplate;
             _settings = settings;
             _localState = localState;
+
+            // 从设置加载勾选状态
+            chkIncludeEnum.Checked = settings.HomeIncludeEnum;
+            chkIncludeEnum.CheckedChanged += chkIncludeEnum_CheckedChanged;
         }
 
         /// <summary>
@@ -223,6 +227,13 @@ namespace ConfigExcelEnhancer.UI
             SetUILocked(false);
             ExecutionStateChanged?.Invoke(this, false);
             LogDivider();
+        }
+
+        private void chkIncludeEnum_CheckedChanged(object? sender, EventArgs e)
+        {
+            if (_settings == null) return;
+            _settings.HomeIncludeEnum = chkIncludeEnum.Checked;
+            SettingsManager.Save(_settings);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
