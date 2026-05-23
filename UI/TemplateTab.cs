@@ -382,8 +382,8 @@ namespace ConfigExcelEnhancer.UI
         {
             if (jobs.Count == 0)
             {
-                Log("没有可运行的任务。", LogLevel.Warn);
-                return false;
+                Log("没有可运行的任务，已跳过。", LogLevel.Info);
+                return true;
             }
 
             if (string.IsNullOrWhiteSpace(Settings.TablesClassPath))

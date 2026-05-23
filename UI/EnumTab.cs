@@ -145,26 +145,34 @@ namespace ConfigExcelEnhancer.UI
 
                 token.ThrowIfCancellationRequested();
 
-                if (enums.Count == 0)
+                if (enums.Count == 0 && !Settings.BoolValidation)
                 {
                     Log("未找到任何 Enum 定义，请检查数据定义 XML 目录。", LogLevel.Warn);
+                    ProgressBarHelper.SetProgress(pbUpdate, 100);
                     return false;
+                }
+                else if (enums.Count == 0)
+                {
+                    Log("未找到任何 Enum 定义，将仅执行布尔值验证。", LogLevel.Info);
                 }
 
                 // 枚举列表（超过 8 个时截断显示）
-                const int maxShow = 8;
                 var enumNameSet = enums.Select(e => e.Name).ToHashSet(StringComparer.Ordinal);
-                var enumNames = enumNameSet.ToList();
-                var namesDisplay = enumNames.Count <= maxShow
-                    ? string.Join("、", enumNames)
-                    : string.Join("、", enumNames.Take(maxShow)) + $" (+{enumNames.Count - maxShow})";
-                Log($"找到 {enums.Count} 个 Enum：{namesDisplay}", LogLevel.Ok);
-
-                // 警告没有 value=0 的枚举（默认值将使用第一项）
-                foreach (var ei in enums)
+                if (enums.Count > 0)
                 {
-                    if (!ei.Options.Any(o => o.Value == "0"))
-                        Log($"  ⚠ {ei.Name} 没有 value=0 的选项，默认将使用第一项：{ei.Options.FirstOrDefault()?.Name}", LogLevel.Warn);
+                    const int maxShow = 8;
+                    var enumNames = enumNameSet.ToList();
+                    var namesDisplay = enumNames.Count <= maxShow
+                        ? string.Join("、", enumNames)
+                        : string.Join("、", enumNames.Take(maxShow)) + $" (+{enumNames.Count - maxShow})";
+                    Log($"找到 {enums.Count} 个 Enum：{namesDisplay}", LogLevel.Ok);
+
+                    // 警告没有 value=0 的枚举（默认值将使用第一项）
+                    foreach (var ei in enums)
+                    {
+                        if (!ei.Options.Any(o => o.Value == "0"))
+                            Log($"  ⚠ {ei.Name} 没有 value=0 的选项，默认将使用第一项：{ei.Options.FirstOrDefault()?.Name}", LogLevel.Warn);
+                    }
                 }
 
                 // 布尔值验证：注入合成 bool 枚举（Name="bool"，选项 FALSE/TRUE）
