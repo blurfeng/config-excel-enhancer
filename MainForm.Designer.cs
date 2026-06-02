@@ -100,7 +100,7 @@ namespace ConfigExcelEnhancer
             ClientSize = new Size(860, 600);
             MinimumSize = new Size(800, 560);
             Controls.Add(tabControl);
-            Text = "ConfigStudio";
+            Text = "Config Excel Enhancer";
             Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application;
             tabControl.ResumeLayout(false);
             tabHome.ResumeLayout(false);

@@ -29,7 +29,7 @@ namespace ConfigExcelEnhancer.UI
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            Log("Hello! ConfigStudio 已就绪。", LogLevel.Info);
+            Log("Hello! Config Excel Enhancer 已就绪。", LogLevel.Info);
         }
 
         // ── 目录选择 ──────────────────────────────────────────
