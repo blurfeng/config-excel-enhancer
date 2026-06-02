@@ -127,7 +127,7 @@ namespace ConfigExcelEnhancer.UI
             chkBoolValidation.AutoSize = true;
             chkBoolValidation.Checked = true;
             chkBoolValidation.CheckState = CheckState.Checked;
-            chkBoolValidation.Location = new Point(310, 22);
+            chkBoolValidation.Location = new Point(148, 22);
             chkBoolValidation.Name = "chkBoolValidation";
             chkBoolValidation.Size = new Size(111, 21);
             chkBoolValidation.TabIndex = 14;

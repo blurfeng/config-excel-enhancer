@@ -132,7 +132,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // lblSheetScope
             // 
-            lblSheetScope.Location = new Point(8, 50);
+            lblSheetScope.Location = new Point(10, 49);
             lblSheetScope.Name = "lblSheetScope";
             lblSheetScope.Size = new Size(87, 21);
             lblSheetScope.TabIndex = 9;
@@ -152,7 +152,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             rdoScopeAll.AutoSize = true;
             rdoScopeAll.Checked = true;
-            rdoScopeAll.Location = new Point(3, 3);
+            rdoScopeAll.Location = new Point(3, 4);
             rdoScopeAll.Name = "rdoScopeAll";
             rdoScopeAll.Size = new Size(50, 21);
             rdoScopeAll.TabIndex = 0;
@@ -163,7 +163,7 @@ namespace ConfigExcelEnhancer.UI
             // rdoScopeFirst
             // 
             rdoScopeFirst.AutoSize = true;
-            rdoScopeFirst.Location = new Point(54, 3);
+            rdoScopeFirst.Location = new Point(54, 4);
             rdoScopeFirst.Name = "rdoScopeFirst";
             rdoScopeFirst.Size = new Size(62, 21);
             rdoScopeFirst.TabIndex = 1;
@@ -185,7 +185,7 @@ namespace ConfigExcelEnhancer.UI
             // lblHeaderSymbol
             // 
             lblHeaderSymbol.AutoSize = true;
-            lblHeaderSymbol.Location = new Point(10, 78);
+            lblHeaderSymbol.Location = new Point(10, 79);
             lblHeaderSymbol.Name = "lblHeaderSymbol";
             lblHeaderSymbol.Size = new Size(68, 17);
             lblHeaderSymbol.TabIndex = 12;
@@ -217,7 +217,7 @@ namespace ConfigExcelEnhancer.UI
             chkMergeHeaderCells.AutoSize = true;
             chkMergeHeaderCells.Checked = true;
             chkMergeHeaderCells.CheckState = CheckState.Checked;
-            chkMergeHeaderCells.Location = new Point(10, 106);
+            chkMergeHeaderCells.Location = new Point(10, 108);
             chkMergeHeaderCells.Name = "chkMergeHeaderCells";
             chkMergeHeaderCells.Size = new Size(135, 21);
             chkMergeHeaderCells.TabIndex = 15;

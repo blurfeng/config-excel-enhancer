@@ -21,27 +21,27 @@ namespace ConfigExcelEnhancer.UI
             // 
             // groupBoxSettings
             // 
+            groupBoxSettings.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             groupBoxSettings.Controls.Add(lblClearDesc);
             groupBoxSettings.Controls.Add(btnClearSettings);
-            groupBoxSettings.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             groupBoxSettings.Location = new Point(12, 14);
             groupBoxSettings.Name = "groupBoxSettings";
-            groupBoxSettings.Size = new Size(641, 113);
+            groupBoxSettings.Size = new Size(641, 100);
             groupBoxSettings.TabIndex = 0;
             groupBoxSettings.TabStop = false;
             groupBoxSettings.Text = "settings.json";
             // 
             // lblClearDesc
             // 
-            lblClearDesc.Location = new Point(10, 27);
+            lblClearDesc.Location = new Point(162, 30);
             lblClearDesc.Name = "lblClearDesc";
-            lblClearDesc.Size = new Size(380, 41);
+            lblClearDesc.Size = new Size(236, 20);
             lblClearDesc.TabIndex = 0;
             lblClearDesc.Text = "清空后，所有工具设置将恢复为默认值。";
             // 
             // btnClearSettings
             // 
-            btnClearSettings.Location = new Point(10, 68);
+            btnClearSettings.Location = new Point(6, 22);
             btnClearSettings.Name = "btnClearSettings";
             btnClearSettings.Size = new Size(150, 32);
             btnClearSettings.TabIndex = 1;

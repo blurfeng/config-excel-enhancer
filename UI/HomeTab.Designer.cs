@@ -97,9 +97,9 @@ namespace ConfigExcelEnhancer.UI
             // btnGoLuban
             // 
             btnGoLuban.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnGoLuban.Location = new Point(730, 68);
+            btnGoLuban.Location = new Point(700, 68);
             btnGoLuban.Name = "btnGoLuban";
-            btnGoLuban.Size = new Size(80, 23);
+            btnGoLuban.Size = new Size(108, 23);
             btnGoLuban.TabIndex = 5;
             btnGoLuban.Text = "→ Luban";
             toolTip.SetToolTip(btnGoLuban, "跳转到 Luban 选项卡");
@@ -221,7 +221,7 @@ namespace ConfigExcelEnhancer.UI
             lblLubanTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblLubanTitle.Location = new Point(28, 73);
             lblLubanTitle.Name = "lblLubanTitle";
-            lblLubanTitle.Size = new Size(68, 15);
+            lblLubanTitle.Size = new Size(40, 15);
             lblLubanTitle.TabIndex = 12;
             lblLubanTitle.Text = "Luban";
             // 
@@ -239,7 +239,7 @@ namespace ConfigExcelEnhancer.UI
             // lblGenBat
             // 
             lblGenBat.AutoSize = true;
-            lblGenBat.Location = new Point(100, 73);
+            lblGenBat.Location = new Point(125, 73);
             lblGenBat.Name = "lblGenBat";
             lblGenBat.Size = new Size(64, 17);
             lblGenBat.TabIndex = 1;
@@ -251,7 +251,7 @@ namespace ConfigExcelEnhancer.UI
             lblTemplateTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblTemplateTitle.Location = new Point(28, 101);
             lblTemplateTitle.Name = "lblTemplateTitle";
-            lblTemplateTitle.Size = new Size(105, 15);
+            lblTemplateTitle.Size = new Size(77, 15);
             lblTemplateTitle.TabIndex = 13;
             lblTemplateTitle.Text = "导出模板类";
             // 
@@ -269,7 +269,7 @@ namespace ConfigExcelEnhancer.UI
             // lblTemplateJobs
             // 
             lblTemplateJobs.AutoSize = true;
-            lblTemplateJobs.Location = new Point(137, 101);
+            lblTemplateJobs.Location = new Point(125, 101);
             lblTemplateJobs.Name = "lblTemplateJobs";
             lblTemplateJobs.Size = new Size(68, 17);
             lblTemplateJobs.TabIndex = 7;
@@ -278,7 +278,7 @@ namespace ConfigExcelEnhancer.UI
             // lblTablesCs
             // 
             lblTablesCs.AutoSize = true;
-            lblTablesCs.Location = new Point(320, 101);
+            lblTablesCs.Location = new Point(284, 101);
             lblTablesCs.Name = "lblTablesCs";
             lblTablesCs.Size = new Size(73, 17);
             lblTablesCs.TabIndex = 9;
