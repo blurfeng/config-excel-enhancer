@@ -75,22 +75,27 @@ namespace ConfigExcelEnhancer.UI
             lblGenBat.Text = genBatValid
                 ? $"gen.bat：{ShortenPath(genBatPath, 60)}"
                 : "gen.bat：未配置";
-            SetDot(lblGenBatDot, genBatValid);
+            lblGenBatDot.ForeColor = genBatValid ? Color.LightGreen : Color.Red;
 
-            // 模板任务数
+            // 模板任务数 & Tables.cs 状态
             int jobCount = _settings.TemplateExportJobs.Count;
             lblTemplateJobs.Text = jobCount > 0
                 ? $"模板任务：{jobCount} 个已配置"
                 : "模板任务：未配置";
-            SetDot(lblTemplateJobsDot, jobCount > 0);
 
-            // Tables.cs 状态
             string tablesPath = _settings.TablesClassPath;
             bool tablesValid = !string.IsNullOrEmpty(tablesPath) && File.Exists(tablesPath);
             lblTablesCs.Text = tablesValid
-                ? $"Tables.cs：{ShortenPath(tablesPath, 60)}"
+                ? "Tables.cs：已配置"
                 : "Tables.cs：未配置";
-            SetDot(lblTablesCsDot, tablesValid);
+
+            // 圆点三态：未配置模板任务→黄色；任务已配置但Tables.cs未配置→红色；全部配置→绿色
+            if (jobCount == 0)
+                lblTemplateJobsDot.ForeColor = Color.Yellow;
+            else if (!tablesValid)
+                lblTemplateJobsDot.ForeColor = Color.Red;
+            else
+                lblTemplateJobsDot.ForeColor = Color.LightGreen;
 
             // 上次导出时间（仅显示，不指示配置对错）
             if (_localState?.LastExportTime.HasValue == true)
