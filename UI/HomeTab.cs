@@ -107,7 +107,7 @@ namespace ConfigExcelEnhancer.UI
 
         /// <summary>设置状态圆点颜色；不修改主 Label 的字体颜色。</summary>
         private static void SetDot(Label dot, bool ok)
-            => dot.ForeColor = ok ? Color.LightGreen : Color.OrangeRed;
+            => dot.ForeColor = ok ? Color.LightGreen : Color.Yellow;
 
         private static string ShortenPath(string path, int maxLength)
         {
