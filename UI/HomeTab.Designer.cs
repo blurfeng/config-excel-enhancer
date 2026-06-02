@@ -27,15 +27,18 @@ namespace ConfigExcelEnhancer.UI
             pbOverall = new ProgressBar();
             pnlActions = new Panel();
             grpStatus = new GroupBox();
+            lblCheckDot = new Label();
+            lblCheckSummary = new Label();
+            lblCheckIssues = new Label();
+            lblLubanTitle = new Label();
             lblGenBatDot = new Label();
             lblGenBat = new Label();
+            lblTemplateTitle = new Label();
             lblTemplateJobsDot = new Label();
             lblTemplateJobs = new Label();
             lblTablesCs = new Label();
             lblLastExportDot = new Label();
             lblLastExport = new Label();
-            lblLubanTitle = new Label();
-            lblTemplateTitle = new Label();
             grpLog = new GroupBox();
             txtLog = new RichTextBox();
             ctxLog.SuspendLayout();
@@ -94,7 +97,7 @@ namespace ConfigExcelEnhancer.UI
             // btnGoLuban
             // 
             btnGoLuban.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnGoLuban.Location = new Point(730, 20);
+            btnGoLuban.Location = new Point(730, 68);
             btnGoLuban.Name = "btnGoLuban";
             btnGoLuban.Size = new Size(80, 23);
             btnGoLuban.TabIndex = 5;
@@ -106,7 +109,7 @@ namespace ConfigExcelEnhancer.UI
             // btnGoTemplate1
             // 
             btnGoTemplate1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnGoTemplate1.Location = new Point(700, 48);
+            btnGoTemplate1.Location = new Point(700, 96);
             btnGoTemplate1.Name = "btnGoTemplate1";
             btnGoTemplate1.Size = new Size(110, 23);
             btnGoTemplate1.TabIndex = 6;
@@ -114,7 +117,7 @@ namespace ConfigExcelEnhancer.UI
             toolTip.SetToolTip(btnGoTemplate1, "跳转到导出模板类选项卡");
             btnGoTemplate1.UseVisualStyleBackColor = true;
             btnGoTemplate1.Click += btnGoTemplate_Click;
-            //
+            // 
             // ctxLog
             // 
             ctxLog.Items.AddRange(new ToolStripItem[] { ctxMenuItemClearLog, ctxMenuItemCopyLog });
@@ -159,6 +162,9 @@ namespace ConfigExcelEnhancer.UI
             // 
             // grpStatus
             // 
+            grpStatus.Controls.Add(lblCheckDot);
+            grpStatus.Controls.Add(lblCheckSummary);
+            grpStatus.Controls.Add(lblCheckIssues);
             grpStatus.Controls.Add(lblLubanTitle);
             grpStatus.Controls.Add(lblGenBatDot);
             grpStatus.Controls.Add(lblGenBat);
@@ -174,17 +180,57 @@ namespace ConfigExcelEnhancer.UI
             grpStatus.Location = new Point(0, 80);
             grpStatus.Name = "grpStatus";
             grpStatus.Padding = new Padding(8);
-            grpStatus.Size = new Size(819, 108);
+            grpStatus.Size = new Size(819, 156);
             grpStatus.TabIndex = 1;
             grpStatus.TabStop = false;
             grpStatus.Text = "当前配置状态";
+            // 
+            // lblCheckDot
+            // 
+            lblCheckDot.AutoSize = true;
+            lblCheckDot.Font = new Font("Segoe UI", 10F);
+            lblCheckDot.ForeColor = Color.Gray;
+            lblCheckDot.Location = new Point(10, 22);
+            lblCheckDot.Name = "lblCheckDot";
+            lblCheckDot.Size = new Size(17, 19);
+            lblCheckDot.TabIndex = 20;
+            lblCheckDot.Text = "●";
+            // 
+            // lblCheckSummary
+            // 
+            lblCheckSummary.AutoSize = true;
+            lblCheckSummary.Location = new Point(28, 25);
+            lblCheckSummary.Name = "lblCheckSummary";
+            lblCheckSummary.Size = new Size(77, 17);
+            lblCheckSummary.TabIndex = 21;
+            lblCheckSummary.Text = "配置检查中...";
+            // 
+            // lblCheckIssues
+            // 
+            lblCheckIssues.AutoSize = true;
+            lblCheckIssues.ForeColor = Color.Orange;
+            lblCheckIssues.Location = new Point(28, 44);
+            lblCheckIssues.Name = "lblCheckIssues";
+            lblCheckIssues.Size = new Size(0, 17);
+            lblCheckIssues.TabIndex = 22;
+            lblCheckIssues.Visible = false;
+            // 
+            // lblLubanTitle
+            // 
+            lblLubanTitle.AutoSize = true;
+            lblLubanTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblLubanTitle.Location = new Point(28, 73);
+            lblLubanTitle.Name = "lblLubanTitle";
+            lblLubanTitle.Size = new Size(68, 15);
+            lblLubanTitle.TabIndex = 12;
+            lblLubanTitle.Text = "Luban";
             // 
             // lblGenBatDot
             // 
             lblGenBatDot.AutoSize = true;
             lblGenBatDot.Font = new Font("Segoe UI", 10F);
             lblGenBatDot.ForeColor = Color.Gray;
-            lblGenBatDot.Location = new Point(80, 23);
+            lblGenBatDot.Location = new Point(10, 71);
             lblGenBatDot.Name = "lblGenBatDot";
             lblGenBatDot.Size = new Size(17, 19);
             lblGenBatDot.TabIndex = 0;
@@ -193,18 +239,28 @@ namespace ConfigExcelEnhancer.UI
             // lblGenBat
             // 
             lblGenBat.AutoSize = true;
-            lblGenBat.Location = new Point(98, 25);
+            lblGenBat.Location = new Point(100, 73);
             lblGenBat.Name = "lblGenBat";
             lblGenBat.Size = new Size(64, 17);
             lblGenBat.TabIndex = 1;
             lblGenBat.Text = "gen.bat：";
+            // 
+            // lblTemplateTitle
+            // 
+            lblTemplateTitle.AutoSize = true;
+            lblTemplateTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblTemplateTitle.Location = new Point(28, 101);
+            lblTemplateTitle.Name = "lblTemplateTitle";
+            lblTemplateTitle.Size = new Size(105, 15);
+            lblTemplateTitle.TabIndex = 13;
+            lblTemplateTitle.Text = "导出模板类";
             // 
             // lblTemplateJobsDot
             // 
             lblTemplateJobsDot.AutoSize = true;
             lblTemplateJobsDot.Font = new Font("Segoe UI", 10F);
             lblTemplateJobsDot.ForeColor = Color.Gray;
-            lblTemplateJobsDot.Location = new Point(118, 51);
+            lblTemplateJobsDot.Location = new Point(10, 99);
             lblTemplateJobsDot.Name = "lblTemplateJobsDot";
             lblTemplateJobsDot.Size = new Size(17, 19);
             lblTemplateJobsDot.TabIndex = 6;
@@ -213,7 +269,7 @@ namespace ConfigExcelEnhancer.UI
             // lblTemplateJobs
             // 
             lblTemplateJobs.AutoSize = true;
-            lblTemplateJobs.Location = new Point(136, 53);
+            lblTemplateJobs.Location = new Point(137, 101);
             lblTemplateJobs.Name = "lblTemplateJobs";
             lblTemplateJobs.Size = new Size(68, 17);
             lblTemplateJobs.TabIndex = 7;
@@ -222,7 +278,7 @@ namespace ConfigExcelEnhancer.UI
             // lblTablesCs
             // 
             lblTablesCs.AutoSize = true;
-            lblTablesCs.Location = new Point(320, 53);
+            lblTablesCs.Location = new Point(320, 101);
             lblTablesCs.Name = "lblTablesCs";
             lblTablesCs.Size = new Size(73, 17);
             lblTablesCs.TabIndex = 9;
@@ -233,7 +289,7 @@ namespace ConfigExcelEnhancer.UI
             lblLastExportDot.AutoSize = true;
             lblLastExportDot.Font = new Font("Segoe UI", 10F);
             lblLastExportDot.ForeColor = Color.Gray;
-            lblLastExportDot.Location = new Point(10, 81);
+            lblLastExportDot.Location = new Point(10, 129);
             lblLastExportDot.Name = "lblLastExportDot";
             lblLastExportDot.Size = new Size(17, 19);
             lblLastExportDot.TabIndex = 10;
@@ -242,38 +298,20 @@ namespace ConfigExcelEnhancer.UI
             // lblLastExport
             // 
             lblLastExport.AutoSize = true;
-            lblLastExport.Location = new Point(28, 81);
+            lblLastExport.Location = new Point(28, 129);
             lblLastExport.Name = "lblLastExport";
             lblLastExport.Size = new Size(68, 17);
             lblLastExport.TabIndex = 11;
             lblLastExport.Text = "上次导出：";
             // 
-            // lblLubanTitle
-            // 
-            lblLubanTitle.AutoSize = true;
-            lblLubanTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblLubanTitle.Location = new Point(10, 25);
-            lblLubanTitle.Name = "lblLubanTitle";
-            lblLubanTitle.TabIndex = 12;
-            lblLubanTitle.Text = "【Luban】";
-            // 
-            // lblTemplateTitle
-            // 
-            lblTemplateTitle.AutoSize = true;
-            lblTemplateTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblTemplateTitle.Location = new Point(10, 53);
-            lblTemplateTitle.Name = "lblTemplateTitle";
-            lblTemplateTitle.TabIndex = 13;
-            lblTemplateTitle.Text = "【导出模板类】";
-            // 
             // grpLog
             // 
             grpLog.Controls.Add(txtLog);
             grpLog.Dock = DockStyle.Fill;
-            grpLog.Location = new Point(0, 188);
+            grpLog.Location = new Point(0, 236);
             grpLog.Name = "grpLog";
             grpLog.Padding = new Padding(8);
-            grpLog.Size = new Size(819, 349);
+            grpLog.Size = new Size(819, 331);
             grpLog.TabIndex = 0;
             grpLog.TabStop = false;
             grpLog.Text = "运行日志（右键清空/复制）";
@@ -290,7 +328,7 @@ namespace ConfigExcelEnhancer.UI
             txtLog.Name = "txtLog";
             txtLog.ReadOnly = true;
             txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
-            txtLog.Size = new Size(803, 317);
+            txtLog.Size = new Size(803, 299);
             txtLog.TabIndex = 0;
             txtLog.Text = "";
             txtLog.WordWrap = false;
@@ -337,6 +375,9 @@ namespace ConfigExcelEnhancer.UI
         private Label lblLastExport;
         private Label lblLubanTitle;
         private Label lblTemplateTitle;
+        private Label lblCheckDot;
+        private Label lblCheckSummary;
+        private Label lblCheckIssues;
 
         private GroupBox grpLog;
         private RichTextBox txtLog;

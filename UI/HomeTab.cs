@@ -108,6 +108,24 @@ namespace ConfigExcelEnhancer.UI
                 lblLastExport.Text = "本地上次导出：从未导出";
                 lblLastExportDot.ForeColor = Color.Gray;
             }
+
+            // 配置检查
+            var (issues, commonRoot) = BuildConfigIssues();
+            if (issues.Count == 0)
+            {
+                lblCheckDot.ForeColor = Color.LightGreen;
+                lblCheckSummary.Text = !string.IsNullOrEmpty(commonRoot)
+                    ? $"配置检查通过，根目录：{ShortenPath(commonRoot, 80)}"
+                    : "配置检查通过";
+                lblCheckIssues.Visible = false;
+            }
+            else
+            {
+                lblCheckDot.ForeColor = Color.Yellow;
+                lblCheckSummary.Text = $"发现 {issues.Count} 项配置问题：";
+                lblCheckIssues.Text = string.Join("\n", issues.Select(s => "• " + s));
+                lblCheckIssues.Visible = true;
+            }
         }
 
         /// <summary>设置状态圆点颜色；不修改主 Label 的字体颜色。</summary>
@@ -118,6 +136,160 @@ namespace ConfigExcelEnhancer.UI
         {
             if (path.Length <= maxLength) return path;
             return "..." + path[(path.Length - maxLength + 3)..];
+        }
+
+        /// <summary>
+        /// 计算一组路径的最长公共根路径（按路径段逐段比对）。
+        /// 返回 null 表示路径集为空、无公共前缀或路径无效。
+        /// </summary>
+        private static string? GetLongestCommonRootPath(IEnumerable<string> paths)
+        {
+            var validPaths = paths
+                .Where(p => !string.IsNullOrWhiteSpace(p) && Path.IsPathRooted(p))
+                .Select(p => p.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (validPaths.Count == 0) return null;
+            if (validPaths.Count == 1) return validPaths[0];
+
+            var splitPaths = validPaths.Select(p => p.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)).ToList();
+            int minSegmentCount = splitPaths.Min(sp => sp.Length);
+            var commonSegments = new List<string>();
+
+            for (int i = 0; i < minSegmentCount; i++)
+            {
+                var segment = splitPaths[0][i];
+                if (splitPaths.All(sp => string.Equals(sp[i], segment, StringComparison.OrdinalIgnoreCase)))
+                    commonSegments.Add(segment);
+                else
+                    break;
+            }
+
+            return commonSegments.Count > 0 ? string.Join(Path.DirectorySeparatorChar.ToString(), commonSegments) : null;
+        }
+
+        /// <summary>
+        /// 构建配置检查问题列表。
+        /// 返回 (问题列表, 公共根路径)。问题列表为空表示配置正确。
+        /// </summary>
+        private (List<string> issues, string? commonRoot) BuildConfigIssues()
+        {
+            var issues = new List<string>();
+            if (_settings == null) return (issues, null);
+
+            var allPaths = new List<string>();
+            var genBatDir = string.Empty;
+
+            // 收集 gen.bat 路径
+            if (!string.IsNullOrEmpty(_settings.GenBatPath) && File.Exists(_settings.GenBatPath))
+            {
+                genBatDir = Path.GetDirectoryName(_settings.GenBatPath) ?? "";
+                if (!string.IsNullOrEmpty(genBatDir))
+                    allPaths.Add(genBatDir);
+            }
+
+            // 收集 Tables.cs 路径
+            var tablesDir = string.Empty;
+            if (!string.IsNullOrEmpty(_settings.TablesClassPath) && File.Exists(_settings.TablesClassPath))
+            {
+                tablesDir = Path.GetDirectoryName(_settings.TablesClassPath) ?? "";
+                if (!string.IsNullOrEmpty(tablesDir))
+                    allPaths.Add(tablesDir);
+            }
+
+            // 收集模板任务输出路径
+            var jobPaths = new List<string>();
+            foreach (var job in _settings.TemplateExportJobs)
+            {
+                if (!string.IsNullOrEmpty(job.OutputDirectory) && Directory.Exists(job.OutputDirectory))
+                {
+                    allPaths.Add(job.OutputDirectory);
+                    jobPaths.Add(job.OutputDirectory);
+                }
+                if (!string.IsNullOrEmpty(job.IdsOutputDirectory) && Directory.Exists(job.IdsOutputDirectory))
+                {
+                    allPaths.Add(job.IdsOutputDirectory);
+                    jobPaths.Add(job.IdsOutputDirectory);
+                }
+            }
+
+            // 计算公共根路径
+            var commonRoot = GetLongestCommonRootPath(allPaths);
+
+            // 检查 1：根目录不一致
+            if (allPaths.Count > 1 && commonRoot != null)
+            {
+                var outliers = allPaths.Where(p =>
+                {
+                    var normalized = p.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    var rootNormalized = commonRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    return !normalized.StartsWith(rootNormalized, StringComparison.OrdinalIgnoreCase);
+                }).ToList();
+
+                if (outliers.Any())
+                    issues.Add($"根目录不一致：{outliers.Count} 个路径不在公共根 [{commonRoot}] 下");
+            }
+
+            // 检查 2：gen.bat 导出路径不在 gen.bat 根目录下
+            if (!string.IsNullOrEmpty(genBatDir) && _lubanTab != null)
+            {
+                var config = _lubanTab.GetCurrentConfig();
+                if (config != null)
+                {
+                    var genOutputPaths = new List<string>();
+                    foreach (var cmd in config.Commands)
+                    {
+                        foreach (var kv in cmd.XArgs)
+                        {
+                            if (kv.Key.EndsWith("Dir", StringComparison.OrdinalIgnoreCase) ||
+                                kv.Key.EndsWith("Path", StringComparison.OrdinalIgnoreCase))
+                            {
+                                var val = kv.Value;
+                                if (string.IsNullOrWhiteSpace(val)) continue;
+
+                                // 解析为绝对路径（相对路径以 genBatDir 为基准）
+                                string absPath;
+                                if (Path.IsPathRooted(val))
+                                    absPath = val;
+                                else if (!val.Contains('%'))
+                                {
+                                    try { absPath = Path.GetFullPath(Path.Combine(genBatDir, val)); }
+                                    catch { continue; }
+                                }
+                                else
+                                    continue; // 包含变量引用，跳过
+
+                                genOutputPaths.Add(absPath);
+                            }
+                        }
+                    }
+
+                    var genRootNormalized = genBatDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    var outsideGen = genOutputPaths.Where(p =>
+                    {
+                        var normalized = p.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                        return !normalized.StartsWith(genRootNormalized, StringComparison.OrdinalIgnoreCase);
+                    }).ToList();
+
+                    if (outsideGen.Any())
+                        issues.Add($"Luban 导出路径不在 gen.bat 根目录下：{outsideGen.Count} 个路径在 [{genBatDir}] 外");
+                }
+            }
+
+            // 检查 3：Tables.cs 与模板任务输出目录根不一致
+            if (!string.IsNullOrEmpty(tablesDir) && jobPaths.Any())
+            {
+                var tablesJobPaths = new List<string> { tablesDir };
+                tablesJobPaths.AddRange(jobPaths);
+                var tablesCommonRoot = GetLongestCommonRootPath(tablesJobPaths);
+
+                // 如果公共前缀只是驱动符（如 "F:"），认为不一致
+                if (tablesCommonRoot == null || tablesCommonRoot.Length <= 3)
+                    issues.Add("Tables.cs 与模板任务输出目录根不一致");
+            }
+
+            return (issues, commonRoot);
         }
 
         // ── 快速操作 ──────────────────────────────────────────
