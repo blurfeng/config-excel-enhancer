@@ -37,8 +37,8 @@ namespace ConfigExcelEnhancer.Core
                     RedirectStandardError = true,
                     RedirectStandardInput = true,   // 重定向 stdin 以防止子进程等待用户输入
                     CreateNoWindow = true,
-                    StandardOutputEncoding = Encoding.GetEncoding(936),   // GBK，与 cmd.exe 默认代码页一致
-                    StandardErrorEncoding = Encoding.GetEncoding(936)
+                    StandardOutputEncoding = new UTF8Encoding(false),   // Luban 为 .NET 工具，输出 UTF-8
+                    StandardErrorEncoding = new UTF8Encoding(false)
                 },
                 EnableRaisingEvents = true          // 启用 Exited 事件
             };
