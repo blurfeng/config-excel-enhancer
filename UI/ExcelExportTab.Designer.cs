@@ -28,6 +28,8 @@ namespace ConfigExcelEnhancer.UI
             rdoBatch = new RadioButton();
             pnlListBar = new Panel();
             btnRefresh = new Button();
+            btnSelectAll = new Button();
+            btnDeselectAll = new Button();
             pnlBatchExtra = new Panel();
             lblTargetFolder = new Label();
             txtTargetFolder = new TextBox();
@@ -96,7 +98,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // btnBrowseXmlFolder
             // 
-            btnBrowseXmlFolder.Location = new Point(677, 8);
+            btnBrowseXmlFolder.Location = new Point(677, 6);
             btnBrowseXmlFolder.Name = "btnBrowseXmlFolder";
             btnBrowseXmlFolder.Size = new Size(75, 28);
             btnBrowseXmlFolder.TabIndex = 2;
@@ -122,7 +124,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // btnBrowseTemplate
             // 
-            btnBrowseTemplate.Location = new Point(639, 44);
+            btnBrowseTemplate.Location = new Point(637, 42);
             btnBrowseTemplate.Name = "btnBrowseTemplate";
             btnBrowseTemplate.Size = new Size(75, 28);
             btnBrowseTemplate.TabIndex = 5;
@@ -131,7 +133,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // btnClearTemplate
             // 
-            btnClearTemplate.Location = new Point(718, 44);
+            btnClearTemplate.Location = new Point(718, 42);
             btnClearTemplate.Name = "btnClearTemplate";
             btnClearTemplate.Size = new Size(34, 28);
             btnClearTemplate.TabIndex = 6;
@@ -181,6 +183,8 @@ namespace ConfigExcelEnhancer.UI
             // pnlListBar
             // 
             pnlListBar.Controls.Add(btnRefresh);
+            pnlListBar.Controls.Add(btnSelectAll);
+            pnlListBar.Controls.Add(btnDeselectAll);
             pnlListBar.Dock = DockStyle.Top;
             pnlListBar.Location = new Point(0, 180);
             pnlListBar.Name = "pnlListBar";
@@ -195,6 +199,24 @@ namespace ConfigExcelEnhancer.UI
             btnRefresh.TabIndex = 0;
             btnRefresh.Text = "刷新列表";
             btnRefresh.Click += btnRefresh_Click;
+            // 
+            // btnSelectAll
+            // 
+            btnSelectAll.Location = new Point(100, 4);
+            btnSelectAll.Name = "btnSelectAll";
+            btnSelectAll.Size = new Size(56, 26);
+            btnSelectAll.TabIndex = 1;
+            btnSelectAll.Text = "全选";
+            btnSelectAll.Click += btnSelectAll_Click;
+            // 
+            // btnDeselectAll
+            // 
+            btnDeselectAll.Location = new Point(164, 4);
+            btnDeselectAll.Name = "btnDeselectAll";
+            btnDeselectAll.Size = new Size(72, 26);
+            btnDeselectAll.TabIndex = 2;
+            btnDeselectAll.Text = "取消全选";
+            btnDeselectAll.Click += btnDeselectAll_Click;
             // 
             // pnlBatchExtra
             // 
@@ -279,15 +301,15 @@ namespace ConfigExcelEnhancer.UI
             // 
             dgvClasses.AllowUserToAddRows = false;
             dgvClasses.AllowUserToDeleteRows = false;
-            dgvClasses.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             dgvClasses.BackgroundColor = SystemColors.Window;
             dgvClasses.Columns.AddRange(new DataGridViewColumn[] { colEnabled, colClassName, colSourceFile, colTargetPath, colBrowse });
             dgvClasses.Dock = DockStyle.Fill;
             dgvClasses.Location = new Point(0, 216);
             dgvClasses.Name = "dgvClasses";
             dgvClasses.RowHeadersVisible = false;
+            dgvClasses.ScrollBars = ScrollBars.Vertical;
             dgvClasses.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvClasses.Size = new Size(764, 314);
+            dgvClasses.Size = new Size(764, 118);
             dgvClasses.TabIndex = 3;
             dgvClasses.CellContentClick += dgvClasses_CellContentClick;
             dgvClasses.CellValueChanged += dgvClasses_CellValueChanged;
@@ -406,9 +428,9 @@ namespace ConfigExcelEnhancer.UI
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(dgvClasses);
             Controls.Add(txtLog);
             Controls.Add(pnlAction);
-            Controls.Add(dgvClasses);
             Controls.Add(pnlListBar);
             Controls.Add(pnlBatchExtra);
             Controls.Add(pnlSettings);
@@ -441,8 +463,10 @@ namespace ConfigExcelEnhancer.UI
         private RadioButton rdoList            = null!;
         private RadioButton rdoBatch           = null!;
 
-        private Panel  pnlListBar = null!;
-        private Button btnRefresh = null!;
+        private Panel  pnlListBar    = null!;
+        private Button btnRefresh    = null!;
+        private Button btnSelectAll  = null!;
+        private Button btnDeselectAll = null!;
 
         private Panel   pnlBatchExtra         = null!;
         private Label   lblTargetFolder       = null!;

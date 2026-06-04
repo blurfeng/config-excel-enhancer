@@ -152,6 +152,25 @@ namespace ConfigExcelEnhancer.UI
         private void btnRefresh_Click(object sender, EventArgs e)
             => RefreshClassList(rescanXml: true);
 
+        private void btnSelectAll_Click(object sender, EventArgs e)
+            => SetAllEnabled(true);
+
+        private void btnDeselectAll_Click(object sender, EventArgs e)
+            => SetAllEnabled(false);
+
+        private void SetAllEnabled(bool enabled)
+        {
+            foreach (var cfg in Settings.ExcelExportClassConfigs)
+                cfg.Enabled = enabled;
+
+            foreach (DataGridViewRow row in dgvClasses.Rows)
+            {
+                row.Cells[colEnabled.Index].Value = enabled;
+                if (row.Tag is ExcelExportClassConfig cfg)
+                    cfg.Enabled = enabled;
+            }
+        }
+
         /// <summary>
         /// 刷新叶子类列表。
         /// <paramref name="rescanXml"/> 为 true 时重新扫描 XML；为 false 时仅用保存的配置填充列表。
@@ -268,7 +287,7 @@ namespace ConfigExcelEnhancer.UI
             btnClearTemplate.Enabled    = !locked;
             rdoList.Enabled             = !locked;
             rdoBatch.Enabled            = !locked;
-            pnlListBar.Enabled          = !locked;
+            pnlListBar.Enabled          = !locked;  // covers btnRefresh / btnSelectAll / btnDeselectAll
             dgvClasses.Enabled          = !locked;
             pnlBatchExtra.Enabled       = !locked;
         }
