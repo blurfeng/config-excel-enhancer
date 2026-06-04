@@ -26,6 +26,8 @@ namespace ConfigExcelEnhancer
             tableDesignTab = new TableDesignTab();
             tabTemplate = new TabPage();
             templateTab = new TemplateTab();
+            tabExcelExport = new TabPage();
+            excelExportTab = new ExcelExportTab();
             tabSettings = new TabPage();
             settingsTab = new SettingsTab();
             tabControl.SuspendLayout();
@@ -34,6 +36,7 @@ namespace ConfigExcelEnhancer
             tabLuban.SuspendLayout();
             tabTableDesign.SuspendLayout();
             tabTemplate.SuspendLayout();
+            tabExcelExport.SuspendLayout();
             tabSettings.SuspendLayout();
             SuspendLayout();
 
@@ -44,6 +47,7 @@ namespace ConfigExcelEnhancer
             tabControl.Controls.Add(tabLuban);
             tabControl.Controls.Add(tabEnum);
             tabControl.Controls.Add(tabTableDesign);
+            tabControl.Controls.Add(tabExcelExport);
             tabControl.Controls.Add(tabSettings);
 
             // tabHome
@@ -86,6 +90,14 @@ namespace ConfigExcelEnhancer
             // templateTab
             templateTab.Dock = DockStyle.Fill;
 
+            // tabExcelExport
+            tabExcelExport.Text = "导出 Excel";
+            tabExcelExport.Padding = new Padding(4);
+            tabExcelExport.Controls.Add(excelExportTab);
+
+            // excelExportTab
+            excelExportTab.Dock = DockStyle.Fill;
+
             // tabSettings
             tabSettings.Text = "设置";
             tabSettings.Padding = new Padding(4);
@@ -108,6 +120,7 @@ namespace ConfigExcelEnhancer
             tabLuban.ResumeLayout(false);
             tabTableDesign.ResumeLayout(false);
             tabTemplate.ResumeLayout(false);
+            tabExcelExport.ResumeLayout(false);
             tabSettings.ResumeLayout(false);
             ResumeLayout(false);
         }
@@ -123,6 +136,8 @@ namespace ConfigExcelEnhancer
         private TableDesignTab tableDesignTab = null!;
         private TabPage tabTemplate = null!;
         private TemplateTab templateTab = null!;
+        private TabPage tabExcelExport = null!;
+        private ExcelExportTab excelExportTab = null!;
         private TabPage tabSettings = null!;
         private SettingsTab settingsTab = null!;
     }

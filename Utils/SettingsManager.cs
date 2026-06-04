@@ -89,6 +89,14 @@ namespace ConfigExcelEnhancer.Utils
             s.TablesClassPath            = ToRelativeIfPossible(s.TablesClassPath);
             s.EnumExcelFiles             = s.EnumExcelFiles.Select(ToRelativeIfPossible).ToList();
             s.TableDesignTargetFiles     = s.TableDesignTargetFiles.Select(ToRelativeIfPossible).ToList();
+            s.ExcelExportXmlFolder       = ToRelativeIfPossible(s.ExcelExportXmlFolder);
+            s.ExcelExportDesignTemplate  = ToRelativeIfPossible(s.ExcelExportDesignTemplate);
+            s.ExcelExportTargetFolder    = ToRelativeIfPossible(s.ExcelExportTargetFolder);
+            foreach (var cfg in s.ExcelExportClassConfigs)
+            {
+                cfg.SourceXmlFile    = ToRelativeIfPossible(cfg.SourceXmlFile);
+                cfg.TargetExcelPath  = ToRelativeIfPossible(cfg.TargetExcelPath);
+            }
         }
 
         /// <summary>
@@ -104,6 +112,14 @@ namespace ConfigExcelEnhancer.Utils
             s.TablesClassPath            = ToAbsolute(s.TablesClassPath);
             s.EnumExcelFiles             = s.EnumExcelFiles.Select(ToAbsolute).ToList();
             s.TableDesignTargetFiles     = s.TableDesignTargetFiles.Select(ToAbsolute).ToList();
+            s.ExcelExportXmlFolder       = ToAbsolute(s.ExcelExportXmlFolder);
+            s.ExcelExportDesignTemplate  = ToAbsolute(s.ExcelExportDesignTemplate);
+            s.ExcelExportTargetFolder    = ToAbsolute(s.ExcelExportTargetFolder);
+            foreach (var cfg in s.ExcelExportClassConfigs)
+            {
+                cfg.SourceXmlFile    = ToAbsolute(cfg.SourceXmlFile);
+                cfg.TargetExcelPath  = ToAbsolute(cfg.TargetExcelPath);
+            }
         }
 
         /// <summary>
@@ -189,6 +205,19 @@ namespace ConfigExcelEnhancer.Utils
             TablesClassPath                   = src.TablesClassPath,
             TemplateExportJobs                = new List<TemplateExportJob>(src.TemplateExportJobs),
             HomeIncludeEnum                   = src.HomeIncludeEnum,
+            ExcelExportXmlFolder              = src.ExcelExportXmlFolder,
+            ExcelExportDesignTemplate         = src.ExcelExportDesignTemplate,
+            ExcelExportMode                   = src.ExcelExportMode,
+            ExcelExportClassConfigs           = src.ExcelExportClassConfigs.Select(c => new ExcelExportClassConfig
+            {
+                Enabled         = c.Enabled,
+                ClassName       = c.ClassName,
+                SourceXmlFile   = c.SourceXmlFile,
+                TargetExcelPath = c.TargetExcelPath,
+            }).ToList(),
+            ExcelExportTargetFolder           = src.ExcelExportTargetFolder,
+            ExcelExportNamePrefix             = src.ExcelExportNamePrefix,
+            ExcelExportNameSuffix             = src.ExcelExportNameSuffix,
         };
     }
 }

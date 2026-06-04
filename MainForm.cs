@@ -25,6 +25,7 @@ namespace ConfigExcelEnhancer
             lubanTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
             tableDesignTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
             templateTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
+            excelExportTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
             homeTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
             tabControl.Selecting += (_, e) => { if (_isExecuting) e.Cancel = true; };
             LoadSettings();
@@ -57,10 +58,12 @@ namespace ConfigExcelEnhancer
             lubanTab.Settings = settings;
             tableDesignTab.Settings = settings;
             templateTab.Settings = settings;
+            excelExportTab.Settings = settings;
             enumTab.LoadFromSettings();
             lubanTab.LoadFromSettings();
             tableDesignTab.LoadFromSettings();
             templateTab.LoadFromSettings();
+            excelExportTab.LoadFromSettings();
             InitializeHomeTab();
         }
 
@@ -82,6 +85,7 @@ namespace ConfigExcelEnhancer
             lubanTab.CancelRunningTask();
             tableDesignTab.CancelRunningTask();
             templateTab.CancelRunningTask();
+            excelExportTab.CancelRunningTask();
             homeTab.CancelRunningTask();
             SaveSettings();
             base.OnFormClosing(e);

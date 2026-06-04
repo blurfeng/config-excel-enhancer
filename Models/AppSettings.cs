@@ -82,5 +82,28 @@ namespace ConfigExcelEnhancer.Models
 
         /// <summary>主页"一键导出"是否包含 Enum 验证步骤。</summary>
         public bool HomeIncludeEnum { get; set; } = true;
+
+        // ── 导出 Excel ────────────────────────────────────────
+
+        /// <summary>XML 定义文件夹（供两种模式共用，支持跨文件继承引用）。</summary>
+        public string ExcelExportXmlFolder { get; set; } = string.Empty;
+
+        /// <summary>Excel 设计模板路径；空 = 使用表设计分页的模板；两者均空则直接新建。</summary>
+        public string ExcelExportDesignTemplate { get; set; } = string.Empty;
+
+        /// <summary>导出模式：0 = 按列表，1 = 批量导出。</summary>
+        public int ExcelExportMode { get; set; } = 0;
+
+        /// <summary>列表模式：各数据类的导出配置（类名 → 目标 Excel 路径）。</summary>
+        public List<ExcelExportClassConfig> ExcelExportClassConfigs { get; set; } = new();
+
+        /// <summary>批量导出模式：导出 Excel 的目标文件夹。</summary>
+        public string ExcelExportTargetFolder { get; set; } = string.Empty;
+
+        /// <summary>批量导出模式：导出文件名前缀。</summary>
+        public string ExcelExportNamePrefix { get; set; } = string.Empty;
+
+        /// <summary>批量导出模式：导出文件名后缀。</summary>
+        public string ExcelExportNameSuffix { get; set; } = string.Empty;
     }
 }
