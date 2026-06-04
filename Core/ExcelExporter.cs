@@ -1,3 +1,5 @@
+using System.IO.Compression;
+using System.Xml.Linq;
 using ClosedXML.Excel;
 
 namespace ConfigExcelEnhancer.Core
@@ -99,15 +101,23 @@ namespace ConfigExcelEnhancer.Core
 
             var columns = ExpandFields(task.AllFields, beanMap, usedAsField);
 
+            // templateMs 必须在 wb.SaveAs 完成后才能 Dispose：ClosedXML 的 SaveAs
+            // 会惰性复制模板里未修改的 parts（打印设置等），若流提前关闭则报
+            // "Cannot access a closed Stream"。
+            MemoryStream? templateMs = null;
             IXLWorkbook wb;
             if (!string.IsNullOrEmpty(templatePath) && File.Exists(templatePath))
             {
                 log($"  从模板复制：{Path.GetFileName(templatePath)}", LogLevel.Info);
-                var bytes = File.ReadAllBytes(templatePath);
-                using var ms = new MemoryStream(bytes);
-                wb = new XLWorkbook(ms);
-                // 清空第一张 Sheet 的内容（保留样式）
+                // 剥除模板中的 Table 结构：模板的 Table Header Row 可能与 Luban
+                // 的 ##group 行重叠，WriteHeaders 把 "c,s" 写入后 ClosedXML 会把
+                // 所有 Table 列名同步为 "c,s"，导致 SaveAs 时抛出重复 key 异常。
+                var templateBytes = StripTablesFromXlsx(File.ReadAllBytes(templatePath));
+                templateMs = new MemoryStream(templateBytes);
+                wb = new XLWorkbook(templateMs);
                 var firstWs = wb.Worksheets.First();
+                firstWs.AutoFilter.Clear();
+                // 清空第一张 Sheet 的内容（保留样式）
                 firstWs.RangeUsed()?.Clear(XLClearOptions.Contents);
             }
             else
@@ -123,6 +133,7 @@ namespace ConfigExcelEnhancer.Core
 
             wb.SaveAs(task.TargetExcelPath);
             wb.Dispose();
+            templateMs?.Dispose(); // SaveAs 完成后再关闭
         }
 
         // ── 更新（保留数据）────────────────────────────────────────────────
@@ -135,7 +146,23 @@ namespace ConfigExcelEnhancer.Core
         {
             var targetColumns = ExpandFields(task.AllFields, beanMap, usedAsField);
 
-            using var wb = new XLWorkbook(task.TargetExcelPath);
+            // 加载现有文件；若因 Table 列名重复无法加载，则自动剥除 Table 后重试。
+            // strippedMs 与 templateMs 同理：SaveAs 完成前不能关闭。
+            MemoryStream? strippedMs = null;
+            XLWorkbook wb;
+            bool loadedFromStream = false;
+            try
+            {
+                wb = new XLWorkbook(task.TargetExcelPath);
+            }
+            catch (ArgumentException ex) when (ex.Message.Contains("same key"))
+            {
+                log("  检测到文件含重复列名 Table，自动清理后继续...", LogLevel.Warn);
+                var stripped = StripTablesFromXlsx(File.ReadAllBytes(task.TargetExcelPath));
+                strippedMs = new MemoryStream(stripped);
+                wb = new XLWorkbook(strippedMs);
+                loadedFromStream = true;
+            }
             var ws = wb.Worksheets.First();
 
             // 检测现有表头
@@ -146,7 +173,9 @@ namespace ConfigExcelEnhancer.Core
                 log($"  未检测到有效表头，重建表头结构", LogLevel.Warn);
                 ws.RangeUsed()?.Clear(XLClearOptions.Contents);
                 WriteHeaders(ws, task.LeafBean.Name, targetColumns);
-                wb.Save();
+                if (loadedFromStream) wb.SaveAs(task.TargetExcelPath); else wb.Save();
+                wb.Dispose();
+                strippedMs?.Dispose();
                 return;
             }
 
@@ -184,15 +213,30 @@ namespace ConfigExcelEnhancer.Core
 
             if (needsSubRow && !hadSubRow)
             {
-                // 在 typeRow 之后插入新的子字段行
-                ws.Row(headerInfo.TypeRow + 1).InsertRowsAbove(1);
-                ws.Cell(headerInfo.TypeRow + 1, 1).Value = "##var";
-                headerInfo = DetectHeaders(ws); // 重新检测行号
+                // 需要插入一个子字段行。
+                // 不使用 InsertRowsAbove：ClosedXML 在行移动时会以 ##group 行里
+                // 大量重复的 "c,s" 字符串作为字典 key，触发重复 key 异常（issue #1114）。
+                // 改用 Range.CopyTo 手动向下平移，再清空腾出的行。
+                int insertAt = headerInfo.TypeRow + 1;
+                int lastRow  = ws.LastRowUsed()?.RowNumber() ?? insertAt;
+                int lastCol  = ws.LastColumnUsed()?.ColumnNumber() ?? 1;
+                if (lastRow >= insertAt)
+                    ws.Range(insertAt, 1, lastRow, lastCol)
+                      .CopyTo(ws.Cell(insertAt + 1, 1));
+                ws.Range(insertAt, 1, insertAt, lastCol).Clear(XLClearOptions.All);
+                ws.Cell(insertAt, 1).Value = "##var";
+                headerInfo = DetectHeaders(ws);
             }
             else if (!needsSubRow && hadSubRow)
             {
-                // 删除不再需要的子字段行
-                ws.Row(headerInfo.SubVarRow).Delete();
+                // 同理：用 Range.CopyTo 向上平移替代 Row.Delete。
+                int removeAt = headerInfo.SubVarRow;
+                int lastRow  = ws.LastRowUsed()?.RowNumber() ?? removeAt;
+                int lastCol  = ws.LastColumnUsed()?.ColumnNumber() ?? 1;
+                if (lastRow > removeAt)
+                    ws.Range(removeAt + 1, 1, lastRow, lastCol)
+                      .CopyTo(ws.Cell(removeAt, 1));
+                ws.Range(lastRow, 1, lastRow, lastCol).Clear(XLClearOptions.All);
                 headerInfo = DetectHeaders(ws);
             }
 
@@ -208,7 +252,12 @@ namespace ConfigExcelEnhancer.Core
                 AppendColumns(ws, headerInfo, newCols, nextCol, task.LeafBean.Name);
             }
 
-            wb.Save();
+            if (loadedFromStream)
+                wb.SaveAs(task.TargetExcelPath); // 从 MemoryStream 加载时须用 SaveAs
+            else
+                wb.Save();
+            wb.Dispose();
+            strippedMs?.Dispose(); // SaveAs 完成后再关闭
         }
 
         // ── 表头写入 ──────────────────────────────────────────────────────
@@ -454,5 +503,86 @@ namespace ConfigExcelEnhancer.Core
 
         private static string EffectiveGroup(string group)
             => string.IsNullOrEmpty(group) ? DefaultGroup : group;
+
+        // ── xlsx Table 清理（ZIP 级别）────────────────────────────────────
+
+        /// <summary>
+        /// 从 xlsx 字节流中移除所有 Excel Table 定义及相关 XML 引用。
+        /// 根因：模板的 Table Header Row 可能与 Luban ##group 行（行号 4）重叠。
+        /// WriteHeaders 把 "c,s" 写入后，ClosedXML 会把所有 Table 列名同步为 "c,s"，
+        /// SaveAs 时构建列名字典触发重复 key 异常。在 ClosedXML 层面无法直接删除
+        /// Table，因此在 ZIP 层面手动剥除。
+        /// </summary>
+        private static byte[] StripTablesFromXlsx(byte[] xlsxBytes)
+        {
+            const string tableRelType =
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table";
+            XNamespace nsCT  = "http://schemas.openxmlformats.org/package/2006/content-types";
+            XNamespace nsRel = "http://schemas.openxmlformats.org/package/2006/relationships";
+            XNamespace nsWs  = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
+            using var srcMs = new MemoryStream(xlsxBytes);
+            using var dstMs = new MemoryStream();
+
+            using (var srcZip = new ZipArchive(srcMs, ZipArchiveMode.Read))
+            using (var dstZip = new ZipArchive(dstMs, ZipArchiveMode.Create, leaveOpen: true))
+            {
+                var tableEntries = srcZip.Entries
+                    .Select(e => e.FullName)
+                    .Where(n => n.StartsWith("xl/tables/", StringComparison.OrdinalIgnoreCase))
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var srcEntry in srcZip.Entries)
+                {
+                    if (tableEntries.Contains(srcEntry.FullName))
+                        continue; // 丢弃 xl/tables/*.xml
+
+                    var fn       = srcEntry.FullName;
+                    var dstEntry = dstZip.CreateEntry(fn, CompressionLevel.Optimal);
+
+                    bool isCT        = fn.Equals("[Content_Types].xml",
+                                           StringComparison.OrdinalIgnoreCase);
+                    bool isSheetRels = fn.StartsWith("xl/worksheets/_rels/",
+                                           StringComparison.OrdinalIgnoreCase)
+                                       && fn.EndsWith(".rels",
+                                           StringComparison.OrdinalIgnoreCase);
+                    bool isSheetXml  = fn.StartsWith("xl/worksheets/sheet",
+                                           StringComparison.OrdinalIgnoreCase)
+                                       && fn.EndsWith(".xml",
+                                           StringComparison.OrdinalIgnoreCase);
+
+                    if (isCT || isSheetRels || isSheetXml)
+                    {
+                        XDocument doc;
+                        using (var s = srcEntry.Open()) doc = XDocument.Load(s);
+
+                        if (isCT)
+                            doc.Root!.Elements(nsCT + "Override")
+                                     .Where(e => ((string?)e.Attribute("ContentType") ?? "")
+                                                  .Contains(".table"))
+                                     .Remove();
+                        else if (isSheetRels)
+                            doc.Root!.Elements(nsRel + "Relationship")
+                                     .Where(e => ((string?)e.Attribute("Type") ?? "")
+                                                  == tableRelType)
+                                     .Remove();
+                        else
+                            doc.Root!.Element(nsWs + "tableParts")?.Remove();
+
+                        using var dst = dstEntry.Open();
+                        doc.Save(dst);
+                    }
+                    else
+                    {
+                        using var src = srcEntry.Open();
+                        using var dst = dstEntry.Open();
+                        src.CopyTo(dst);
+                    }
+                }
+            }
+
+            dstMs.Position = 0;
+            return dstMs.ToArray();
+        }
     }
 }

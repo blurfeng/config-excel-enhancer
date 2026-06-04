@@ -43,7 +43,6 @@ namespace ConfigExcelEnhancer.UI
             txtXmlFolder.SetBounds(120, 9, r - 75 - 8 - 120, 23);
 
             // 行 2 — Excel 设计模板（清 34px + 间距 4px + 浏览 75px）
-            btnClearTemplate.SetBounds(r - 34, 44, 34, 28);
             btnBrowseTemplate.SetBounds(r - 34 - 4 - 75, 44, 75, 28);
             txtDesignTemplate.SetBounds(120, 45, r - 34 - 4 - 75 - 8 - 120, 23);
         }
@@ -284,7 +283,6 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseXmlFolder.Enabled  = !locked;
             txtDesignTemplate.Enabled   = !locked;
             btnBrowseTemplate.Enabled   = !locked;
-            btnClearTemplate.Enabled    = !locked;
             rdoList.Enabled             = !locked;
             rdoBatch.Enabled            = !locked;
             pnlListBar.Enabled          = !locked;  // covers btnRefresh / btnSelectAll / btnDeselectAll

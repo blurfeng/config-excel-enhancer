@@ -21,7 +21,6 @@ namespace ConfigExcelEnhancer.UI
             lblTemplate = new Label();
             txtDesignTemplate = new TextBox();
             btnBrowseTemplate = new Button();
-            btnClearTemplate = new Button();
             lblMode = new Label();
             pnlModeGroup = new Panel();
             rdoList = new RadioButton();
@@ -69,7 +68,6 @@ namespace ConfigExcelEnhancer.UI
             pnlSettings.Controls.Add(lblTemplate);
             pnlSettings.Controls.Add(txtDesignTemplate);
             pnlSettings.Controls.Add(btnBrowseTemplate);
-            pnlSettings.Controls.Add(btnClearTemplate);
             pnlSettings.Controls.Add(lblMode);
             pnlSettings.Controls.Add(pnlModeGroup);
             pnlSettings.Dock = DockStyle.Top;
@@ -118,27 +116,18 @@ namespace ConfigExcelEnhancer.UI
             // 
             txtDesignTemplate.Location = new Point(120, 45);
             txtDesignTemplate.Name = "txtDesignTemplate";
-            txtDesignTemplate.Size = new Size(511, 23);
+            txtDesignTemplate.Size = new Size(549, 23);
             txtDesignTemplate.TabIndex = 4;
             txtDesignTemplate.TextChanged += txtDesignTemplate_TextChanged;
             // 
             // btnBrowseTemplate
             // 
-            btnBrowseTemplate.Location = new Point(637, 42);
+            btnBrowseTemplate.Location = new Point(677, 44);
             btnBrowseTemplate.Name = "btnBrowseTemplate";
             btnBrowseTemplate.Size = new Size(75, 28);
             btnBrowseTemplate.TabIndex = 5;
             btnBrowseTemplate.Text = "浏览...";
             btnBrowseTemplate.Click += btnBrowseTemplate_Click;
-            // 
-            // btnClearTemplate
-            // 
-            btnClearTemplate.Location = new Point(718, 42);
-            btnClearTemplate.Name = "btnClearTemplate";
-            btnClearTemplate.Size = new Size(34, 28);
-            btnClearTemplate.TabIndex = 6;
-            btnClearTemplate.Text = "清";
-            btnClearTemplate.Click += btnClearTemplate_Click;
             // 
             // lblMode
             // 
@@ -457,7 +446,6 @@ namespace ConfigExcelEnhancer.UI
         private Label       lblTemplate        = null!;
         private TextBox     txtDesignTemplate  = null!;
         private Button      btnBrowseTemplate  = null!;
-        private Button      btnClearTemplate   = null!;
         private Label       lblMode            = null!;
         private Panel       pnlModeGroup       = null!;
         private RadioButton rdoList            = null!;
