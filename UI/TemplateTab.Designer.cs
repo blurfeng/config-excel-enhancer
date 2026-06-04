@@ -27,6 +27,7 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseOutputDir = new Button();
             txtNamespace = new TextBox();
             chkUseGeneratedSuffix = new CheckBox();
+            txtNameField = new TextBox();
             chkGenerateIds = new CheckBox();
             txtIdsOutputDir = new TextBox();
             btnBrowseIdsOutputDir = new Button();
@@ -41,6 +42,7 @@ namespace ConfigExcelEnhancer.UI
             btnAddBinding = new Button();
             btnRemoveBinding = new Button();
             btnBrowseBinding = new Button();
+            lblNameField = new Label();
             pnlTablesPath = new Panel();
             lblTablesClass = new Label();
             pnlLeft = new Panel();
@@ -146,7 +148,7 @@ namespace ConfigExcelEnhancer.UI
             txtDisplayName.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtDisplayName.Location = new Point(90, 24);
             txtDisplayName.Name = "txtDisplayName";
-            txtDisplayName.Size = new Size(530, 23);
+            txtDisplayName.Size = new Size(490, 23);
             txtDisplayName.TabIndex = 0;
             toolTip.SetToolTip(txtDisplayName, "任务的显示名称，仅用于左侧列表的标识，不影响生成结果。");
             txtDisplayName.KeyDown += txtDisplayName_KeyDown;
@@ -157,7 +159,7 @@ namespace ConfigExcelEnhancer.UI
             txtJsonFile.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtJsonFile.Location = new Point(90, 51);
             txtJsonFile.Name = "txtJsonFile";
-            txtJsonFile.Size = new Size(448, 23);
+            txtJsonFile.Size = new Size(408, 23);
             txtJsonFile.TabIndex = 1;
             toolTip.SetToolTip(txtJsonFile, "Luban 导出的 JSON 配置文件路径。\n工具通过该文件名在 Tables.cs 中查找对应的表映射。\n例如：...\\output\\unit_tbpawn.json");
             txtJsonFile.TextChanged += txtJsonFile_TextChanged;
@@ -165,7 +167,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseJsonFile
             // 
             btnBrowseJsonFile.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseJsonFile.Location = new Point(544, 49);
+            btnBrowseJsonFile.Location = new Point(504, 49);
             btnBrowseJsonFile.Name = "btnBrowseJsonFile";
             btnBrowseJsonFile.Size = new Size(76, 26);
             btnBrowseJsonFile.TabIndex = 2;
@@ -178,7 +180,7 @@ namespace ConfigExcelEnhancer.UI
             txtOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtOutputDir.Location = new Point(90, 78);
             txtOutputDir.Name = "txtOutputDir";
-            txtOutputDir.Size = new Size(448, 23);
+            txtOutputDir.Size = new Size(408, 23);
             txtOutputDir.TabIndex = 3;
             toolTip.SetToolTip(txtOutputDir, "生成的模板类 .cs 文件的输出目录（绝对路径）。\n目录不存在时会自动创建。");
             txtOutputDir.TextChanged += txtOutputDir_TextChanged;
@@ -186,7 +188,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseOutputDir
             // 
             btnBrowseOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseOutputDir.Location = new Point(545, 76);
+            btnBrowseOutputDir.Location = new Point(505, 76);
             btnBrowseOutputDir.Name = "btnBrowseOutputDir";
             btnBrowseOutputDir.Size = new Size(76, 26);
             btnBrowseOutputDir.TabIndex = 4;
@@ -199,7 +201,7 @@ namespace ConfigExcelEnhancer.UI
             txtNamespace.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtNamespace.Location = new Point(90, 105);
             txtNamespace.Name = "txtNamespace";
-            txtNamespace.Size = new Size(530, 23);
+            txtNamespace.Size = new Size(490, 23);
             txtNamespace.TabIndex = 5;
             toolTip.SetToolTip(txtNamespace, "生成的 C# 类的命名空间，将填入模板中的 {{$Namespace}} 占位符。");
             txtNamespace.TextChanged += txtNamespace_TextChanged;
@@ -207,13 +209,24 @@ namespace ConfigExcelEnhancer.UI
             // chkUseGeneratedSuffix
             // 
             chkUseGeneratedSuffix.AutoSize = true;
-            chkUseGeneratedSuffix.Location = new Point(10, 132);
+            chkUseGeneratedSuffix.Location = new Point(10, 159);
             chkUseGeneratedSuffix.Name = "chkUseGeneratedSuffix";
             chkUseGeneratedSuffix.Size = new Size(171, 21);
-            chkUseGeneratedSuffix.TabIndex = 6;
+            chkUseGeneratedSuffix.TabIndex = 7;
             chkUseGeneratedSuffix.Text = "文件名加 .Generated 后缀";
             toolTip.SetToolTip(chkUseGeneratedSuffix, "勾选后，生成的模板类文件名变为 {类名}.Generated.cs。\n未勾选则为 {类名}.cs。");
             chkUseGeneratedSuffix.CheckedChanged += chkUseGeneratedSuffix_CheckedChanged;
+            // 
+            // txtNameField
+            // 
+            txtNameField.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtNameField.Location = new Point(90, 132);
+            txtNameField.Name = "txtNameField";
+            txtNameField.PlaceholderText = "name";
+            txtNameField.Size = new Size(490, 23);
+            txtNameField.TabIndex = 6;
+            toolTip.SetToolTip(txtNameField, "JSON 条目中用作名称来源的字段名（默认 \"name\"）。\n该字段值将转为 PascalCase，作为模板类名和 Ids 常量名。\n清空时自动回退为 \"name\"。");
+            txtNameField.TextChanged += txtNameField_TextChanged;
             // 
             // chkGenerateIds
             // 
@@ -234,7 +247,7 @@ namespace ConfigExcelEnhancer.UI
             txtIdsOutputDir.Location = new Point(90, 51);
             txtIdsOutputDir.Name = "txtIdsOutputDir";
             txtIdsOutputDir.PlaceholderText = "Ids 文件输出目录";
-            txtIdsOutputDir.Size = new Size(448, 23);
+            txtIdsOutputDir.Size = new Size(408, 23);
             txtIdsOutputDir.TabIndex = 1;
             toolTip.SetToolTip(txtIdsOutputDir, "Ids 文件的输出目录（不含文件名）。\n文件名由工具自动拼：{类名}[.Generated].cs。");
             txtIdsOutputDir.TextChanged += txtIdsOutputDir_TextChanged;
@@ -242,7 +255,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseIdsOutputDir
             // 
             btnBrowseIdsOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseIdsOutputDir.Location = new Point(544, 49);
+            btnBrowseIdsOutputDir.Location = new Point(504, 49);
             btnBrowseIdsOutputDir.Name = "btnBrowseIdsOutputDir";
             btnBrowseIdsOutputDir.Size = new Size(76, 26);
             btnBrowseIdsOutputDir.TabIndex = 2;
@@ -255,7 +268,7 @@ namespace ConfigExcelEnhancer.UI
             txtIdsNamespace.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtIdsNamespace.Location = new Point(90, 78);
             txtIdsNamespace.Name = "txtIdsNamespace";
-            txtIdsNamespace.Size = new Size(530, 23);
+            txtIdsNamespace.Size = new Size(490, 23);
             txtIdsNamespace.TabIndex = 3;
             toolTip.SetToolTip(txtIdsNamespace, "Ids 文件使用的命名空间。");
             txtIdsNamespace.TextChanged += txtIdsNamespace_TextChanged;
@@ -265,7 +278,7 @@ namespace ConfigExcelEnhancer.UI
             txtIdsClassName.Location = new Point(90, 105);
             txtIdsClassName.Name = "txtIdsClassName";
             txtIdsClassName.PlaceholderText = "如 UnitIds";
-            txtIdsClassName.Size = new Size(199, 23);
+            txtIdsClassName.Size = new Size(167, 23);
             txtIdsClassName.TabIndex = 4;
             toolTip.SetToolTip(txtIdsClassName, "ID 常量类的类名，例如 UnitIds。\n文件名将自动拼为 {类名}[.Generated].cs。");
             txtIdsClassName.TextChanged += txtIdsClassName_TextChanged;
@@ -275,7 +288,7 @@ namespace ConfigExcelEnhancer.UI
             chkIdsUsePartialClass.AutoSize = true;
             chkIdsUsePartialClass.Checked = true;
             chkIdsUsePartialClass.CheckState = CheckState.Checked;
-            chkIdsUsePartialClass.Location = new Point(295, 108);
+            chkIdsUsePartialClass.Location = new Point(263, 108);
             chkIdsUsePartialClass.Name = "chkIdsUsePartialClass";
             chkIdsUsePartialClass.Size = new Size(136, 21);
             chkIdsUsePartialClass.TabIndex = 5;
@@ -286,7 +299,7 @@ namespace ConfigExcelEnhancer.UI
             // chkIdsUseGeneratedSuffix
             // 
             chkIdsUseGeneratedSuffix.AutoSize = true;
-            chkIdsUseGeneratedSuffix.Location = new Point(437, 108);
+            chkIdsUseGeneratedSuffix.Location = new Point(405, 108);
             chkIdsUseGeneratedSuffix.Name = "chkIdsUseGeneratedSuffix";
             chkIdsUseGeneratedSuffix.Size = new Size(171, 21);
             chkIdsUseGeneratedSuffix.TabIndex = 6;
@@ -368,6 +381,15 @@ namespace ConfigExcelEnhancer.UI
             toolTip.SetToolTip(btnBrowseBinding, "为当前选中行选择 .tmpl 模板文件。");
             btnBrowseBinding.Click += btnBrowseBinding_Click;
             // 
+            // lblNameField
+            // 
+            lblNameField.AutoSize = true;
+            lblNameField.Location = new Point(10, 135);
+            lblNameField.Name = "lblNameField";
+            lblNameField.Size = new Size(68, 17);
+            lblNameField.TabIndex = 8;
+            lblNameField.Text = "名称字段：";
+            // 
             // pnlTablesPath
             // 
             pnlTablesPath.Controls.Add(lblTablesClass);
@@ -401,6 +423,7 @@ namespace ConfigExcelEnhancer.UI
             // lstJobs
             // 
             lstJobs.Dock = DockStyle.Fill;
+            lstJobs.ItemHeight = 17;
             lstJobs.Location = new Point(0, 0);
             lstJobs.Name = "lstJobs";
             lstJobs.Size = new Size(200, 653);
@@ -455,7 +478,7 @@ namespace ConfigExcelEnhancer.UI
             grpBindings.Controls.Add(dgvBindings);
             grpBindings.Controls.Add(lblTemplatePreview);
             grpBindings.Controls.Add(pnlBindingButtons);
-            grpBindings.Location = new Point(6, 318);
+            grpBindings.Location = new Point(6, 345);
             grpBindings.Name = "grpBindings";
             grpBindings.Size = new Size(628, 165);
             grpBindings.TabIndex = 2;
@@ -486,9 +509,9 @@ namespace ConfigExcelEnhancer.UI
             grpIds.Controls.Add(txtIdsClassName);
             grpIds.Controls.Add(chkIdsUsePartialClass);
             grpIds.Controls.Add(chkIdsUseGeneratedSuffix);
-            grpIds.Location = new Point(6, 171);
+            grpIds.Location = new Point(6, 198);
             grpIds.Name = "grpIds";
-            grpIds.Size = new Size(628, 141);
+            grpIds.Size = new Size(588, 141);
             grpIds.TabIndex = 1;
             grpIds.TabStop = false;
             grpIds.Text = "Ids 文件";
@@ -534,9 +557,11 @@ namespace ConfigExcelEnhancer.UI
             grpBasic.Controls.Add(lblNamespace);
             grpBasic.Controls.Add(txtNamespace);
             grpBasic.Controls.Add(chkUseGeneratedSuffix);
+            grpBasic.Controls.Add(lblNameField);
+            grpBasic.Controls.Add(txtNameField);
             grpBasic.Location = new Point(6, 4);
             grpBasic.Name = "grpBasic";
-            grpBasic.Size = new Size(628, 161);
+            grpBasic.Size = new Size(588, 188);
             grpBasic.TabIndex = 0;
             grpBasic.TabStop = false;
             grpBasic.Text = "基本设置";
@@ -595,11 +620,11 @@ namespace ConfigExcelEnhancer.UI
             txtLog.Dock = DockStyle.Fill;
             txtLog.Font = new Font("Consolas", 9F);
             txtLog.ForeColor = Color.LightGreen;
-            txtLog.Location = new Point(0, 40);
+            txtLog.Location = new Point(0, 44);
             txtLog.Name = "txtLog";
             txtLog.ReadOnly = true;
             txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
-            txtLog.Size = new Size(620, 163);
+            txtLog.Size = new Size(620, 159);
             txtLog.TabIndex = 1;
             txtLog.Text = "";
             // 
@@ -703,6 +728,8 @@ namespace ConfigExcelEnhancer.UI
         private Label lblNamespace = null!;
         private TextBox txtNamespace = null!;
         private CheckBox chkUseGeneratedSuffix = null!;
+        private Label lblNameField = null!;
+        private TextBox txtNameField = null!;
         private GroupBox grpIds = null!;
         private CheckBox chkGenerateIds = null!;
         private Label lblIdsOutputDir = null!;

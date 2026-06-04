@@ -95,6 +95,7 @@ namespace ConfigExcelEnhancer.UI
                 txtOutputDir.Text = job.OutputDirectory;
                 txtNamespace.Text = job.Namespace;
                 chkUseGeneratedSuffix.Checked = job.UseGeneratedSuffix;
+                txtNameField.Text = job.NameField;
 
                 chkGenerateIds.Checked = job.GenerateIds;
                 txtIdsOutputDir.Text = job.IdsOutputDirectory;
@@ -162,6 +163,14 @@ namespace ConfigExcelEnhancer.UI
         {
             if (_loadingJob || _currentJob is null) return;
             _currentJob.UseGeneratedSuffix = chkUseGeneratedSuffix.Checked;
+        }
+
+        private void txtNameField_TextChanged(object sender, EventArgs e)
+        {
+            if (_loadingJob || _currentJob is null) return;
+            _currentJob.NameField = string.IsNullOrWhiteSpace(txtNameField.Text)
+                ? "name"
+                : txtNameField.Text.Trim();
         }
 
         private void chkGenerateIds_CheckedChanged(object sender, EventArgs e)
