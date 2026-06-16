@@ -52,6 +52,12 @@ namespace ConfigExcelEnhancer.Core
         private const string TypeColumnLabel = "$type";
         private const string ClassNameLabel = "数据类名";
 
+        /// <summary>表头标记符号（Luban 标记为 ##var/##type/##group/##）。</summary>
+        private const string HeaderSymbol = "##";
+
+        // 需要跨子列合并的是「父字段名行」与「类型行」(WriteHeaders 布局中固定为第 1、2 行)。
+        // 用行号而非 ##var/##type 关键字匹配：子字段行(##var)同样以 ## 开头，若按关键字会被误合并。
+
         // ── 公共入口 ──────────────────────────────────────────────────────
 
         public static void ExportAll(
@@ -99,26 +105,33 @@ namespace ConfigExcelEnhancer.Core
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
 
-            var columns = ExpandFields(task.AllFields, beanMap, usedAsField);
+            // 注释行即智能表表头行，要求列名唯一非空：空注释写占位“列N”，重复加 _n 后缀。
+            var columns = ApplyTableHeaderNames(ExpandFields(task.AllFields, beanMap, usedAsField));
+
+            // 目标表头行数：含嵌套结构子字段行(##var)时为 5，否则 4；目标末列 = $type 列 + 字段列。
+            bool hasSubRow = columns.Any(c => !string.IsNullOrEmpty(c.SubVarName));
+            int targetHeaderRows = hasSubRow ? 5 : 4;
+            int dataLastCol = 2 + columns.Count;
 
             // templateMs 必须在 wb.SaveAs 完成后才能 Dispose：ClosedXML 的 SaveAs
             // 会惰性复制模板里未修改的 parts（打印设置等），若流提前关闭则报
             // "Cannot access a closed Stream"。
             MemoryStream? templateMs = null;
             IXLWorkbook wb;
+            bool fromTemplate = false;
+            int templateHeaderRows = 0;
+            int templateLastCol = 0;
             if (!string.IsNullOrEmpty(templatePath) && File.Exists(templatePath))
             {
                 log($"  从模板复制：{Path.GetFileName(templatePath)}", LogLevel.Info);
-                // 剥除模板中的 Table 结构：模板的 Table Header Row 可能与 Luban
-                // 的 ##group 行重叠，WriteHeaders 把 "c,s" 写入后 ClosedXML 会把
-                // 所有 Table 列名同步为 "c,s"，导致 SaveAs 时抛出重复 key 异常。
-                var templateBytes = StripTablesFromXlsx(File.ReadAllBytes(templatePath));
-                templateMs = new MemoryStream(templateBytes);
+                // 从字节流加载模板，保留其「智能表」(Excel Table) 外观与计算列公式。
+                templateMs = new MemoryStream(File.ReadAllBytes(templatePath));
                 wb = new XLWorkbook(templateMs);
+                fromTemplate = true;
                 var firstWs = wb.Worksheets.First();
-                firstWs.AutoFilter.Clear();
-                // 清空第一张 Sheet 的内容（保留样式）
-                firstWs.RangeUsed()?.Clear(XLClearOptions.Contents);
+                // 统计模板表头行数与末列（在改动前，文本仍存在）。
+                templateHeaderRows = FunctionLibrary.CountHeaderRows(firstWs, HeaderSymbol);
+                templateLastCol = firstWs.LastColumnUsed()?.ColumnNumber() ?? 0;
             }
             else
             {
@@ -129,11 +142,101 @@ namespace ConfigExcelEnhancer.Core
             var ws = wb.Worksheets.First();
             ws.Name = task.LeafBean.Name;
 
+            // 1. 调整模板表头行数为 targetHeaderRows（会同步下移/上移数据行与智能表）。
+            if (fromTemplate && templateHeaderRows != targetHeaderRows)
+                FunctionLibrary.AdjustHeaderRows(ws, templateHeaderRows, targetHeaderRows, templateLastCol);
+
+            // 2. 写表头。直接逐格覆盖（不预先清空表头行）：注释已唯一非空，活动智能表
+            //    重命名字段时不会冲突；避免「批量清空表头格触发 ClosedXML 自动改名并产生重复列名」。
             WriteHeaders(ws, task.LeafBean.Name, columns);
+
+            if (fromTemplate)
+            {
+                // 3. 把表头样式扩展到模板宽度之外的新列。
+                if (dataLastCol > templateLastCol && templateLastCol > 0)
+                    FunctionLibrary.ExtendHeaderRowStyles(ws, targetHeaderRows, templateLastCol, dataLastCol);
+
+                // 4. 智能表调整为覆盖「B[注释行] : [末列][数据行]」。此时新范围内表头格均已填唯一值。
+                ResizeOrCreateTable(ws, targetHeaderRows, targetHeaderRows + 1, dataLastCol);
+
+                // 5. 模板比目标更宽时，清理表外多余列的残留模板内容（已移出智能表，清空不会触发改名）。
+                if (templateLastCol > dataLastCol)
+                    ws.Range(1, dataLastCol + 1, targetHeaderRows + 1, templateLastCol)
+                      .Clear(XLClearOptions.Contents);
+            }
+
+            // 6. 合并嵌套结构父列：父字段名行(1)与类型行(2)的连续空单元格。
+            FunctionLibrary.MergeHeaderEmptyCells(ws, ["1", "2"], targetHeaderRows, dataLastCol, HeaderSymbol);
+
+            // 7. 保留一行「假数据」承载计算列公式（智能表已覆盖该行）。
+            if (fromTemplate)
+                FinalizeDataRow(ws, targetHeaderRows, dataLastCol, columns.Count);
+
+            // 8. 按实际表头行数冻结窗格。
+            ws.SheetView.FreezeRows(targetHeaderRows);
+
+            // 9. 自动列宽。
+            FunctionLibrary.AutoFitColumns(ws, dataLastCol);
 
             wb.SaveAs(task.TargetExcelPath);
             wb.Dispose();
             templateMs?.Dispose(); // SaveAs 完成后再关闭
+        }
+
+        /// <summary>
+        /// 数据行收尾：清空唯一一行数据行的字段值（保留样式），在 $type 列(B)写入计算列公式。
+        /// 智能表范围已在调用前覆盖该数据行，此处不再处理表。
+        /// </summary>
+        private static void FinalizeDataRow(IXLWorksheet ws, int headerRows, int dataLastCol, int fieldCount)
+        {
+            int dataRow = headerRows + 1; // 唯一一行假数据
+
+            // 清空数据行的旧示例值（保留样式），稍后只回填 B 列公式。
+            ws.Range(dataRow, 1, dataRow, dataLastCol).Clear(XLClearOptions.Contents);
+
+            // B 列计算列公式：当首个字段列(C)非空时填入类名(B2=##type 行类名)，否则留空。
+            if (fieldCount > 0)
+                ws.Cell(dataRow, 2).FormulaA1 = $"IF(C{dataRow}<>\"\",$B$2,\"\")";
+        }
+
+        /// <summary>
+        /// 将智能表(Excel Table)调整为覆盖「B[注释行] : [末列][数据行]」；工作表无表时新建一个。
+        /// </summary>
+        private static void ResizeOrCreateTable(IXLWorksheet ws, int commentRow, int dataLastRow, int dataLastCol)
+        {
+            var range = ws.Range(commentRow, 2, dataLastRow, dataLastCol);
+            var table = ws.Tables.FirstOrDefault();
+            if (table != null)
+                table.Resize(range);
+            else
+                range.CreateTable();
+        }
+
+        /// <summary>
+        /// 为每列生成智能表表头用的「注释」：注释为空时按顺序写占位“列1”“列2”…
+        /// （与 Excel/ClosedXML 自动列名逻辑一致）；重复项追加 _n 后缀。Excel 智能表要求
+        /// 表头列名唯一非空，否则写入/保存时抛「重复 key」异常。$type 列(B)固定用「数据类名」，
+        /// 这里预置到去重集合避免字段注释与其冲突。
+        /// </summary>
+        private static List<ExcelColumnMeta> ApplyTableHeaderNames(List<ExcelColumnMeta> columns)
+        {
+            var seen = new HashSet<string>(StringComparer.Ordinal) { ClassNameLabel };
+            int placeholder = 0;
+            var result = new List<ExcelColumnMeta>(columns.Count);
+            foreach (var c in columns)
+            {
+                string name = (c.Comment ?? string.Empty).Trim();
+                if (name.Length == 0)
+                    name = $"列{++placeholder}";
+
+                string unique = name;
+                int n = 2;
+                while (!seen.Add(unique))
+                    unique = $"{name}_{n++}";
+
+                result.Add(unique == c.Comment ? c : c with { Comment = unique });
+            }
+            return result;
         }
 
         // ── 更新（保留数据）────────────────────────────────────────────────
@@ -144,7 +247,8 @@ namespace ConfigExcelEnhancer.Core
             HashSet<string> usedAsField,
             Action<string, LogLevel> log)
         {
-            var targetColumns = ExpandFields(task.AllFields, beanMap, usedAsField);
+            // 注释行即智能表表头行，要求列名唯一非空：空注释写占位“列N”，重复加 _n 后缀。
+            var targetColumns = ApplyTableHeaderNames(ExpandFields(task.AllFields, beanMap, usedAsField));
 
             // 加载现有文件；若因 Table 列名重复无法加载，则自动剥除 Table 后重试。
             // strippedMs 与 templateMs 同理：SaveAs 完成前不能关闭。
@@ -173,6 +277,13 @@ namespace ConfigExcelEnhancer.Core
                 log($"  未检测到有效表头，重建表头结构", LogLevel.Warn);
                 ws.RangeUsed()?.Clear(XLClearOptions.Contents);
                 WriteHeaders(ws, task.LeafBean.Name, targetColumns);
+                int rebuildHeaderRows = targetColumns.Any(c => !string.IsNullOrEmpty(c.SubVarName)) ? 5 : 4;
+                int rebuildLastCol = 2 + targetColumns.Count;
+                FunctionLibrary.MergeHeaderEmptyCells(ws, ["1", "2"], rebuildHeaderRows, rebuildLastCol, HeaderSymbol);
+                FinalizeDataRow(ws, rebuildHeaderRows, rebuildLastCol, targetColumns.Count);
+                ResizeOrCreateTable(ws, rebuildHeaderRows, rebuildHeaderRows + 1, rebuildLastCol);
+                ws.SheetView.FreezeRows(rebuildHeaderRows);
+                FunctionLibrary.AutoFitColumns(ws, rebuildLastCol);
                 if (loadedFromStream) wb.SaveAs(task.TargetExcelPath); else wb.Save();
                 wb.Dispose();
                 strippedMs?.Dispose();
@@ -244,13 +355,43 @@ namespace ConfigExcelEnhancer.Core
             RewriteHeadersForKeptColumns(ws, headerInfo, existingGroups.Where(g => toKeep.Contains(g.Key)).ToList(),
                 targetColumns, task.LeafBean.Name);
 
-            // 在末尾追加新增字段的列
+            // 在末尾追加新增字段的列（记录追加前末列，作为新列的样式参考列）
+            int prevLastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 1;
             if (toAdd.Count > 0)
             {
-                int nextCol = (ws.LastColumnUsed()?.ColumnNumber() ?? 1) + 1;
+                int nextCol = prevLastCol + 1;
                 var newCols = targetColumns.Where(c => toAdd.Contains(c.GroupKey)).ToList();
                 AppendColumns(ws, headerInfo, newCols, nextCol, task.LeafBean.Name);
             }
+
+            // ── 样式收尾：以已有表头列为参考，给新列套样式，重新合并/冻结/列宽 ──
+            headerInfo = DetectHeaders(ws);
+            int headerRows = headerInfo.CommentRow > 0 ? headerInfo.CommentRow : targetColumns.Any(c => !string.IsNullOrEmpty(c.SubVarName)) ? 5 : 4;
+            int finalLastCol = ws.LastColumnUsed()?.ColumnNumber() ?? prevLastCol;
+
+            // 1. 给新增列套表头样式（参考追加前的已有末列）
+            if (finalLastCol > prevLastCol && prevLastCol > 0)
+                FunctionLibrary.ExtendHeaderRowStyles(ws, headerRows, prevLastCol, finalLastCol);
+
+            // 2. 先取消表头区域已有合并区，避免旧合并残留，再按当前结构重新合并 struct 父列
+            //    （仅合并父字段名行与类型行，避免子字段行被误合并）
+            foreach (var mr in ws.MergedRanges.ToList())
+                if (mr.RangeAddress.FirstAddress.RowNumber <= headerRows)
+                    mr.Unmerge();
+            FunctionLibrary.MergeHeaderEmptyCells(ws,
+                [headerInfo.VarRow.ToString(), headerInfo.TypeRow.ToString()],
+                headerRows, finalLastCol, HeaderSymbol);
+
+            // 3. 按实际表头行数冻结窗格
+            ws.SheetView.FreezeRows(headerRows);
+
+            // 4. 自动列宽
+            FunctionLibrary.AutoFitColumns(ws, finalLastCol);
+
+            // 5. 调整智能表(Excel Table)：覆盖「## 注释行 ~ 末行数据」。表头列名已由
+            //    ApplyTableHeaderNames 保证唯一非空，写入时活动智能表不会抛重复 key 异常。
+            int updLastDataRow = Math.Max(ws.LastRowUsed()?.RowNumber() ?? headerRows, headerRows + 1);
+            ResizeOrCreateTable(ws, headerRows, updLastDataRow, finalLastCol);
 
             if (loadedFromStream)
                 wb.SaveAs(task.TargetExcelPath); // 从 MemoryStream 加载时须用 SaveAs
@@ -280,9 +421,11 @@ namespace ConfigExcelEnhancer.Core
             ws.Cell(groupRow,   1).Value = "##group";
             ws.Cell(commentRow, 1).Value = "##";
 
-            // B 列（$type）
+            // B 列（$type）。子字段行与组行的 B 列应为空——显式清空，避免残留模板数据。
             ws.Cell(varRow,     2).Value = TypeColumnLabel;
             ws.Cell(typeRow,    2).Value = className;
+            if (hasSubRow) ws.Cell(subVarRow, 2).Value = string.Empty;
+            ws.Cell(groupRow,   2).Value = string.Empty;
             ws.Cell(commentRow, 2).Value = ClassNameLabel;
 
             // 字段列（从 C 列起）

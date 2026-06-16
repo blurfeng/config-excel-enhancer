@@ -212,7 +212,7 @@ namespace ConfigExcelEnhancer.Core
             TableDesignOptions options)
         {
             // 1. 在清空内容前统计 T2 表头行数（文本内容仍存在）
-            int t2HeaderCount = CountHeaderRows(t2, options.HeaderSymbol);
+            int t2HeaderCount = FunctionLibrary.CountHeaderRows(t2, options.HeaderSymbol);
 
             // 2. 取消所有已合并区域（确保 CopyDataOnly 能正确写入）
             foreach (var mr in t2.MergedRanges.ToList())
@@ -227,9 +227,9 @@ namespace ConfigExcelEnhancer.Core
             // 4. 调整表头行数以匹配 T3
             // 单元格级样式（填充、边框、对齐、字体）在 Clear 后仍保留。
             // AdjustHeaderRows 会从原第一行复制样式到新增的行。
-            int t3HeaderCount = CountHeaderRows(t3, options.HeaderSymbol);
+            int t3HeaderCount = FunctionLibrary.CountHeaderRows(t3, options.HeaderSymbol);
             if (t3HeaderCount != t2HeaderCount)
-                AdjustHeaderRows(t2, t2HeaderCount, t3HeaderCount, t2LastCol);
+                FunctionLibrary.AdjustHeaderRows(t2, t2HeaderCount, t3HeaderCount, t2LastCol);
 
             // 在复制数据前记录 T2 行范围，以便识别“多余”行
             int t2RowExtent = t2.LastRowUsed()?.RowNumber() ?? t3HeaderCount;
@@ -247,7 +247,7 @@ namespace ConfigExcelEnhancer.Core
             // 将表头样式扩展到 T3 中有而 T2 模板中没有的列。
             // 使用内部单元格（而非边缘单元格）作为样式来源。
             if (dataLastCol > t2LastCol && t2LastCol > 0)
-                ExtendHeaderRowStyles(t2, t3HeaderCount, t2LastCol, dataLastCol);
+                FunctionLibrary.ExtendHeaderRowStyles(t2, t3HeaderCount, t2LastCol, dataLastCol);
 
             // 将第一数据行的对齐方式传播到所有后续数据行。
             // 涵盖模板范围内（可能缺少单元格级对齐）
@@ -270,7 +270,7 @@ namespace ConfigExcelEnhancer.Core
                 var keywords = options.MergeHeaderKeywords
                     .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 if (keywords.Length > 0)
-                    DoMergeHeaderCells(t2, keywords, dataLastRow, dataLastCol, options.HeaderSymbol);
+                    FunctionLibrary.MergeHeaderEmptyCells(t2, keywords, dataLastRow, dataLastCol, options.HeaderSymbol);
             }
 
             // 8. 调整智能表格尺寸以覆盖新的数据范围
@@ -278,205 +278,7 @@ namespace ConfigExcelEnhancer.Core
 
             // 9. 自动调整列宽（最后执行，确保内容已全部确定）
             if (options.AutoColumnWidth)
-            {
-                for (int c = 1; c <= dataLastCol; c++)
-                    t2.Column(c).AdjustToContents();
-            }
-        }
-
-        private static int CountHeaderRows(IXLWorksheet ws, string headerSymbol)
-        {
-            int count = 0;
-            int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
-            for (int r = 1; r <= lastRow; r++)
-            {
-                if (ws.Cell(r, 1).GetString().Contains(headerSymbol))
-                    count++;
-                else
-                    break;
-            }
-            return count;
-        }
-
-        // 插入或删除表头行使 T2 与 targetCount 匹配。
-        // 新插入的行将从原第一行完整复制单元格级样式，
-        // 精确保留填充、边框、对齐和字体等模板格式。
-        // 已有行不会重新设置样式——保持其模板格式不变。
-        private static void AdjustHeaderRows(
-            IXLWorksheet t2,
-            int t2Count,
-            int targetCount,
-            int lastCol)
-        {
-            int diff = targetCount - t2Count;
-
-            if (diff > 0)
-            {
-                // === 在插入行前，快照 T2 第一行的边框及单元格样式 ===
-                // InsertRowsAbove 后行会下移，ClosedXML 对从未赋值的空单元格
-                // 样式保留可能不可靠。插入前读取可确保获取到原始样式对象。
-
-                // 优先扫描行级样式获取代表性边框，再逐单元格扫描。
-                // 以普通值存储四个方向和颜色，避免持有 IXLStyle 引用。
-                var rowBorder = t2.Row(1).Style.Border;
-                XLBorderStyleValues bTop    = rowBorder.TopBorder;
-                XLBorderStyleValues bBottom = rowBorder.BottomBorder;
-                XLBorderStyleValues bLeft   = rowBorder.LeftBorder;
-                XLBorderStyleValues bRight  = rowBorder.RightBorder;
-                XLColor cTop    = rowBorder.TopBorderColor;
-                XLColor cBottom = rowBorder.BottomBorderColor;
-                XLColor cLeft   = rowBorder.LeftBorderColor;
-                XLColor cRight  = rowBorder.RightBorderColor;
-
-                bool anyBorder = bTop    != XLBorderStyleValues.None ||
-                                 bBottom != XLBorderStyleValues.None ||
-                                 bLeft   != XLBorderStyleValues.None ||
-                                 bRight  != XLBorderStyleValues.None;
-
-                if (!anyBorder)
-                {
-                    // 行级样式无边框——扫描单元格找到第一个有明确边框的单元格。
-                    // 优先使用内部列，避免外边缘的粗边框。
-                    int preferCol = lastCol >= 2 ? lastCol - 1 : lastCol;
-                    int[] scanOrder = Enumerable.Range(1, lastCol)
-                        .OrderBy(c => Math.Abs(c - preferCol))
-                        .ToArray();
-
-                    foreach (int c in scanOrder)
-                    {
-                        var cb = t2.Cell(1, c).Style.Border;
-                        if (cb.TopBorder    != XLBorderStyleValues.None ||
-                            cb.BottomBorder != XLBorderStyleValues.None ||
-                            cb.LeftBorder   != XLBorderStyleValues.None ||
-                            cb.RightBorder  != XLBorderStyleValues.None)
-                        {
-                            bTop    = cb.TopBorder;    cTop    = cb.TopBorderColor;
-                            bBottom = cb.BottomBorder; cBottom = cb.BottomBorderColor;
-                            bLeft   = cb.LeftBorder;   cLeft   = cb.LeftBorderColor;
-                            bRight  = cb.RightBorder;  cRight  = cb.RightBorderColor;
-                            break;
-                        }
-                    }
-                }
-
-                // 在插入前快照第一行各单元格的对齐方式和字体。
-                var cellAlignFont = new (XLAlignmentHorizontalValues H,
-                                         XLAlignmentVerticalValues V,
-                                         bool Wrap,
-                                         bool Bold,
-                                         double FontSize,
-                                         string FontName,
-                                         XLColor FontColor)[lastCol + 1];
-                for (int c = 1; c <= lastCol; c++)
-                {
-                    var s = t2.Cell(1, c).Style;
-                    cellAlignFont[c] = (
-                        s.Alignment.Horizontal, s.Alignment.Vertical, s.Alignment.WrapText,
-                        s.Font.Bold, s.Font.FontSize, s.Font.FontName, s.Font.FontColor);
-                }
-
-                // === 插入行后，将快照的样式应用到新行 ===
-                t2.Row(1).InsertRowsAbove(diff);
-
-                int lastHeaderRow = diff + t2Count;
-
-                for (int r = diff; r >= 1; r--)
-                {
-                    // 通过行级样式应用边框，使该行所有单元格都被覆盖，
-                    // 包括当前无数据的 lastCol 之外的单元格。
-                    var destRowStyle = t2.Row(r).Style;
-                    destRowStyle.Border.TopBorder         = bTop;
-                    destRowStyle.Border.TopBorderColor    = cTop;
-                    destRowStyle.Border.BottomBorder      = bBottom;
-                    destRowStyle.Border.BottomBorderColor = cBottom;
-                    destRowStyle.Border.LeftBorder        = bLeft;
-                    destRowStyle.Border.LeftBorderColor   = cLeft;
-                    destRowStyle.Border.RightBorder       = bRight;
-                    destRowStyle.Border.RightBorderColor  = cRight;
-
-                    // 从快照应用各单元格的对齐方式和字体。
-                    for (int c = 1; c <= lastCol; c++)
-                    {
-                        var (H, V, Wrap, Bold, FontSize, FontName, FontColor) = cellAlignFont[c];
-                        var d = t2.Cell(r, c).Style;
-                        d.Alignment.Horizontal = H;
-                        d.Alignment.Vertical   = V;
-                        d.Alignment.WrapText   = Wrap;
-                        d.Font.Bold      = Bold;
-                        d.Font.FontSize  = FontSize;
-                        d.Font.FontName  = FontName;
-                        d.Font.FontColor = FontColor;
-                    }
-
-                    // 填充色：取自下方两行（r+2）的颜色，夹紧在表头范围内。
-                    int fillSrc = r + 2;
-                    if (fillSrc > lastHeaderRow) fillSrc = lastHeaderRow;
-                    if (fillSrc >= 1 && t2Count > 0)
-                        CopyRowFillOnly(t2, fillSrc, r, lastCol);
-                }
-            }
-            else if (diff < 0)
-            {
-                int n = -diff;
-                int col = t2.LastColumnUsed()?.ColumnNumber() ?? lastCol;
-                t2.Range(1, 1, n, col).Delete(XLShiftDeletedCells.ShiftCellsUp);
-            }
-        }
-
-        // 将 T2 表头样式扩展到 T3 中有而模板中没有的列。
-        // 使用倒数第二列作为内部单元格参考，
-        // 避免外边框渗入应为内部的单元格。
-        private static void ExtendHeaderRowStyles(
-            IXLWorksheet ws,
-            int headerCount,
-            int templateLastCol,
-            int newLastCol)
-        {
-            // 内部参考列：避免最右列（可能有右外边框）
-            int refCol = templateLastCol >= 2 ? templateLastCol - 1 : templateLastCol;
-
-            for (int hr = 1; hr <= headerCount; hr++)
-            {
-                var refStyle  = ws.Cell(hr, refCol).Style;
-                var rowFill   = ws.Row(hr).Style.Fill;
-
-                // 确定有效填充色：行级填充优先于单元格级填充
-                var fillColor   = rowFill.BackgroundColor.Equals(XLColor.NoColor)
-                                  ? refStyle.Fill.BackgroundColor
-                                  : rowFill.BackgroundColor;
-                var fillPattern = rowFill.PatternType == XLFillPatternValues.None
-                                  ? refStyle.Fill.PatternType
-                                  : rowFill.PatternType;
-
-                for (int c = templateLastCol + 1; c <= newLastCol; c++)
-                {
-                    var d = ws.Cell(hr, c).Style;
-
-                    if (!fillColor.Equals(XLColor.NoColor))
-                    {
-                        d.Fill.BackgroundColor = fillColor;
-                        d.Fill.PatternType     = fillPattern;
-                    }
-
-                    d.Border.TopBorder         = refStyle.Border.TopBorder;
-                    d.Border.TopBorderColor    = refStyle.Border.TopBorderColor;
-                    d.Border.BottomBorder      = refStyle.Border.BottomBorder;
-                    d.Border.BottomBorderColor = refStyle.Border.BottomBorderColor;
-                    d.Border.LeftBorder        = refStyle.Border.LeftBorder;
-                    d.Border.LeftBorderColor   = refStyle.Border.LeftBorderColor;
-                    d.Border.RightBorder       = refStyle.Border.RightBorder;
-                    d.Border.RightBorderColor  = refStyle.Border.RightBorderColor;
-
-                    d.Alignment.Horizontal = refStyle.Alignment.Horizontal;
-                    d.Alignment.Vertical   = refStyle.Alignment.Vertical;
-                    d.Alignment.WrapText   = refStyle.Alignment.WrapText;
-
-                    d.Font.Bold      = refStyle.Font.Bold;
-                    d.Font.FontSize  = refStyle.Font.FontSize;
-                    d.Font.FontName  = refStyle.Font.FontName;
-                    d.Font.FontColor = refStyle.Font.FontColor;
-                }
-            }
+                FunctionLibrary.AutoFitColumns(t2, dataLastCol);
         }
 
         private static void CopyDataOnly(IXLWorksheet source, IXLWorksheet dest)
@@ -512,89 +314,6 @@ namespace ConfigExcelEnhancer.Core
             }
         }
 
-        // keywords 中每项为从 1 开始的行号（如 "3"）或文本模式（如 "##type"）。
-        // 行号匹配或 A 列包含该模式时处理该行。
-        private static void DoMergeHeaderCells(
-            IXLWorksheet ws,
-            string[] keywords,
-            int lastRow,
-            int lastCol,
-            string headerSymbol)
-        {
-            var rowNums = new HashSet<int>();
-            var textKws = new List<string>();
-            foreach (var kw in keywords)
-            {
-                if (int.TryParse(kw, out int n) && n >= 1)
-                    rowNums.Add(n);
-                else
-                    textKws.Add(kw);
-            }
-
-            for (int r = 1; r <= lastRow; r++)
-            {
-                bool match = rowNums.Contains(r);
-                if (!match && textKws.Count > 0)
-                {
-                    string aValue = ws.Cell(r, 1).GetString();
-                    match = textKws.Any(kw => aValue.Contains(kw, StringComparison.Ordinal));
-                }
-                if (!match) continue;
-
-                int c = 1;
-                while (c <= lastCol)
-                {
-                    // 跳过包含表头符号的单元格——它们不应参与合并
-                    string cellVal = ws.Cell(r, c).GetString();
-                    if (!string.IsNullOrEmpty(headerSymbol) && cellVal.Contains(headerSymbol, StringComparison.Ordinal))
-                    {
-                        c++;
-                        continue;
-                    }
-
-                    if (!IsEffectivelyEmpty(ws.Cell(r, c)))
-                    {
-                        int end = c;
-                        while (end + 1 <= lastCol && IsEffectivelyEmpty(ws.Cell(r, end + 1)))
-                            end++;
-
-                        if (end > c)
-                        {
-                            ws.Range(r, c, r, end).Merge();
-                            c = end + 1;
-                            continue;
-                        }
-                    }
-                    c++;
-                }
-            }
-        }
-
-
-        // 当边框/对齐/字体来自不同源行时使用。
-        private static void CopyRowFillOnly(IXLWorksheet ws, int srcRow, int destRow, int lastCol)
-        {
-            // 行级填充——覆盖所有没有显式单元格级填充的单元格
-            var srcRowFill = ws.Row(srcRow).Style.Fill;
-            var dstRowStyle = ws.Row(destRow).Style;
-            dstRowStyle.Fill.BackgroundColor = srcRowFill.BackgroundColor;
-            dstRowStyle.Fill.PatternType     = srcRowFill.PatternType;
-
-            for (int c = 1; c <= lastCol; c++)
-            {
-                var s = ws.Cell(srcRow, c).Style;
-                var d = ws.Cell(destRow, c).Style;
-
-                // 单元格级填充：仅在单元格有明确填充色（非 NoColor）时复制，
-                // 否则以上方已应用的行级填充作为正确回退。
-                if (!s.Fill.BackgroundColor.Equals(XLColor.NoColor))
-                {
-                    d.Fill.BackgroundColor = s.Fill.BackgroundColor;
-                    d.Fill.PatternType     = s.Fill.PatternType;
-                }
-            }
-        }
-
         // 复制行级对齐方式（用于超出模板范围的额外数据行）。
         private static void CopyRowAlignment(IXLRow source, IXLRow dest)
         {
@@ -617,9 +336,6 @@ namespace ConfigExcelEnhancer.Core
                 d.WrapText   = s.WrapText;
             }
         }
-
-        private static bool IsEffectivelyEmpty(IXLCell cell)
-            => cell.IsEmpty() || string.IsNullOrWhiteSpace(cell.GetString());
 
         private static void ResizeTables(IXLWorksheet t2, int dataLastRow, int dataLastCol)
         {
