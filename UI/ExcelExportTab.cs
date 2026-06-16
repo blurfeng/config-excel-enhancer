@@ -18,8 +18,6 @@ namespace ConfigExcelEnhancer.UI
         public ExcelExportTab()
         {
             InitializeComponent();
-            LayoutSettingsRows();
-            LayoutBatchRows();
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -27,37 +25,7 @@ namespace ConfigExcelEnhancer.UI
 
         public void CancelRunningTask() => _cts?.Cancel();
 
-        // ── 行布局（运行时动态计算，防止 VS 设计器 DPI 缩放错位）─────────
-
-        // 按钮不使用 Anchor，改为 Resize 事件手动定位，避免 VS 设计器保存时坐标被错误重算。
-        private void pnlSettings_Resize(object sender, EventArgs e) => LayoutSettingsRows();
-        private void pnlBatchExtra_Resize(object sender, EventArgs e) => LayoutBatchRows();
-
-        private void LayoutSettingsRows()
-        {
-            int r = pnlSettings.ClientSize.Width - 12; // 右侧保留 12px 边距
-            if (r <= 200) return;
-
-            // 行 1 — XML 来源文件夹
-            btnBrowseXmlFolder.SetBounds(r - 75, 8, 75, 28);
-            txtXmlFolder.SetBounds(120, 9, r - 75 - 8 - 120, 23);
-
-            // 行 2 — Excel 设计模板（清 34px + 间距 4px + 浏览 75px）
-            btnBrowseTemplate.SetBounds(r - 34 - 4 - 75, 44, 75, 28);
-            txtDesignTemplate.SetBounds(120, 45, r - 34 - 4 - 75 - 8 - 120, 23);
-        }
-
-        private void LayoutBatchRows()
-        {
-            int r = pnlBatchExtra.ClientSize.Width - 12;
-            if (r <= 200) return;
-
-            // 行 1 — 导出目标文件夹
-            btnBrowseTargetFolder.SetBounds(r - 75, 3, 75, 28);
-            txtTargetFolder.SetBounds(120, 4, r - 75 - 8 - 120, 23);
-        }
-
-        // ── 设置加载 ──────────────────────────────────────────────────────
+        // ── 设置加载
 
         public void LoadFromSettings()
         {

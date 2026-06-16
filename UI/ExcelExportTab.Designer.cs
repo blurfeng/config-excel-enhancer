@@ -75,7 +75,6 @@ namespace ConfigExcelEnhancer.UI
             pnlSettings.Name = "pnlSettings";
             pnlSettings.Size = new Size(764, 110);
             pnlSettings.TabIndex = 6;
-            pnlSettings.Resize += pnlSettings_Resize;
             // 
             // lblXmlFolder
             // 
@@ -88,14 +87,16 @@ namespace ConfigExcelEnhancer.UI
             // 
             // txtXmlFolder
             // 
-            txtXmlFolder.Location = new Point(120, 9);
+            txtXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtXmlFolder.Location = new Point(125, 9);
             txtXmlFolder.Name = "txtXmlFolder";
-            txtXmlFolder.Size = new Size(549, 23);
+            txtXmlFolder.Size = new Size(544, 23);
             txtXmlFolder.TabIndex = 1;
             txtXmlFolder.TextChanged += txtXmlFolder_TextChanged;
             // 
             // btnBrowseXmlFolder
             // 
+            btnBrowseXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnBrowseXmlFolder.Location = new Point(677, 6);
             btnBrowseXmlFolder.Name = "btnBrowseXmlFolder";
             btnBrowseXmlFolder.Size = new Size(75, 28);
@@ -114,14 +115,16 @@ namespace ConfigExcelEnhancer.UI
             // 
             // txtDesignTemplate
             // 
-            txtDesignTemplate.Location = new Point(120, 45);
+            txtDesignTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtDesignTemplate.Location = new Point(125, 45);
             txtDesignTemplate.Name = "txtDesignTemplate";
-            txtDesignTemplate.Size = new Size(549, 23);
+            txtDesignTemplate.Size = new Size(544, 23);
             txtDesignTemplate.TabIndex = 4;
             txtDesignTemplate.TextChanged += txtDesignTemplate_TextChanged;
             // 
             // btnBrowseTemplate
             // 
+            btnBrowseTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnBrowseTemplate.Location = new Point(677, 44);
             btnBrowseTemplate.Name = "btnBrowseTemplate";
             btnBrowseTemplate.Size = new Size(75, 28);
@@ -222,7 +225,6 @@ namespace ConfigExcelEnhancer.UI
             pnlBatchExtra.Size = new Size(764, 70);
             pnlBatchExtra.TabIndex = 5;
             pnlBatchExtra.Visible = false;
-            pnlBatchExtra.Resize += pnlBatchExtra_Resize;
             // 
             // lblTargetFolder
             // 
@@ -235,14 +237,16 @@ namespace ConfigExcelEnhancer.UI
             // 
             // txtTargetFolder
             // 
-            txtTargetFolder.Location = new Point(120, 4);
+            txtTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtTargetFolder.Location = new Point(125, 4);
             txtTargetFolder.Name = "txtTargetFolder";
-            txtTargetFolder.Size = new Size(549, 23);
+            txtTargetFolder.Size = new Size(544, 23);
             txtTargetFolder.TabIndex = 1;
             txtTargetFolder.TextChanged += txtTargetFolder_TextChanged;
             // 
             // btnBrowseTargetFolder
             // 
+            btnBrowseTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnBrowseTargetFolder.Location = new Point(677, 3);
             btnBrowseTargetFolder.Name = "btnBrowseTargetFolder";
             btnBrowseTargetFolder.Size = new Size(75, 28);
@@ -323,6 +327,7 @@ namespace ConfigExcelEnhancer.UI
             colSourceFile.HeaderText = "来源文件";
             colSourceFile.Name = "colSourceFile";
             colSourceFile.ReadOnly = true;
+            colSourceFile.Width = 150;
             // 
             // colTargetPath
             // 
