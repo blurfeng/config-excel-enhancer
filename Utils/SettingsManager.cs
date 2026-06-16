@@ -97,6 +97,16 @@ namespace ConfigExcelEnhancer.Utils
                 cfg.SourceXmlFile    = ToRelativeIfPossible(cfg.SourceXmlFile);
                 cfg.TargetExcelPath  = ToRelativeIfPossible(cfg.TargetExcelPath);
             }
+            foreach (var job in s.TemplateExportJobs)
+            {
+                job.JsonFilePath                   = ToRelativeIfPossible(job.JsonFilePath);
+                job.OutputDirectory                = ToRelativeIfPossible(job.OutputDirectory);
+                job.IdsOutputDirectory             = ToRelativeIfPossible(job.IdsOutputDirectory);
+                job.LastExportedIdsOutputDirectory = ToRelativeIfPossible(job.LastExportedIdsOutputDirectory);
+                job.TypeTemplates = job.TypeTemplates.ToDictionary(
+                    kv => kv.Key,
+                    kv => ToRelativeIfPossible(kv.Value));
+            }
         }
 
         /// <summary>
@@ -119,6 +129,16 @@ namespace ConfigExcelEnhancer.Utils
             {
                 cfg.SourceXmlFile    = ToAbsolute(cfg.SourceXmlFile);
                 cfg.TargetExcelPath  = ToAbsolute(cfg.TargetExcelPath);
+            }
+            foreach (var job in s.TemplateExportJobs)
+            {
+                job.JsonFilePath                   = ToAbsolute(job.JsonFilePath);
+                job.OutputDirectory                = ToAbsolute(job.OutputDirectory);
+                job.IdsOutputDirectory             = ToAbsolute(job.IdsOutputDirectory);
+                job.LastExportedIdsOutputDirectory = ToAbsolute(job.LastExportedIdsOutputDirectory);
+                job.TypeTemplates = job.TypeTemplates.ToDictionary(
+                    kv => kv.Key,
+                    kv => ToAbsolute(kv.Value));
             }
         }
 
@@ -203,7 +223,26 @@ namespace ConfigExcelEnhancer.Utils
             TableDesignMergeHeaderCells       = src.TableDesignMergeHeaderCells,
             TableDesignMergeHeaderKeywords    = src.TableDesignMergeHeaderKeywords,
             TablesClassPath                   = src.TablesClassPath,
-            TemplateExportJobs                = new List<TemplateExportJob>(src.TemplateExportJobs),
+            TemplateExportJobs                = src.TemplateExportJobs.Select(j => new TemplateExportJob
+            {
+                DisplayName                    = j.DisplayName,
+                JsonFilePath                   = j.JsonFilePath,
+                OutputDirectory                = j.OutputDirectory,
+                Namespace                      = j.Namespace,
+                UseGeneratedSuffix             = j.UseGeneratedSuffix,
+                GenerateIds                    = j.GenerateIds,
+                IdsOutputDirectory             = j.IdsOutputDirectory,
+                IdsNamespace                   = j.IdsNamespace,
+                IdsClassName                   = j.IdsClassName,
+                IdsUsePartialClass             = j.IdsUsePartialClass,
+                IdsUseGeneratedSuffix          = j.IdsUseGeneratedSuffix,
+                TypeTemplates                  = new Dictionary<string, string>(j.TypeTemplates),
+                NameField                      = j.NameField,
+                IdField                        = j.IdField,
+                LastExportedIdsClassName       = j.LastExportedIdsClassName,
+                LastExportedIdsOutputDirectory = j.LastExportedIdsOutputDirectory,
+                LastExportedOwnedGroups        = new List<string>(j.LastExportedOwnedGroups),
+            }).ToList(),
             HomeIncludeEnum                   = src.HomeIncludeEnum,
             ExcelExportXmlFolder              = src.ExcelExportXmlFolder,
             ExcelExportDesignTemplate         = src.ExcelExportDesignTemplate,
