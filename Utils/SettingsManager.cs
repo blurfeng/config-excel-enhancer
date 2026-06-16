@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ConfigExcelEnhancer.Core;
 using ConfigExcelEnhancer.Models;
 
 namespace ConfigExcelEnhancer.Utils
@@ -7,8 +8,9 @@ namespace ConfigExcelEnhancer.Utils
     /// 负责将 AppSettings 持久化到应用目录下的 settings.json 文件。
     /// 支持加载、保存和清除操作；JSON 格式化输出便于手动编辑。
     /// <para>
-    /// 路径策略：保存时将路径转为相对于 exe 目录的相对路径（若可能），
-    /// 加载时还原为绝对路径。这样仓库克隆到不同机器后路径仍然有效。
+    /// 路径策略：保存时将路径转为相对于项目根目录（<see cref="LocalState.ProjectRoot"/>）的相对路径，
+    /// 加载时以同一根目录还原为绝对路径。项目根目录存储于 LocalApplicationData，不进入版本控制。
+    /// 若本机未配置项目根目录，则回退到相对于 exe 目录的旧行为以保持向后兼容。
     /// </para>
     /// </summary>
     public static class SettingsManager
@@ -35,7 +37,7 @@ namespace ConfigExcelEnhancer.Utils
                 // System.Text.Json 遇到缺失字段时保留属性类定义的默认值，
                 // 因此 HideEnumDataSheet 等字段即使不在旧版 JSON 中也会正确取 true。
                 var settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
-                DenormalizePaths(settings);
+                DenormalizePaths(settings, GetProjectRoot());
                 return settings;
             }
             catch (Exception ex)
@@ -51,12 +53,12 @@ namespace ConfigExcelEnhancer.Utils
 
         /// <summary>
         /// 将设置序列化为格式化 JSON 并写入 settings.json。
-        /// 写入前将路径字段转为相对路径（相对 exe 目录），不修改传入对象。
+        /// 写入前将路径字段转为相对于项目根目录的相对路径，不修改传入对象。
         /// </summary>
         public static void Save(AppSettings settings)
         {
             var toWrite = ShallowClone(settings);
-            NormalizePaths(toWrite);
+            NormalizePaths(toWrite, GetProjectRoot());
             var json = JsonSerializer.Serialize(toWrite, JsonOptions);
             File.WriteAllText(SettingsPath, json);
         }
@@ -77,120 +79,80 @@ namespace ConfigExcelEnhancer.Utils
         // ── 路径规范化辅助 ─────────────────────────────────
 
         /// <summary>
-        /// 将 settings 中所有路径字段转为相对路径（保存前调用）。
+        /// 获取当前有效的路径基准目录：优先使用本机配置的项目根目录，
+        /// 未配置时回退到 exe 所在目录（旧行为，向后兼容）。
         /// </summary>
-        private static void NormalizePaths(AppSettings s)
+        private static string GetProjectRoot()
         {
-            s.XmlDirectory               = ToRelativeIfPossible(s.XmlDirectory);
-            s.ExcelDirectory             = ToRelativeIfPossible(s.ExcelDirectory);
-            s.GenBatPath                 = ToRelativeIfPossible(s.GenBatPath);
-            s.TableDesignSourceExcel     = ToRelativeIfPossible(s.TableDesignSourceExcel);
-            s.TableDesignTargetDirectory = ToRelativeIfPossible(s.TableDesignTargetDirectory);
-            s.TablesClassPath            = ToRelativeIfPossible(s.TablesClassPath);
-            s.EnumExcelFiles             = s.EnumExcelFiles.Select(ToRelativeIfPossible).ToList();
-            s.TableDesignTargetFiles     = s.TableDesignTargetFiles.Select(ToRelativeIfPossible).ToList();
-            s.ExcelExportXmlFolder       = ToRelativeIfPossible(s.ExcelExportXmlFolder);
-            s.ExcelExportDesignTemplate  = ToRelativeIfPossible(s.ExcelExportDesignTemplate);
-            s.ExcelExportTargetFolder    = ToRelativeIfPossible(s.ExcelExportTargetFolder);
+            var root = LocalStateManager.Load().ProjectRoot;
+            return string.IsNullOrEmpty(root) ? AppContext.BaseDirectory : root;
+        }
+
+        /// <summary>
+        /// 将 settings 中所有路径字段转为相对于 <paramref name="baseDir"/> 的相对路径（保存前调用）。
+        /// </summary>
+        private static void NormalizePaths(AppSettings s, string baseDir)
+        {
+            s.XmlDirectory               = FunctionLibrary.ToProjectRelative(s.XmlDirectory, baseDir);
+            s.ExcelDirectory             = FunctionLibrary.ToProjectRelative(s.ExcelDirectory, baseDir);
+            s.GenBatPath                 = FunctionLibrary.ToProjectRelative(s.GenBatPath, baseDir);
+            s.TableDesignSourceExcel     = FunctionLibrary.ToProjectRelative(s.TableDesignSourceExcel, baseDir);
+            s.TableDesignTargetDirectory = FunctionLibrary.ToProjectRelative(s.TableDesignTargetDirectory, baseDir);
+            s.TablesClassPath            = FunctionLibrary.ToProjectRelative(s.TablesClassPath, baseDir);
+            s.EnumExcelFiles             = s.EnumExcelFiles.Select(p => FunctionLibrary.ToProjectRelative(p, baseDir)).ToList();
+            s.TableDesignTargetFiles     = s.TableDesignTargetFiles.Select(p => FunctionLibrary.ToProjectRelative(p, baseDir)).ToList();
+            s.ExcelExportXmlFolder       = FunctionLibrary.ToProjectRelative(s.ExcelExportXmlFolder, baseDir);
+            s.ExcelExportDesignTemplate  = FunctionLibrary.ToProjectRelative(s.ExcelExportDesignTemplate, baseDir);
+            s.ExcelExportTargetFolder    = FunctionLibrary.ToProjectRelative(s.ExcelExportTargetFolder, baseDir);
             foreach (var cfg in s.ExcelExportClassConfigs)
             {
-                cfg.SourceXmlFile    = ToRelativeIfPossible(cfg.SourceXmlFile);
-                cfg.TargetExcelPath  = ToRelativeIfPossible(cfg.TargetExcelPath);
+                cfg.SourceXmlFile   = FunctionLibrary.ToProjectRelative(cfg.SourceXmlFile, baseDir);
+                cfg.TargetExcelPath = FunctionLibrary.ToProjectRelative(cfg.TargetExcelPath, baseDir);
             }
             foreach (var job in s.TemplateExportJobs)
             {
-                job.JsonFilePath                   = ToRelativeIfPossible(job.JsonFilePath);
-                job.OutputDirectory                = ToRelativeIfPossible(job.OutputDirectory);
-                job.IdsOutputDirectory             = ToRelativeIfPossible(job.IdsOutputDirectory);
-                job.LastExportedIdsOutputDirectory = ToRelativeIfPossible(job.LastExportedIdsOutputDirectory);
+                job.JsonFilePath                   = FunctionLibrary.ToProjectRelative(job.JsonFilePath, baseDir);
+                job.OutputDirectory                = FunctionLibrary.ToProjectRelative(job.OutputDirectory, baseDir);
+                job.IdsOutputDirectory             = FunctionLibrary.ToProjectRelative(job.IdsOutputDirectory, baseDir);
+                job.LastExportedIdsOutputDirectory = FunctionLibrary.ToProjectRelative(job.LastExportedIdsOutputDirectory, baseDir);
                 job.TypeTemplates = job.TypeTemplates.ToDictionary(
                     kv => kv.Key,
-                    kv => ToRelativeIfPossible(kv.Value));
+                    kv => FunctionLibrary.ToProjectRelative(kv.Value, baseDir));
             }
         }
 
         /// <summary>
-        /// 将 settings 中所有路径字段还原为绝对路径（加载后调用）。
+        /// 将 settings 中所有路径字段以 <paramref name="baseDir"/> 为基准还原为绝对路径（加载后调用）。
+        /// 已是绝对路径的字段（旧版 settings.json）原样保留，实现向后兼容。
         /// </summary>
-        private static void DenormalizePaths(AppSettings s)
+        private static void DenormalizePaths(AppSettings s, string baseDir)
         {
-            s.XmlDirectory               = ToAbsolute(s.XmlDirectory);
-            s.ExcelDirectory             = ToAbsolute(s.ExcelDirectory);
-            s.GenBatPath                 = ToAbsolute(s.GenBatPath);
-            s.TableDesignSourceExcel     = ToAbsolute(s.TableDesignSourceExcel);
-            s.TableDesignTargetDirectory = ToAbsolute(s.TableDesignTargetDirectory);
-            s.TablesClassPath            = ToAbsolute(s.TablesClassPath);
-            s.EnumExcelFiles             = s.EnumExcelFiles.Select(ToAbsolute).ToList();
-            s.TableDesignTargetFiles     = s.TableDesignTargetFiles.Select(ToAbsolute).ToList();
-            s.ExcelExportXmlFolder       = ToAbsolute(s.ExcelExportXmlFolder);
-            s.ExcelExportDesignTemplate  = ToAbsolute(s.ExcelExportDesignTemplate);
-            s.ExcelExportTargetFolder    = ToAbsolute(s.ExcelExportTargetFolder);
+            s.XmlDirectory               = FunctionLibrary.ToAbsoluteFromRoot(s.XmlDirectory, baseDir);
+            s.ExcelDirectory             = FunctionLibrary.ToAbsoluteFromRoot(s.ExcelDirectory, baseDir);
+            s.GenBatPath                 = FunctionLibrary.ToAbsoluteFromRoot(s.GenBatPath, baseDir);
+            s.TableDesignSourceExcel     = FunctionLibrary.ToAbsoluteFromRoot(s.TableDesignSourceExcel, baseDir);
+            s.TableDesignTargetDirectory = FunctionLibrary.ToAbsoluteFromRoot(s.TableDesignTargetDirectory, baseDir);
+            s.TablesClassPath            = FunctionLibrary.ToAbsoluteFromRoot(s.TablesClassPath, baseDir);
+            s.EnumExcelFiles             = s.EnumExcelFiles.Select(p => FunctionLibrary.ToAbsoluteFromRoot(p, baseDir)).ToList();
+            s.TableDesignTargetFiles     = s.TableDesignTargetFiles.Select(p => FunctionLibrary.ToAbsoluteFromRoot(p, baseDir)).ToList();
+            s.ExcelExportXmlFolder       = FunctionLibrary.ToAbsoluteFromRoot(s.ExcelExportXmlFolder, baseDir);
+            s.ExcelExportDesignTemplate  = FunctionLibrary.ToAbsoluteFromRoot(s.ExcelExportDesignTemplate, baseDir);
+            s.ExcelExportTargetFolder    = FunctionLibrary.ToAbsoluteFromRoot(s.ExcelExportTargetFolder, baseDir);
             foreach (var cfg in s.ExcelExportClassConfigs)
             {
-                cfg.SourceXmlFile    = ToAbsolute(cfg.SourceXmlFile);
-                cfg.TargetExcelPath  = ToAbsolute(cfg.TargetExcelPath);
+                cfg.SourceXmlFile   = FunctionLibrary.ToAbsoluteFromRoot(cfg.SourceXmlFile, baseDir);
+                cfg.TargetExcelPath = FunctionLibrary.ToAbsoluteFromRoot(cfg.TargetExcelPath, baseDir);
             }
             foreach (var job in s.TemplateExportJobs)
             {
-                job.JsonFilePath                   = ToAbsolute(job.JsonFilePath);
-                job.OutputDirectory                = ToAbsolute(job.OutputDirectory);
-                job.IdsOutputDirectory             = ToAbsolute(job.IdsOutputDirectory);
-                job.LastExportedIdsOutputDirectory = ToAbsolute(job.LastExportedIdsOutputDirectory);
+                job.JsonFilePath                   = FunctionLibrary.ToAbsoluteFromRoot(job.JsonFilePath, baseDir);
+                job.OutputDirectory                = FunctionLibrary.ToAbsoluteFromRoot(job.OutputDirectory, baseDir);
+                job.IdsOutputDirectory             = FunctionLibrary.ToAbsoluteFromRoot(job.IdsOutputDirectory, baseDir);
+                job.LastExportedIdsOutputDirectory = FunctionLibrary.ToAbsoluteFromRoot(job.LastExportedIdsOutputDirectory, baseDir);
                 job.TypeTemplates = job.TypeTemplates.ToDictionary(
                     kv => kv.Key,
-                    kv => ToAbsolute(kv.Value));
+                    kv => FunctionLibrary.ToAbsoluteFromRoot(kv.Value, baseDir));
             }
-        }
-
-        /// <summary>
-        /// 将 <paramref name="path"/> 转为相对于 BaseDirectory 的相对路径（含 .. 上跳）。
-        /// 仅当路径跨越不同盘符（无法表达相对关系）时原样保留绝对路径。
-        /// 空字符串直接返回。
-        /// </summary>
-        private static string ToRelativeIfPossible(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                return path;
-
-            try
-            {
-                var fullPath = Path.GetFullPath(path);
-                // GetRelativePath 在路径跨盘符时会原样返回绝对路径，其余情况均可计算出含 .. 的相对路径
-                var rel = Path.GetRelativePath(AppContext.BaseDirectory, fullPath);
-                // 若仍为绝对路径说明跨盘符，无法使用相对路径，原样保留
-                if (Path.IsPathRooted(rel))
-                    return path;
-                return rel;
-            }
-            catch
-            {
-                // 路径非法时原样保留
-            }
-
-            return path;
-        }
-
-        /// <summary>
-        /// 若 <paramref name="path"/> 是相对路径，则以 BaseDirectory 为基准还原为绝对路径；
-        /// 否则原样返回（向后兼容已保存绝对路径的旧 settings.json）。
-        /// 空字符串直接返回。
-        /// </summary>
-        private static string ToAbsolute(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                return path;
-
-            try
-            {
-                if (!Path.IsPathRooted(path))
-                    return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, path));
-            }
-            catch
-            {
-                // 路径非法时原样保留
-            }
-
-            return path;
         }
 
         /// <summary>
@@ -198,6 +160,7 @@ namespace ConfigExcelEnhancer.Utils
         /// </summary>
         private static AppSettings ShallowClone(AppSettings src) => new()
         {
+            ProjectName                       = src.ProjectName,
             XmlDirectory                      = src.XmlDirectory,
             ExcelDirectory                    = src.ExcelDirectory,
             GenBatPath                        = src.GenBatPath,

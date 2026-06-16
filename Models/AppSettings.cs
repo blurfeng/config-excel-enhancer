@@ -80,6 +80,14 @@ namespace ConfigExcelEnhancer.Models
 
         // ── 主页 ──────────────────────────────────────────
 
+        /// <summary>
+        /// 项目名称（通用参数，如 "GodsClash"）。
+        /// 用于在新机器上自动定位项目根目录：启动时若本机未设置根目录，
+        /// 会在工具目录的上层路径中查找同名文件夹并自动设置。
+        /// 不含路径信息，可安全提交到版本控制。
+        /// </summary>
+        public string ProjectName { get; set; } = string.Empty;
+
         /// <summary>主页"一键导出"是否包含 Enum 验证步骤。</summary>
         public bool HomeIncludeEnum { get; set; } = true;
 

@@ -349,5 +349,62 @@ namespace ConfigExcelEnhancer.Core
             sta.Join();
             return result;
         }
+
+        // ── 路径工具 ─────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// 从 <paramref name="startDir"/> 开始逐级向上查找名为 <paramref name="projectName"/> 的兄弟目录。
+        /// 最多向上查找 4 层，找到则返回其完整路径，否则返回 null。
+        /// </summary>
+        public static string? TryFindProjectRoot(string projectName, string startDir)
+        {
+            if (string.IsNullOrEmpty(projectName) || string.IsNullOrEmpty(startDir))
+                return null;
+
+            var dir = startDir;
+            for (int i = 0; i < 4; i++)
+            {
+                var parent = Path.GetDirectoryName(dir);
+                if (parent == null) break;
+                var candidate = Path.Combine(parent, projectName);
+                if (Directory.Exists(candidate))
+                    return candidate;
+                dir = parent;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 将 <paramref name="absolutePath"/> 转为相对于 <paramref name="baseDir"/> 的相对路径。
+        /// 跨盘符或转换失败时原样返回绝对路径。
+        /// <paramref name="baseDir"/> 为空时直接返回原路径（无法计算相对关系）。
+        /// </summary>
+        public static string ToProjectRelative(string absolutePath, string baseDir)
+        {
+            if (string.IsNullOrEmpty(absolutePath)) return absolutePath;
+            if (string.IsNullOrEmpty(baseDir)) return absolutePath;
+            try
+            {
+                var rel = Path.GetRelativePath(baseDir, Path.GetFullPath(absolutePath));
+                return Path.IsPathRooted(rel) ? absolutePath : rel;
+            }
+            catch { return absolutePath; }
+        }
+
+        /// <summary>
+        /// 将 <paramref name="path"/> 还原为绝对路径。
+        /// <list type="bullet">
+        ///   <item>若 path 已是绝对路径（旧版 settings.json 兼容）则原样返回。</item>
+        ///   <item>若 <paramref name="baseDir"/> 为空则以 <see cref="AppContext.BaseDirectory"/> 为基准（旧行为回退）。</item>
+        /// </list>
+        /// </summary>
+        public static string ToAbsoluteFromRoot(string path, string baseDir)
+        {
+            if (string.IsNullOrEmpty(path)) return path;
+            if (Path.IsPathRooted(path)) return path;
+            var effectiveBase = string.IsNullOrEmpty(baseDir) ? AppContext.BaseDirectory : baseDir;
+            try { return Path.GetFullPath(Path.Combine(effectiveBase, path)); }
+            catch { return path; }
+        }
     }
 }

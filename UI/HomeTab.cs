@@ -53,6 +53,13 @@ namespace ConfigExcelEnhancer.UI
             // 从设置加载勾选状态
             chkIncludeEnum.Checked = settings.HomeIncludeEnum;
             chkIncludeEnum.CheckedChanged += chkIncludeEnum_CheckedChanged;
+
+            // 项目名称输入框
+            txtProjectName.Text = settings.ProjectName;
+            txtProjectName.Leave += txtProjectName_Leave;
+
+            // 若本机项目根目录未配置，尝试按项目名称自动定位
+            TryAutoDetectProjectRoot();
         }
 
         /// <summary>
@@ -68,6 +75,31 @@ namespace ConfigExcelEnhancer.UI
         private void RefreshStatus()
         {
             if (_settings == null) return;
+
+            // 项目根目录状态
+            string projectRoot = _localState?.ProjectRoot ?? string.Empty;
+            bool rootValid = !string.IsNullOrEmpty(projectRoot) && Directory.Exists(projectRoot);
+            if (!rootValid)
+            {
+                lblProjectRootDot.ForeColor = Color.Red;
+                lblProjectRoot.Text = "本地项目根目录：未配置";
+            }
+            else
+            {
+                string localFolderName = Path.GetFileName(projectRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                bool nameMatches = string.IsNullOrEmpty(_settings.ProjectName)
+                    || string.Equals(localFolderName, _settings.ProjectName, StringComparison.OrdinalIgnoreCase);
+                if (nameMatches)
+                {
+                    lblProjectRootDot.ForeColor = Color.LightGreen;
+                    lblProjectRoot.Text = $"本地项目根目录：{ShortenPath(projectRoot, 60)}";
+                }
+                else
+                {
+                    lblProjectRootDot.ForeColor = Color.Yellow;
+                    lblProjectRoot.Text = $"本地项目根目录：{ShortenPath(projectRoot, 45)}（本地名称与项目名称不一致，项目名称：{_settings.ProjectName}）";
+                }
+            }
 
             // gen.bat 状态
             string genBatPath = _settings.GenBatPath;
@@ -177,6 +209,11 @@ namespace ConfigExcelEnhancer.UI
         {
             var issues = new List<string>();
             if (_settings == null) return (issues, null);
+
+            // 检查 0：项目根目录未配置或不存在
+            string projectRoot = _localState?.ProjectRoot ?? string.Empty;
+            if (string.IsNullOrEmpty(projectRoot) || !Directory.Exists(projectRoot))
+                issues.Add("项目根目录未配置或不存在，settings.json 中的相对路径将无法正确解析");
 
             var allPaths = new List<string>();
             var genBatDir = string.Empty;
@@ -469,6 +506,61 @@ namespace ConfigExcelEnhancer.UI
         {
             if (_tabControl != null && _tabTemplate != null)
                 _tabControl.SelectedTab = _tabTemplate;
+        }
+
+        // ── 项目根目录 ────────────────────────────────────────
+
+        /// <summary>
+        /// 若本机项目根目录未配置或已失效，且 ProjectName 已设置，
+        /// 则从工具目录逐级向上查找同名文件夹并自动设置 ProjectRoot。
+        /// </summary>
+        private void TryAutoDetectProjectRoot()
+        {
+            if (_localState == null || _settings == null) return;
+            if (string.IsNullOrEmpty(_settings.ProjectName)) return;
+
+            // 已有有效的根目录则不覆盖
+            if (!string.IsNullOrEmpty(_localState.ProjectRoot) && Directory.Exists(_localState.ProjectRoot))
+                return;
+
+            var found = FunctionLibrary.TryFindProjectRoot(_settings.ProjectName, AppContext.BaseDirectory);
+            if (found == null) return;
+
+            _localState.ProjectRoot = found;
+            LocalStateManager.Save(_localState);
+        }
+
+        private void txtProjectName_Leave(object? sender, EventArgs e)
+        {
+            if (_settings == null) return;
+            var newName = txtProjectName.Text.Trim();
+            if (string.Equals(newName, _settings.ProjectName, StringComparison.Ordinal)) return;
+
+            _settings.ProjectName = newName;
+            SettingsManager.Save(_settings);
+            TryAutoDetectProjectRoot();
+            RefreshStatus();
+        }
+
+        private void btnBrowseProjectRoot_Click(object sender, EventArgs e)
+        {
+            if (_localState == null || _settings == null) return;
+
+            using var dlg = new FolderBrowserDialog
+            {
+                Description = "选择本地项目根目录（如 GodsClash/ 所在文件夹）",
+                UseDescriptionForTitle = true,
+            };
+
+            if (!string.IsNullOrEmpty(_localState.ProjectRoot) && Directory.Exists(_localState.ProjectRoot))
+                dlg.InitialDirectory = _localState.ProjectRoot;
+
+            if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+            _localState.ProjectRoot = dlg.SelectedPath;
+            LocalStateManager.Save(_localState);
+            SettingsManager.Save(_settings);
+            RefreshStatus();
         }
 
         // ── 日志右键菜单 ──────────────────────────────────────

@@ -8,5 +8,12 @@ namespace ConfigExcelEnhancer.Models
     {
         /// <summary>上次执行"一键导出"的时间（包含 Luban 导表 + 导出模板类）。</summary>
         public DateTime? LastExportTime { get; set; }
+
+        /// <summary>
+        /// 本机的项目根目录绝对路径（如 GodsClash/ 所在的文件夹）。
+        /// 此路径机器私有，存储于 LocalApplicationData，不进入版本控制。
+        /// settings.json 中的所有相对路径均以此为基准进行还原。
+        /// </summary>
+        public string ProjectRoot { get; set; } = string.Empty;
     }
 }
