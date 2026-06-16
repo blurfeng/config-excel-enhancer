@@ -108,16 +108,19 @@ namespace ConfigExcelEnhancer.Models
         /// <summary>列表模式：各数据类的导出配置（类名 → 目标 Excel 路径）。</summary>
         public List<ExcelExportClassConfig> ExcelExportClassConfigs { get; set; } = new();
 
+        /// <summary>列表模式：通用目标文件夹（配置项未指定路径时的回退目标）。</summary>
+        public string ExcelExportListTargetFolder { get; set; } = string.Empty;
+
         /// <summary>批量导出模式：导出 Excel 的目标文件夹。</summary>
         public string ExcelExportTargetFolder { get; set; } = string.Empty;
 
-        /// <summary>批量导出模式：导出文件名前缀。</summary>
+        /// <summary>导出文件名前缀（两种模式共用）。</summary>
         public string ExcelExportNamePrefix { get; set; } = string.Empty;
 
-        /// <summary>批量导出模式：导出文件名后缀。</summary>
+        /// <summary>导出文件名后缀（两种模式共用）。</summary>
         public string ExcelExportNameSuffix { get; set; } = string.Empty;
 
-        /// <summary>导出 Excel 文件的类名转换方式：0 = 类名不变，1 = 驼峰（首字母小写），2 = 全小写_下划线。</summary>
+        /// <summary>导出 Excel 文件的类名转换方式：0 = 类名不变，1 = 驼峰（首字母大写），2 = 全小写_下划线。</summary>
         public int ExcelExportNameConvention { get; set; } = 0;
     }
 }

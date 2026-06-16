@@ -427,7 +427,7 @@ namespace ConfigExcelEnhancer.Core
         // ── 命名规范转换 ──────────────────────────────────────────────────────
 
         /// <summary>
-        /// 按命名规范转换名称：0 = 类名不变，1 = 驼峰（首字母小写），2 = 全小写_下划线。
+        /// 按命名规范转换名称：0 = 类名不变，1 = 驼峰（首字母大写），2 = 全小写_下划线。
         /// </summary>
         public static string ApplyNameConvention(string name, int convention) => convention switch
         {
@@ -437,7 +437,7 @@ namespace ConfigExcelEnhancer.Core
         };
 
         private static string ToCamelCase(string name)
-            => string.IsNullOrEmpty(name) ? name : char.ToLower(name[0]) + name[1..];
+            => string.IsNullOrEmpty(name) ? name : char.ToUpper(name[0]) + name[1..];
 
         private static string ToSnakeCase(string name)
         {

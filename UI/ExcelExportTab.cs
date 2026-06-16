@@ -25,26 +25,23 @@ namespace ConfigExcelEnhancer.UI
 
         public void CancelRunningTask() => _cts?.Cancel();
 
-        // ── 设置加载
+        // ── 设置加载 ──────────────────────────────────────────────────────
 
         public void LoadFromSettings()
         {
-            txtXmlFolder.Text        = Settings.ExcelExportXmlFolder;
-            txtDesignTemplate.Text   = Settings.ExcelExportDesignTemplate;
-            txtTargetFolder.Text     = Settings.ExcelExportTargetFolder;
-            txtPrefix.Text           = Settings.ExcelExportNamePrefix;
-            txtSuffix.Text           = Settings.ExcelExportNameSuffix;
+            txtXmlFolder.Text          = Settings.ExcelExportXmlFolder;
+            txtDesignTemplate.Text     = Settings.ExcelExportDesignTemplate;
+            txtListTargetFolder.Text   = Settings.ExcelExportListTargetFolder;
+            txtTargetFolder.Text       = Settings.ExcelExportTargetFolder;
+            txtPrefix.Text             = Settings.ExcelExportNamePrefix;
+            txtSuffix.Text             = Settings.ExcelExportNameSuffix;
 
-            if (Settings.ExcelExportMode == 1)
-                rdoBatch.Checked = true;
-            else
-                rdoList.Checked = true;
+            tabMode.SelectedIndex = Settings.ExcelExportMode == 1 ? 1 : 0;
 
             rdoNameAsIs.Checked  = Settings.ExcelExportNameConvention == 0;
             rdoNameCamel.Checked = Settings.ExcelExportNameConvention == 1;
             rdoNameSnake.Checked = Settings.ExcelExportNameConvention == 2;
 
-            // 如果已有 XML 文件夹，且有保存的配置，直接恢复列表（不重新扫描）
             if (!string.IsNullOrEmpty(Settings.ExcelExportXmlFolder))
                 RefreshClassList(rescanXml: false);
         }
@@ -57,6 +54,9 @@ namespace ConfigExcelEnhancer.UI
         private void txtDesignTemplate_TextChanged(object sender, EventArgs e)
             => Settings.ExcelExportDesignTemplate = txtDesignTemplate.Text;
 
+        private void txtListTargetFolder_TextChanged(object sender, EventArgs e)
+            => Settings.ExcelExportListTargetFolder = txtListTargetFolder.Text;
+
         private void txtTargetFolder_TextChanged(object sender, EventArgs e)
             => Settings.ExcelExportTargetFolder = txtTargetFolder.Text;
 
@@ -66,27 +66,8 @@ namespace ConfigExcelEnhancer.UI
         private void txtSuffix_TextChanged(object sender, EventArgs e)
             => Settings.ExcelExportNameSuffix = txtSuffix.Text;
 
-        private void rdoList_CheckedChanged(object sender, EventArgs e)
-        {
-            if (rdoList.Checked)
-            {
-                Settings.ExcelExportMode = 0;
-                pnlBatchExtra.Visible = false;
-                pnlListBar.Visible    = true;
-                dgvClasses.Visible    = true;
-            }
-        }
-
-        private void rdoBatch_CheckedChanged(object sender, EventArgs e)
-        {
-            if (rdoBatch.Checked)
-            {
-                Settings.ExcelExportMode = 1;
-                pnlListBar.Visible    = false;
-                dgvClasses.Visible    = false;
-                pnlBatchExtra.Visible = true;
-            }
-        }
+        private void tabMode_SelectedIndexChanged(object sender, EventArgs e)
+            => Settings.ExcelExportMode = tabMode.SelectedIndex;
 
         private void rdoNameAsIs_CheckedChanged(object sender, EventArgs e)
         {
@@ -125,6 +106,13 @@ namespace ConfigExcelEnhancer.UI
 
         private void btnClearTemplate_Click(object sender, EventArgs e)
             => txtDesignTemplate.Text = string.Empty;
+
+        private void btnBrowseListFolder_Click(object sender, EventArgs e)
+        {
+            var path = DialogHelper.BrowseFolder("选择通用目标文件夹", txtListTargetFolder.Text);
+            if (path != null)
+                txtListTargetFolder.Text = path;
+        }
 
         private void btnBrowseTargetFolder_Click(object sender, EventArgs e)
         {
@@ -175,19 +163,17 @@ namespace ConfigExcelEnhancer.UI
 
                 try
                 {
-                    var allBeans   = BeanParser.ParseFolder(folder);
-                    var leafBeans  = BeanParser.GetLeafBeans(allBeans);
-                    var beanMap    = BeanParser.BuildBeanMap(allBeans);
+                    var allBeans  = BeanParser.ParseFolder(folder);
+                    var leafBeans = BeanParser.GetLeafBeans(allBeans);
 
-                    // 合并：保留已有配置的目标路径和启用状态
                     var existing = Settings.ExcelExportClassConfigs
                         .ToDictionary(c => c.ClassName, StringComparer.Ordinal);
 
                     var newConfigs = leafBeans.Select(b => new ExcelExportClassConfig
                     {
-                        Enabled        = existing.TryGetValue(b.Name, out var e) ? e.Enabled : true,
-                        ClassName      = b.Name,
-                        SourceXmlFile  = b.SourceFile,
+                        Enabled         = existing.TryGetValue(b.Name, out var e) ? e.Enabled : true,
+                        ClassName       = b.Name,
+                        SourceXmlFile   = b.SourceFile,
                         TargetExcelPath = existing.TryGetValue(b.Name, out var ec) ? ec.TargetExcelPath : string.Empty,
                     }).ToList();
 
@@ -200,7 +186,6 @@ namespace ConfigExcelEnhancer.UI
                 }
             }
 
-            // 填充 DataGridView
             dgvClasses.Rows.Clear();
             foreach (var cfg in Settings.ExcelExportClassConfigs)
             {
@@ -231,7 +216,6 @@ namespace ConfigExcelEnhancer.UI
 
         private void dgvClasses_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
-            // CheckBox 变化时立即提交
             if (dgvClasses.IsCurrentCellDirty)
                 dgvClasses.CommitEdit(DataGridViewDataErrorContexts.Commit);
         }
@@ -240,18 +224,17 @@ namespace ConfigExcelEnhancer.UI
         {
             if (e.RowIndex < 0) return;
 
-            // 点击"..."列弹出保存对话框
             if (e.ColumnIndex == colBrowse.Index)
             {
                 var row = dgvClasses.Rows[e.RowIndex];
                 if (row.Tag is not ExcelExportClassConfig cfg) return;
 
-                string? existing = string.IsNullOrEmpty(cfg.TargetExcelPath) ? null : cfg.TargetExcelPath;
-                string defaultName = FunctionLibrary.ApplyNameConvention(cfg.ClassName, Settings.ExcelExportNameConvention) + ".xlsx";
+                string? existing    = string.IsNullOrEmpty(cfg.TargetExcelPath) ? null : cfg.TargetExcelPath;
+                string  defaultName = FunctionLibrary.ApplyNameConvention(cfg.ClassName, Settings.ExcelExportNameConvention) + ".xlsx";
                 var path = DialogHelper.BrowseSaveFile(
                     $"选择 [{cfg.ClassName}] 的导出 Excel 文件",
                     "Excel 文件 (*.xlsx)|*.xlsx",
-                    existing ?? Settings.ExcelExportTargetFolder,
+                    existing ?? Settings.ExcelExportListTargetFolder ?? Settings.ExcelExportTargetFolder,
                     defaultName);
 
                 if (path != null)
@@ -266,15 +249,11 @@ namespace ConfigExcelEnhancer.UI
 
         private void SetUILocked(bool locked)
         {
-            txtXmlFolder.Enabled        = !locked;
-            btnBrowseXmlFolder.Enabled  = !locked;
-            txtDesignTemplate.Enabled   = !locked;
-            btnBrowseTemplate.Enabled   = !locked;
-            rdoList.Enabled             = !locked;
-            rdoBatch.Enabled            = !locked;
-            pnlListBar.Enabled          = !locked;  // covers btnRefresh / btnSelectAll / btnDeselectAll
-            dgvClasses.Enabled          = !locked;
-            pnlBatchExtra.Enabled       = !locked;
+            txtXmlFolder.Enabled       = !locked;
+            btnBrowseXmlFolder.Enabled = !locked;
+            txtDesignTemplate.Enabled  = !locked;
+            btnBrowseTemplate.Enabled  = !locked;
+            tabMode.Enabled            = !locked;
         }
 
         private async void btnExport_Click(object sender, EventArgs e)
@@ -286,7 +265,6 @@ namespace ConfigExcelEnhancer.UI
                 return;
             }
 
-            // 收集任务
             List<ExcelExportTask>? tasks = null;
             try
             {
@@ -305,7 +283,7 @@ namespace ConfigExcelEnhancer.UI
             }
 
             // 批量导出模式：检查重名
-            if (rdoBatch.Checked)
+            if (tabMode.SelectedIndex == 1)
             {
                 var duplicates = tasks
                     .GroupBy(t => t.TargetExcelPath, StringComparer.OrdinalIgnoreCase)
@@ -320,12 +298,10 @@ namespace ConfigExcelEnhancer.UI
                 }
             }
 
-            // 解析 beanMap
-            var allBeans   = BeanParser.ParseFolder(xmlFolder);
-            var beanMap    = BeanParser.BuildBeanMap(allBeans);
+            var allBeans    = BeanParser.ParseFolder(xmlFolder);
+            var beanMap     = BeanParser.BuildBeanMap(allBeans);
             var usedAsField = BeanParser.BuildUsedAsFieldSet(allBeans);
 
-            // 解析模板路径（优先使用本分页的模板，否则回退到表设计分页）
             string? templatePath = txtDesignTemplate.Text.Trim();
             if (string.IsNullOrEmpty(templatePath))
                 templatePath = Settings.TableDesignSourceExcel;
@@ -406,19 +382,34 @@ namespace ConfigExcelEnhancer.UI
             var leafBeans = BeanParser.GetLeafBeans(allBeans);
             var tasks     = new List<ExcelExportTask>();
 
-            if (rdoList.Checked)
+            string prefix     = txtPrefix.Text;
+            string suffix     = txtSuffix.Text;
+            int    convention = Settings.ExcelExportNameConvention;
+
+            if (tabMode.SelectedIndex == 0)
             {
-                // 列表模式：按 Settings.ExcelExportClassConfigs
+                // 列表模式：优先使用各自配置的路径，未配置时回退到通用目标文件夹
+                string commonFolder = txtListTargetFolder.Text.Trim();
+
                 foreach (var cfg in Settings.ExcelExportClassConfigs)
                 {
                     if (!cfg.Enabled) continue;
-                    if (string.IsNullOrEmpty(cfg.TargetExcelPath)) continue;
+
+                    string targetPath = cfg.TargetExcelPath;
+                    if (string.IsNullOrEmpty(targetPath))
+                    {
+                        if (string.IsNullOrEmpty(commonFolder))
+                            continue;
+
+                        string baseName = FunctionLibrary.ApplyNameConvention(cfg.ClassName, convention);
+                        targetPath = Path.Combine(commonFolder, $"{prefix}{baseName}{suffix}.xlsx");
+                    }
 
                     var bean = leafBeans.FirstOrDefault(b => b.Name == cfg.ClassName);
                     if (bean == null) continue;
 
                     var allFields = BeanParser.GetAllFields(bean, beanMap);
-                    tasks.Add(new ExcelExportTask(bean, allFields, cfg.TargetExcelPath));
+                    tasks.Add(new ExcelExportTask(bean, allFields, targetPath));
                 }
             }
             else
@@ -428,15 +419,12 @@ namespace ConfigExcelEnhancer.UI
                 if (string.IsNullOrEmpty(targetFolder))
                     return tasks;
 
-                string prefix = txtPrefix.Text;
-                string suffix = txtSuffix.Text;
-
                 foreach (var bean in leafBeans)
                 {
-                    string baseName = FunctionLibrary.ApplyNameConvention(bean.Name, Settings.ExcelExportNameConvention);
+                    string baseName = FunctionLibrary.ApplyNameConvention(bean.Name, convention);
                     string fileName = $"{prefix}{baseName}{suffix}.xlsx";
                     string path     = Path.Combine(targetFolder, fileName);
-                    var allFields   = BeanParser.GetAllFields(bean, beanMap);
+                    var    allFields = BeanParser.GetAllFields(bean, beanMap);
                     tasks.Add(new ExcelExportTask(bean, allFields, path));
                 }
             }

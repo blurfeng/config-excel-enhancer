@@ -21,33 +21,37 @@ namespace ConfigExcelEnhancer.UI
             lblTemplate = new Label();
             txtDesignTemplate = new TextBox();
             btnBrowseTemplate = new Button();
-            lblMode = new Label();
-            pnlModeGroup = new Panel();
-            rdoList = new RadioButton();
-            rdoBatch = new RadioButton();
+            pnlNaming = new Panel();
             lblNaming = new Label();
             pnlNamingGroup = new Panel();
             rdoNameAsIs = new RadioButton();
             rdoNameCamel = new RadioButton();
             rdoNameSnake = new RadioButton();
-            pnlListBar = new Panel();
-            btnRefresh = new Button();
-            btnSelectAll = new Button();
-            btnDeselectAll = new Button();
-            pnlBatchExtra = new Panel();
-            lblTargetFolder = new Label();
-            txtTargetFolder = new TextBox();
-            btnBrowseTargetFolder = new Button();
             lblFileName = new Label();
             txtPrefix = new TextBox();
             lblClassName = new Label();
             txtSuffix = new TextBox();
+            tabMode = new TabControl();
+            tabPageList = new TabPage();
             dgvClasses = new DataGridView();
             colEnabled = new DataGridViewCheckBoxColumn();
             colClassName = new DataGridViewTextBoxColumn();
             colSourceFile = new DataGridViewTextBoxColumn();
             colTargetPath = new DataGridViewTextBoxColumn();
             colBrowse = new DataGridViewButtonColumn();
+            pnlListBar = new Panel();
+            btnRefresh = new Button();
+            btnSelectAll = new Button();
+            btnDeselectAll = new Button();
+            pnlListCommon = new Panel();
+            lblListTargetFolder = new Label();
+            txtListTargetFolder = new TextBox();
+            btnBrowseListFolder = new Button();
+            tabPageBatch = new TabPage();
+            pnlBatchTarget = new Panel();
+            lblTargetFolder = new Label();
+            txtTargetFolder = new TextBox();
+            btnBrowseTargetFolder = new Button();
             pnlAction = new Panel();
             btnExport = new Button();
             btnStop = new Button();
@@ -57,11 +61,15 @@ namespace ConfigExcelEnhancer.UI
             ctxMenuItemCopyLog = new ToolStripMenuItem();
             txtLog = new RichTextBox();
             pnlSettings.SuspendLayout();
-            pnlModeGroup.SuspendLayout();
+            pnlNaming.SuspendLayout();
             pnlNamingGroup.SuspendLayout();
-            pnlListBar.SuspendLayout();
-            pnlBatchExtra.SuspendLayout();
+            tabMode.SuspendLayout();
+            tabPageList.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvClasses).BeginInit();
+            pnlListBar.SuspendLayout();
+            pnlListCommon.SuspendLayout();
+            tabPageBatch.SuspendLayout();
+            pnlBatchTarget.SuspendLayout();
             pnlAction.SuspendLayout();
             ctxLog.SuspendLayout();
             SuspendLayout();
@@ -74,15 +82,11 @@ namespace ConfigExcelEnhancer.UI
             pnlSettings.Controls.Add(lblTemplate);
             pnlSettings.Controls.Add(txtDesignTemplate);
             pnlSettings.Controls.Add(btnBrowseTemplate);
-            pnlSettings.Controls.Add(lblMode);
-            pnlSettings.Controls.Add(pnlModeGroup);
-            pnlSettings.Controls.Add(lblNaming);
-            pnlSettings.Controls.Add(pnlNamingGroup);
             pnlSettings.Dock = DockStyle.Top;
             pnlSettings.Location = new Point(0, 0);
             pnlSettings.Name = "pnlSettings";
-            pnlSettings.Size = new Size(764, 148);
-            pnlSettings.TabIndex = 6;
+            pnlSettings.Size = new Size(764, 80);
+            pnlSettings.TabIndex = 0;
             // 
             // lblXmlFolder
             // 
@@ -140,53 +144,27 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseTemplate.Text = "浏览...";
             btnBrowseTemplate.Click += btnBrowseTemplate_Click;
             // 
-            // lblMode
+            // pnlNaming
             // 
-            lblMode.AutoSize = true;
-            lblMode.Location = new Point(12, 85);
-            lblMode.Name = "lblMode";
-            lblMode.Size = new Size(44, 17);
-            lblMode.TabIndex = 7;
-            lblMode.Text = "模式：";
-            // 
-            // pnlModeGroup
-            // 
-            pnlModeGroup.Controls.Add(rdoList);
-            pnlModeGroup.Controls.Add(rdoBatch);
-            pnlModeGroup.Location = new Point(55, 80);
-            pnlModeGroup.Name = "pnlModeGroup";
-            pnlModeGroup.Size = new Size(200, 26);
-            pnlModeGroup.TabIndex = 8;
-            // 
-            // rdoList
-            // 
-            rdoList.AutoSize = true;
-            rdoList.Checked = true;
-            rdoList.Location = new Point(3, 3);
-            rdoList.Name = "rdoList";
-            rdoList.Size = new Size(62, 21);
-            rdoList.TabIndex = 0;
-            rdoList.TabStop = true;
-            rdoList.Text = "按列表";
-            rdoList.CheckedChanged += rdoList_CheckedChanged;
-            // 
-            // rdoBatch
-            // 
-            rdoBatch.AutoSize = true;
-            rdoBatch.Location = new Point(70, 3);
-            rdoBatch.Name = "rdoBatch";
-            rdoBatch.Size = new Size(74, 21);
-            rdoBatch.TabIndex = 1;
-            rdoBatch.Text = "批量导出";
-            rdoBatch.CheckedChanged += rdoBatch_CheckedChanged;
+            pnlNaming.Controls.Add(lblNaming);
+            pnlNaming.Controls.Add(pnlNamingGroup);
+            pnlNaming.Controls.Add(lblFileName);
+            pnlNaming.Controls.Add(txtPrefix);
+            pnlNaming.Controls.Add(lblClassName);
+            pnlNaming.Controls.Add(txtSuffix);
+            pnlNaming.Dock = DockStyle.Top;
+            pnlNaming.Location = new Point(0, 80);
+            pnlNaming.Name = "pnlNaming";
+            pnlNaming.Size = new Size(764, 70);
+            pnlNaming.TabIndex = 1;
             // 
             // lblNaming
             // 
             lblNaming.AutoSize = true;
-            lblNaming.Location = new Point(12, 121);
+            lblNaming.Location = new Point(12, 10);
             lblNaming.Name = "lblNaming";
             lblNaming.Size = new Size(68, 17);
-            lblNaming.TabIndex = 9;
+            lblNaming.TabIndex = 0;
             lblNaming.Text = "文件命名：";
             // 
             // pnlNamingGroup
@@ -194,16 +172,16 @@ namespace ConfigExcelEnhancer.UI
             pnlNamingGroup.Controls.Add(rdoNameAsIs);
             pnlNamingGroup.Controls.Add(rdoNameCamel);
             pnlNamingGroup.Controls.Add(rdoNameSnake);
-            pnlNamingGroup.Location = new Point(76, 116);
+            pnlNamingGroup.Location = new Point(76, 5);
             pnlNamingGroup.Name = "pnlNamingGroup";
-            pnlNamingGroup.Size = new Size(400, 26);
-            pnlNamingGroup.TabIndex = 10;
+            pnlNamingGroup.Size = new Size(420, 26);
+            pnlNamingGroup.TabIndex = 1;
             // 
             // rdoNameAsIs
             // 
             rdoNameAsIs.AutoSize = true;
             rdoNameAsIs.Checked = true;
-            rdoNameAsIs.Location = new Point(5, 3);
+            rdoNameAsIs.Location = new Point(7, 3);
             rdoNameAsIs.Name = "rdoNameAsIs";
             rdoNameAsIs.Size = new Size(74, 21);
             rdoNameAsIs.TabIndex = 0;
@@ -214,140 +192,82 @@ namespace ConfigExcelEnhancer.UI
             // rdoNameCamel
             // 
             rdoNameCamel.AutoSize = true;
-            rdoNameCamel.Location = new Point(88, 3);
+            rdoNameCamel.Location = new Point(92, 3);
             rdoNameCamel.Name = "rdoNameCamel";
             rdoNameCamel.Size = new Size(134, 21);
             rdoNameCamel.TabIndex = 1;
-            rdoNameCamel.Text = "驼峰（首字母小写）";
+            rdoNameCamel.Text = "驼峰（首字母大写）";
             rdoNameCamel.CheckedChanged += rdoNameCamel_CheckedChanged;
             // 
             // rdoNameSnake
             // 
             rdoNameSnake.AutoSize = true;
-            rdoNameSnake.Location = new Point(225, 3);
+            rdoNameSnake.Location = new Point(232, 3);
             rdoNameSnake.Name = "rdoNameSnake";
             rdoNameSnake.Size = new Size(103, 21);
             rdoNameSnake.TabIndex = 2;
             rdoNameSnake.Text = "全小写_下划线";
             rdoNameSnake.CheckedChanged += rdoNameSnake_CheckedChanged;
             // 
-            // pnlListBar
-            // 
-            pnlListBar.Controls.Add(btnRefresh);
-            pnlListBar.Controls.Add(btnSelectAll);
-            pnlListBar.Controls.Add(btnDeselectAll);
-            pnlListBar.Dock = DockStyle.Top;
-            pnlListBar.Location = new Point(0, 218);
-            pnlListBar.Name = "pnlListBar";
-            pnlListBar.Size = new Size(764, 36);
-            pnlListBar.TabIndex = 4;
-            // 
-            // btnRefresh
-            // 
-            btnRefresh.Location = new Point(12, 4);
-            btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new Size(80, 26);
-            btnRefresh.TabIndex = 0;
-            btnRefresh.Text = "刷新列表";
-            btnRefresh.Click += btnRefresh_Click;
-            // 
-            // btnSelectAll
-            // 
-            btnSelectAll.Location = new Point(100, 4);
-            btnSelectAll.Name = "btnSelectAll";
-            btnSelectAll.Size = new Size(56, 26);
-            btnSelectAll.TabIndex = 1;
-            btnSelectAll.Text = "全选";
-            btnSelectAll.Click += btnSelectAll_Click;
-            // 
-            // btnDeselectAll
-            // 
-            btnDeselectAll.Location = new Point(164, 4);
-            btnDeselectAll.Name = "btnDeselectAll";
-            btnDeselectAll.Size = new Size(72, 26);
-            btnDeselectAll.TabIndex = 2;
-            btnDeselectAll.Text = "取消全选";
-            btnDeselectAll.Click += btnDeselectAll_Click;
-            // 
-            // pnlBatchExtra
-            // 
-            pnlBatchExtra.Controls.Add(lblTargetFolder);
-            pnlBatchExtra.Controls.Add(txtTargetFolder);
-            pnlBatchExtra.Controls.Add(btnBrowseTargetFolder);
-            pnlBatchExtra.Controls.Add(lblFileName);
-            pnlBatchExtra.Controls.Add(txtPrefix);
-            pnlBatchExtra.Controls.Add(lblClassName);
-            pnlBatchExtra.Controls.Add(txtSuffix);
-            pnlBatchExtra.Dock = DockStyle.Top;
-            pnlBatchExtra.Location = new Point(0, 148);
-            pnlBatchExtra.Name = "pnlBatchExtra";
-            pnlBatchExtra.Size = new Size(764, 70);
-            pnlBatchExtra.TabIndex = 5;
-            pnlBatchExtra.Visible = false;
-            // 
-            // lblTargetFolder
-            // 
-            lblTargetFolder.AutoSize = true;
-            lblTargetFolder.Location = new Point(12, 9);
-            lblTargetFolder.Name = "lblTargetFolder";
-            lblTargetFolder.Size = new Size(104, 17);
-            lblTargetFolder.TabIndex = 0;
-            lblTargetFolder.Text = "导出目标文件夹：";
-            // 
-            // txtTargetFolder
-            // 
-            txtTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtTargetFolder.Location = new Point(125, 4);
-            txtTargetFolder.Name = "txtTargetFolder";
-            txtTargetFolder.Size = new Size(544, 23);
-            txtTargetFolder.TabIndex = 1;
-            txtTargetFolder.TextChanged += txtTargetFolder_TextChanged;
-            // 
-            // btnBrowseTargetFolder
-            // 
-            btnBrowseTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseTargetFolder.Location = new Point(677, 3);
-            btnBrowseTargetFolder.Name = "btnBrowseTargetFolder";
-            btnBrowseTargetFolder.Size = new Size(75, 28);
-            btnBrowseTargetFolder.TabIndex = 2;
-            btnBrowseTargetFolder.Text = "浏览...";
-            btnBrowseTargetFolder.Click += btnBrowseTargetFolder_Click;
-            // 
             // lblFileName
             // 
             lblFileName.AutoSize = true;
-            lblFileName.Location = new Point(12, 45);
+            lblFileName.Location = new Point(12, 44);
             lblFileName.Name = "lblFileName";
             lblFileName.Size = new Size(56, 17);
-            lblFileName.TabIndex = 3;
+            lblFileName.TabIndex = 2;
             lblFileName.Text = "文件名：";
             // 
             // txtPrefix
             // 
-            txtPrefix.Location = new Point(74, 42);
+            txtPrefix.Location = new Point(76, 40);
             txtPrefix.Name = "txtPrefix";
             txtPrefix.PlaceholderText = "前缀（可空）";
             txtPrefix.Size = new Size(100, 23);
-            txtPrefix.TabIndex = 4;
+            txtPrefix.TabIndex = 3;
             txtPrefix.TextChanged += txtPrefix_TextChanged;
             // 
             // lblClassName
             // 
             lblClassName.AutoSize = true;
-            lblClassName.Location = new Point(178, 45);
+            lblClassName.Location = new Point(182, 44);
             lblClassName.Name = "lblClassName";
             lblClassName.Size = new Size(56, 17);
-            lblClassName.TabIndex = 5;
+            lblClassName.TabIndex = 4;
             lblClassName.Text = "数据类名";
             // 
             // txtSuffix
             // 
-            txtSuffix.Location = new Point(240, 42);
+            txtSuffix.Location = new Point(243, 40);
             txtSuffix.Name = "txtSuffix";
             txtSuffix.PlaceholderText = "后缀（可空）";
             txtSuffix.Size = new Size(100, 23);
-            txtSuffix.TabIndex = 6;
+            txtSuffix.TabIndex = 5;
             txtSuffix.TextChanged += txtSuffix_TextChanged;
+            // 
+            // tabMode
+            // 
+            tabMode.Controls.Add(tabPageList);
+            tabMode.Controls.Add(tabPageBatch);
+            tabMode.Dock = DockStyle.Fill;
+            tabMode.Location = new Point(0, 150);
+            tabMode.Name = "tabMode";
+            tabMode.SelectedIndex = 0;
+            tabMode.Size = new Size(764, 184);
+            tabMode.TabIndex = 2;
+            tabMode.SelectedIndexChanged += tabMode_SelectedIndexChanged;
+            // 
+            // tabPageList
+            // 
+            tabPageList.Controls.Add(dgvClasses);
+            tabPageList.Controls.Add(pnlListBar);
+            tabPageList.Controls.Add(pnlListCommon);
+            tabPageList.Location = new Point(4, 26);
+            tabPageList.Name = "tabPageList";
+            tabPageList.Padding = new Padding(3);
+            tabPageList.Size = new Size(756, 154);
+            tabPageList.TabIndex = 0;
+            tabPageList.Text = "按列表";
             // 
             // dgvClasses
             // 
@@ -356,13 +276,13 @@ namespace ConfigExcelEnhancer.UI
             dgvClasses.BackgroundColor = SystemColors.Window;
             dgvClasses.Columns.AddRange(new DataGridViewColumn[] { colEnabled, colClassName, colSourceFile, colTargetPath, colBrowse });
             dgvClasses.Dock = DockStyle.Fill;
-            dgvClasses.Location = new Point(0, 254);
+            dgvClasses.Location = new Point(3, 75);
             dgvClasses.Name = "dgvClasses";
             dgvClasses.RowHeadersVisible = false;
             dgvClasses.ScrollBars = ScrollBars.Vertical;
             dgvClasses.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvClasses.Size = new Size(764, 80);
-            dgvClasses.TabIndex = 3;
+            dgvClasses.Size = new Size(750, 76);
+            dgvClasses.TabIndex = 2;
             dgvClasses.CellContentClick += dgvClasses_CellContentClick;
             dgvClasses.CellValueChanged += dgvClasses_CellValueChanged;
             dgvClasses.CurrentCellDirtyStateChanged += dgvClasses_CurrentCellDirtyStateChanged;
@@ -403,16 +323,142 @@ namespace ConfigExcelEnhancer.UI
             colBrowse.UseColumnTextForButtonValue = true;
             colBrowse.Width = 32;
             // 
+            // pnlListBar
+            // 
+            pnlListBar.Controls.Add(btnRefresh);
+            pnlListBar.Controls.Add(btnSelectAll);
+            pnlListBar.Controls.Add(btnDeselectAll);
+            pnlListBar.Dock = DockStyle.Top;
+            pnlListBar.Location = new Point(3, 39);
+            pnlListBar.Name = "pnlListBar";
+            pnlListBar.Size = new Size(750, 36);
+            pnlListBar.TabIndex = 1;
+            // 
+            // btnRefresh
+            // 
+            btnRefresh.Location = new Point(6, 4);
+            btnRefresh.Name = "btnRefresh";
+            btnRefresh.Size = new Size(80, 26);
+            btnRefresh.TabIndex = 0;
+            btnRefresh.Text = "刷新列表";
+            btnRefresh.Click += btnRefresh_Click;
+            // 
+            // btnSelectAll
+            // 
+            btnSelectAll.Location = new Point(94, 4);
+            btnSelectAll.Name = "btnSelectAll";
+            btnSelectAll.Size = new Size(56, 26);
+            btnSelectAll.TabIndex = 1;
+            btnSelectAll.Text = "全选";
+            btnSelectAll.Click += btnSelectAll_Click;
+            // 
+            // btnDeselectAll
+            // 
+            btnDeselectAll.Location = new Point(158, 4);
+            btnDeselectAll.Name = "btnDeselectAll";
+            btnDeselectAll.Size = new Size(72, 26);
+            btnDeselectAll.TabIndex = 2;
+            btnDeselectAll.Text = "取消全选";
+            btnDeselectAll.Click += btnDeselectAll_Click;
+            // 
+            // pnlListCommon
+            // 
+            pnlListCommon.Controls.Add(lblListTargetFolder);
+            pnlListCommon.Controls.Add(txtListTargetFolder);
+            pnlListCommon.Controls.Add(btnBrowseListFolder);
+            pnlListCommon.Dock = DockStyle.Top;
+            pnlListCommon.Location = new Point(3, 3);
+            pnlListCommon.Name = "pnlListCommon";
+            pnlListCommon.Size = new Size(750, 36);
+            pnlListCommon.TabIndex = 0;
+            // 
+            // lblListTargetFolder
+            // 
+            lblListTargetFolder.AutoSize = true;
+            lblListTargetFolder.Location = new Point(6, 9);
+            lblListTargetFolder.Name = "lblListTargetFolder";
+            lblListTargetFolder.Size = new Size(104, 17);
+            lblListTargetFolder.TabIndex = 0;
+            lblListTargetFolder.Text = "通用导出文件夹：";
+            // 
+            // txtListTargetFolder
+            // 
+            txtListTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtListTargetFolder.Location = new Point(118, 5);
+            txtListTargetFolder.Name = "txtListTargetFolder";
+            txtListTargetFolder.Size = new Size(544, 23);
+            txtListTargetFolder.TabIndex = 1;
+            txtListTargetFolder.TextChanged += txtListTargetFolder_TextChanged;
+            // 
+            // btnBrowseListFolder
+            // 
+            btnBrowseListFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBrowseListFolder.Location = new Point(670, 3);
+            btnBrowseListFolder.Name = "btnBrowseListFolder";
+            btnBrowseListFolder.Size = new Size(75, 28);
+            btnBrowseListFolder.TabIndex = 2;
+            btnBrowseListFolder.Text = "浏览...";
+            btnBrowseListFolder.Click += btnBrowseListFolder_Click;
+            // 
+            // tabPageBatch
+            // 
+            tabPageBatch.Controls.Add(pnlBatchTarget);
+            tabPageBatch.Location = new Point(4, 26);
+            tabPageBatch.Name = "tabPageBatch";
+            tabPageBatch.Padding = new Padding(3);
+            tabPageBatch.Size = new Size(756, 154);
+            tabPageBatch.TabIndex = 1;
+            tabPageBatch.Text = "批量导出";
+            // 
+            // pnlBatchTarget
+            // 
+            pnlBatchTarget.Controls.Add(lblTargetFolder);
+            pnlBatchTarget.Controls.Add(txtTargetFolder);
+            pnlBatchTarget.Controls.Add(btnBrowseTargetFolder);
+            pnlBatchTarget.Dock = DockStyle.Top;
+            pnlBatchTarget.Location = new Point(3, 3);
+            pnlBatchTarget.Name = "pnlBatchTarget";
+            pnlBatchTarget.Size = new Size(750, 36);
+            pnlBatchTarget.TabIndex = 0;
+            // 
+            // lblTargetFolder
+            // 
+            lblTargetFolder.AutoSize = true;
+            lblTargetFolder.Location = new Point(6, 9);
+            lblTargetFolder.Name = "lblTargetFolder";
+            lblTargetFolder.Size = new Size(80, 17);
+            lblTargetFolder.TabIndex = 0;
+            lblTargetFolder.Text = "导出文件夹：";
+            // 
+            // txtTargetFolder
+            // 
+            txtTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtTargetFolder.Location = new Point(118, 5);
+            txtTargetFolder.Name = "txtTargetFolder";
+            txtTargetFolder.Size = new Size(544, 23);
+            txtTargetFolder.TabIndex = 1;
+            txtTargetFolder.TextChanged += txtTargetFolder_TextChanged;
+            // 
+            // btnBrowseTargetFolder
+            // 
+            btnBrowseTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBrowseTargetFolder.Location = new Point(670, 3);
+            btnBrowseTargetFolder.Name = "btnBrowseTargetFolder";
+            btnBrowseTargetFolder.Size = new Size(75, 28);
+            btnBrowseTargetFolder.TabIndex = 2;
+            btnBrowseTargetFolder.Text = "浏览...";
+            btnBrowseTargetFolder.Click += btnBrowseTargetFolder_Click;
+            // 
             // pnlAction
             // 
             pnlAction.Controls.Add(btnExport);
             pnlAction.Controls.Add(btnStop);
             pnlAction.Controls.Add(pbExport);
             pnlAction.Dock = DockStyle.Bottom;
-            pnlAction.Location = new Point(0, 484);
+            pnlAction.Location = new Point(0, 334);
             pnlAction.Name = "pnlAction";
             pnlAction.Size = new Size(764, 46);
-            pnlAction.TabIndex = 2;
+            pnlAction.TabIndex = 3;
             // 
             // btnExport
             // 
@@ -469,73 +515,75 @@ namespace ConfigExcelEnhancer.UI
             txtLog.Dock = DockStyle.Bottom;
             txtLog.Font = new Font("Consolas", 9F);
             txtLog.ForeColor = Color.LightGreen;
-            txtLog.Location = new Point(0, 334);
+            txtLog.Location = new Point(0, 380);
             txtLog.Name = "txtLog";
             txtLog.ReadOnly = true;
             txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
             txtLog.Size = new Size(764, 150);
-            txtLog.TabIndex = 1;
+            txtLog.TabIndex = 4;
             txtLog.Text = "";
             // 
             // ExcelExportTab
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(dgvClasses);
-            Controls.Add(txtLog);
+            Controls.Add(tabMode);
             Controls.Add(pnlAction);
-            Controls.Add(pnlListBar);
-            Controls.Add(pnlBatchExtra);
+            Controls.Add(txtLog);
+            Controls.Add(pnlNaming);
             Controls.Add(pnlSettings);
             Name = "ExcelExportTab";
             Size = new Size(764, 530);
             pnlSettings.ResumeLayout(false);
             pnlSettings.PerformLayout();
-            pnlModeGroup.ResumeLayout(false);
-            pnlModeGroup.PerformLayout();
+            pnlNaming.ResumeLayout(false);
+            pnlNaming.PerformLayout();
             pnlNamingGroup.ResumeLayout(false);
             pnlNamingGroup.PerformLayout();
-            pnlListBar.ResumeLayout(false);
-            pnlBatchExtra.ResumeLayout(false);
-            pnlBatchExtra.PerformLayout();
+            tabMode.ResumeLayout(false);
+            tabPageList.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgvClasses).EndInit();
+            pnlListBar.ResumeLayout(false);
+            pnlListCommon.ResumeLayout(false);
+            pnlListCommon.PerformLayout();
+            tabPageBatch.ResumeLayout(false);
+            pnlBatchTarget.ResumeLayout(false);
+            pnlBatchTarget.PerformLayout();
             pnlAction.ResumeLayout(false);
             ctxLog.ResumeLayout(false);
             ResumeLayout(false);
         }
 
         // ── 字段声明 ──────────────────────────────────────────────────────
-        private Panel       pnlSettings        = null!;
-        private Label       lblXmlFolder       = null!;
-        private TextBox     txtXmlFolder       = null!;
-        private Button      btnBrowseXmlFolder = null!;
-        private Label       lblTemplate        = null!;
-        private TextBox     txtDesignTemplate  = null!;
-        private Button      btnBrowseTemplate  = null!;
-        private Label       lblMode            = null!;
-        private Panel       pnlModeGroup       = null!;
-        private RadioButton rdoList            = null!;
-        private RadioButton rdoBatch           = null!;
-        private Label       lblNaming          = null!;
-        private Panel       pnlNamingGroup     = null!;
-        private RadioButton rdoNameAsIs        = null!;
-        private RadioButton rdoNameCamel       = null!;
-        private RadioButton rdoNameSnake       = null!;
+        private Panel       pnlSettings           = null!;
+        private Label       lblXmlFolder          = null!;
+        private TextBox     txtXmlFolder          = null!;
+        private Button      btnBrowseXmlFolder    = null!;
+        private Label       lblTemplate           = null!;
+        private TextBox     txtDesignTemplate     = null!;
+        private Button      btnBrowseTemplate     = null!;
 
-        private Panel  pnlListBar    = null!;
-        private Button btnRefresh    = null!;
-        private Button btnSelectAll  = null!;
-        private Button btnDeselectAll = null!;
+        private Panel       pnlNaming             = null!;
+        private Label       lblNaming             = null!;
+        private Panel       pnlNamingGroup        = null!;
+        private RadioButton rdoNameAsIs           = null!;
+        private RadioButton rdoNameCamel          = null!;
+        private RadioButton rdoNameSnake          = null!;
+        private Label       lblFileName           = null!;
+        private TextBox     txtPrefix             = null!;
+        private Label       lblClassName          = null!;
+        private TextBox     txtSuffix             = null!;
 
-        private Panel   pnlBatchExtra         = null!;
-        private Label   lblTargetFolder       = null!;
-        private TextBox txtTargetFolder       = null!;
-        private Button  btnBrowseTargetFolder = null!;
-        private Label   lblFileName           = null!;
-        private TextBox txtPrefix             = null!;
-        private Label   lblClassName          = null!;
-        private TextBox txtSuffix             = null!;
-
+        private TabControl  tabMode               = null!;
+        private TabPage     tabPageList           = null!;
+        private Panel       pnlListCommon         = null!;
+        private Label       lblListTargetFolder   = null!;
+        private TextBox     txtListTargetFolder   = null!;
+        private Button      btnBrowseListFolder   = null!;
+        private Panel       pnlListBar            = null!;
+        private Button      btnRefresh            = null!;
+        private Button      btnSelectAll          = null!;
+        private Button      btnDeselectAll        = null!;
         private DataGridView               dgvClasses    = null!;
         private DataGridViewCheckBoxColumn colEnabled    = null!;
         private DataGridViewTextBoxColumn  colClassName  = null!;
@@ -543,10 +591,16 @@ namespace ConfigExcelEnhancer.UI
         private DataGridViewTextBoxColumn  colTargetPath = null!;
         private DataGridViewButtonColumn   colBrowse     = null!;
 
-        private Panel       pnlAction = null!;
-        private Button      btnExport = null!;
-        private Button      btnStop   = null!;
-        private ProgressBar pbExport  = null!;
+        private TabPage     tabPageBatch          = null!;
+        private Panel       pnlBatchTarget        = null!;
+        private Label       lblTargetFolder       = null!;
+        private TextBox     txtTargetFolder       = null!;
+        private Button      btnBrowseTargetFolder = null!;
+
+        private Panel       pnlAction             = null!;
+        private Button      btnExport             = null!;
+        private Button      btnStop               = null!;
+        private ProgressBar pbExport              = null!;
 
         private ContextMenuStrip  ctxLog              = null!;
         private ToolStripMenuItem ctxMenuItemClearLog = null!;

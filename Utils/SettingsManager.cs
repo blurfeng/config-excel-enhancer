@@ -103,9 +103,10 @@ namespace ConfigExcelEnhancer.Utils
             s.TablesClassPath            = FunctionLibrary.ToProjectRelative(s.TablesClassPath, baseDir);
             s.EnumExcelFiles             = s.EnumExcelFiles.Select(p => FunctionLibrary.ToProjectRelative(p, baseDir)).ToList();
             s.TableDesignTargetFiles     = s.TableDesignTargetFiles.Select(p => FunctionLibrary.ToProjectRelative(p, baseDir)).ToList();
-            s.ExcelExportXmlFolder       = FunctionLibrary.ToProjectRelative(s.ExcelExportXmlFolder, baseDir);
-            s.ExcelExportDesignTemplate  = FunctionLibrary.ToProjectRelative(s.ExcelExportDesignTemplate, baseDir);
-            s.ExcelExportTargetFolder    = FunctionLibrary.ToProjectRelative(s.ExcelExportTargetFolder, baseDir);
+            s.ExcelExportXmlFolder          = FunctionLibrary.ToProjectRelative(s.ExcelExportXmlFolder, baseDir);
+            s.ExcelExportDesignTemplate     = FunctionLibrary.ToProjectRelative(s.ExcelExportDesignTemplate, baseDir);
+            s.ExcelExportListTargetFolder   = FunctionLibrary.ToProjectRelative(s.ExcelExportListTargetFolder, baseDir);
+            s.ExcelExportTargetFolder       = FunctionLibrary.ToProjectRelative(s.ExcelExportTargetFolder, baseDir);
             foreach (var cfg in s.ExcelExportClassConfigs)
             {
                 cfg.SourceXmlFile   = FunctionLibrary.ToProjectRelative(cfg.SourceXmlFile, baseDir);
@@ -137,9 +138,10 @@ namespace ConfigExcelEnhancer.Utils
             s.TablesClassPath            = FunctionLibrary.ToAbsoluteFromRoot(s.TablesClassPath, baseDir);
             s.EnumExcelFiles             = s.EnumExcelFiles.Select(p => FunctionLibrary.ToAbsoluteFromRoot(p, baseDir)).ToList();
             s.TableDesignTargetFiles     = s.TableDesignTargetFiles.Select(p => FunctionLibrary.ToAbsoluteFromRoot(p, baseDir)).ToList();
-            s.ExcelExportXmlFolder       = FunctionLibrary.ToAbsoluteFromRoot(s.ExcelExportXmlFolder, baseDir);
-            s.ExcelExportDesignTemplate  = FunctionLibrary.ToAbsoluteFromRoot(s.ExcelExportDesignTemplate, baseDir);
-            s.ExcelExportTargetFolder    = FunctionLibrary.ToAbsoluteFromRoot(s.ExcelExportTargetFolder, baseDir);
+            s.ExcelExportXmlFolder          = FunctionLibrary.ToAbsoluteFromRoot(s.ExcelExportXmlFolder, baseDir);
+            s.ExcelExportDesignTemplate     = FunctionLibrary.ToAbsoluteFromRoot(s.ExcelExportDesignTemplate, baseDir);
+            s.ExcelExportListTargetFolder   = FunctionLibrary.ToAbsoluteFromRoot(s.ExcelExportListTargetFolder, baseDir);
+            s.ExcelExportTargetFolder       = FunctionLibrary.ToAbsoluteFromRoot(s.ExcelExportTargetFolder, baseDir);
             foreach (var cfg in s.ExcelExportClassConfigs)
             {
                 cfg.SourceXmlFile   = FunctionLibrary.ToAbsoluteFromRoot(cfg.SourceXmlFile, baseDir);
@@ -215,6 +217,7 @@ namespace ConfigExcelEnhancer.Utils
                 SourceXmlFile   = c.SourceXmlFile,
                 TargetExcelPath = c.TargetExcelPath,
             }).ToList(),
+            ExcelExportListTargetFolder       = src.ExcelExportListTargetFolder,
             ExcelExportTargetFolder           = src.ExcelExportTargetFolder,
             ExcelExportNamePrefix             = src.ExcelExportNamePrefix,
             ExcelExportNameSuffix             = src.ExcelExportNameSuffix,
