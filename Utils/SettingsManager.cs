@@ -143,7 +143,8 @@ namespace ConfigExcelEnhancer.Utils
         }
 
         /// <summary>
-        /// 若 <paramref name="path"/> 在 BaseDirectory 下，则返回相对路径；否则原样返回。
+        /// 将 <paramref name="path"/> 转为相对于 BaseDirectory 的相对路径（含 .. 上跳）。
+        /// 仅当路径跨越不同盘符（无法表达相对关系）时原样保留绝对路径。
         /// 空字符串直接返回。
         /// </summary>
         private static string ToRelativeIfPossible(string path)
@@ -153,19 +154,13 @@ namespace ConfigExcelEnhancer.Utils
 
             try
             {
-                // 统一用完整路径比较，避免大小写 / 斜杠差异
-                var baseDir = Path.GetFullPath(AppContext.BaseDirectory)
-                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-                    + Path.DirectorySeparatorChar;
-
                 var fullPath = Path.GetFullPath(path);
-
-                if (fullPath.StartsWith(baseDir, StringComparison.OrdinalIgnoreCase))
-                {
-                    // 转为以 "." 开头的相对路径，跨平台友好
-                    var rel = Path.GetRelativePath(AppContext.BaseDirectory, fullPath);
-                    return rel;
-                }
+                // GetRelativePath 在路径跨盘符时会原样返回绝对路径，其余情况均可计算出含 .. 的相对路径
+                var rel = Path.GetRelativePath(AppContext.BaseDirectory, fullPath);
+                // 若仍为绝对路径说明跨盘符，无法使用相对路径，原样保留
+                if (Path.IsPathRooted(rel))
+                    return path;
+                return rel;
             }
             catch
             {
