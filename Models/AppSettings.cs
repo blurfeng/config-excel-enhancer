@@ -88,6 +88,9 @@ namespace ConfigExcelEnhancer.Models
         /// </summary>
         public string ProjectName { get; set; } = string.Empty;
 
+        /// <summary>自动查找根目录时是否启用模糊匹配（忽略大小写及连字符/下划线）。</summary>
+        public bool FuzzyFindProjectRoot { get; set; } = true;
+
         /// <summary>主页"一键导出"是否包含 Enum 验证步骤。</summary>
         public bool HomeIncludeEnum { get; set; } = true;
 
@@ -113,5 +116,8 @@ namespace ConfigExcelEnhancer.Models
 
         /// <summary>批量导出模式：导出文件名后缀。</summary>
         public string ExcelExportNameSuffix { get; set; } = string.Empty;
+
+        /// <summary>导出 Excel 文件的类名转换方式：0 = 类名不变，1 = 驼峰（首字母小写），2 = 全小写_下划线。</summary>
+        public int ExcelExportNameConvention { get; set; } = 0;
     }
 }

@@ -85,7 +85,9 @@ namespace ConfigExcelEnhancer.Utils
         private static string GetProjectRoot()
         {
             var root = LocalStateManager.Load().ProjectRoot;
-            return string.IsNullOrEmpty(root) ? AppContext.BaseDirectory : root;
+            return !string.IsNullOrEmpty(root) && Directory.Exists(root)
+                ? root
+                : AppContext.BaseDirectory;
         }
 
         /// <summary>
@@ -161,6 +163,7 @@ namespace ConfigExcelEnhancer.Utils
         private static AppSettings ShallowClone(AppSettings src) => new()
         {
             ProjectName                       = src.ProjectName,
+            FuzzyFindProjectRoot              = src.FuzzyFindProjectRoot,
             XmlDirectory                      = src.XmlDirectory,
             ExcelDirectory                    = src.ExcelDirectory,
             GenBatPath                        = src.GenBatPath,
@@ -215,6 +218,7 @@ namespace ConfigExcelEnhancer.Utils
             ExcelExportTargetFolder           = src.ExcelExportTargetFolder,
             ExcelExportNamePrefix             = src.ExcelExportNamePrefix,
             ExcelExportNameSuffix             = src.ExcelExportNameSuffix,
+            ExcelExportNameConvention         = src.ExcelExportNameConvention,
         };
     }
 }

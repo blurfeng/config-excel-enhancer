@@ -355,24 +355,41 @@ namespace ConfigExcelEnhancer.Core
         /// <summary>
         /// 从 <paramref name="startDir"/> 开始逐级向上查找名为 <paramref name="projectName"/> 的兄弟目录。
         /// 最多向上查找 4 层，找到则返回其完整路径，否则返回 null。
+        /// <para>
+        /// <paramref name="fuzzy"/> 为 true 时启用模糊匹配：忽略大小写，并将连字符、下划线、空格
+        /// 统一移除后再比较（如 "GodsClash" 可匹配 "gods-clash"、"gods_clash"）。
+        /// </para>
         /// </summary>
-        public static string? TryFindProjectRoot(string projectName, string startDir)
+        public static string? TryFindProjectRoot(string projectName, string startDir, bool fuzzy = false)
         {
             if (string.IsNullOrEmpty(projectName) || string.IsNullOrEmpty(startDir))
                 return null;
+
+            var normalizedTarget = fuzzy ? NormalizeProjectName(projectName) : null;
 
             var dir = startDir;
             for (int i = 0; i < 4; i++)
             {
                 var parent = Path.GetDirectoryName(dir);
                 if (parent == null) break;
-                var candidate = Path.Combine(parent, projectName);
-                if (Directory.Exists(candidate))
-                    return candidate;
+
+                foreach (var sibling in Directory.EnumerateDirectories(parent))
+                {
+                    var siblingName = Path.GetFileName(sibling);
+                    bool match = fuzzy
+                        ? NormalizeProjectName(siblingName) == normalizedTarget
+                        : string.Equals(siblingName, projectName, StringComparison.OrdinalIgnoreCase);
+                    if (match)
+                        return sibling;
+                }
+
                 dir = parent;
             }
             return null;
         }
+
+        private static string NormalizeProjectName(string name)
+            => name.Replace("-", "").Replace("_", "").Replace(" ", "").ToLowerInvariant();
 
         /// <summary>
         /// 将 <paramref name="absolutePath"/> 转为相对于 <paramref name="baseDir"/> 的相对路径。
@@ -405,6 +422,40 @@ namespace ConfigExcelEnhancer.Core
             var effectiveBase = string.IsNullOrEmpty(baseDir) ? AppContext.BaseDirectory : baseDir;
             try { return Path.GetFullPath(Path.Combine(effectiveBase, path)); }
             catch { return path; }
+        }
+
+        // ── 命名规范转换 ──────────────────────────────────────────────────────
+
+        /// <summary>
+        /// 按命名规范转换名称：0 = 类名不变，1 = 驼峰（首字母小写），2 = 全小写_下划线。
+        /// </summary>
+        public static string ApplyNameConvention(string name, int convention) => convention switch
+        {
+            1 => ToCamelCase(name),
+            2 => ToSnakeCase(name),
+            _ => name,
+        };
+
+        private static string ToCamelCase(string name)
+            => string.IsNullOrEmpty(name) ? name : char.ToLower(name[0]) + name[1..];
+
+        private static string ToSnakeCase(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return name;
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < name.Length; i++)
+            {
+                char c = name[i];
+                if (char.IsUpper(c) && i > 0)
+                {
+                    bool prevIsLower = char.IsLower(name[i - 1]);
+                    bool nextIsLower = i + 1 < name.Length && char.IsLower(name[i + 1]);
+                    if (prevIsLower || nextIsLower)
+                        sb.Append('_');
+                }
+                sb.Append(char.ToLower(c));
+            }
+            return sb.ToString();
         }
     }
 }

@@ -40,6 +40,10 @@ namespace ConfigExcelEnhancer.UI
             else
                 rdoList.Checked = true;
 
+            rdoNameAsIs.Checked  = Settings.ExcelExportNameConvention == 0;
+            rdoNameCamel.Checked = Settings.ExcelExportNameConvention == 1;
+            rdoNameSnake.Checked = Settings.ExcelExportNameConvention == 2;
+
             // 如果已有 XML 文件夹，且有保存的配置，直接恢复列表（不重新扫描）
             if (!string.IsNullOrEmpty(Settings.ExcelExportXmlFolder))
                 RefreshClassList(rescanXml: false);
@@ -82,6 +86,21 @@ namespace ConfigExcelEnhancer.UI
                 dgvClasses.Visible    = false;
                 pnlBatchExtra.Visible = true;
             }
+        }
+
+        private void rdoNameAsIs_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rdoNameAsIs.Checked) Settings.ExcelExportNameConvention = 0;
+        }
+
+        private void rdoNameCamel_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rdoNameCamel.Checked) Settings.ExcelExportNameConvention = 1;
+        }
+
+        private void rdoNameSnake_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rdoNameSnake.Checked) Settings.ExcelExportNameConvention = 2;
         }
 
         // ── 浏览按钮 ──────────────────────────────────────────────────────
@@ -228,7 +247,7 @@ namespace ConfigExcelEnhancer.UI
                 if (row.Tag is not ExcelExportClassConfig cfg) return;
 
                 string? existing = string.IsNullOrEmpty(cfg.TargetExcelPath) ? null : cfg.TargetExcelPath;
-                string defaultName = cfg.ClassName + ".xlsx";
+                string defaultName = FunctionLibrary.ApplyNameConvention(cfg.ClassName, Settings.ExcelExportNameConvention) + ".xlsx";
                 var path = DialogHelper.BrowseSaveFile(
                     $"选择 [{cfg.ClassName}] 的导出 Excel 文件",
                     "Excel 文件 (*.xlsx)|*.xlsx",
@@ -414,7 +433,8 @@ namespace ConfigExcelEnhancer.UI
 
                 foreach (var bean in leafBeans)
                 {
-                    string fileName = $"{prefix}{bean.Name}{suffix}.xlsx";
+                    string baseName = FunctionLibrary.ApplyNameConvention(bean.Name, Settings.ExcelExportNameConvention);
+                    string fileName = $"{prefix}{baseName}{suffix}.xlsx";
                     string path     = Path.Combine(targetFolder, fileName);
                     var allFields   = BeanParser.GetAllFields(bean, beanMap);
                     tasks.Add(new ExcelExportTask(bean, allFields, path));

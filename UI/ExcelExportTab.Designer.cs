@@ -25,6 +25,11 @@ namespace ConfigExcelEnhancer.UI
             pnlModeGroup = new Panel();
             rdoList = new RadioButton();
             rdoBatch = new RadioButton();
+            lblNaming = new Label();
+            pnlNamingGroup = new Panel();
+            rdoNameAsIs = new RadioButton();
+            rdoNameCamel = new RadioButton();
+            rdoNameSnake = new RadioButton();
             pnlListBar = new Panel();
             btnRefresh = new Button();
             btnSelectAll = new Button();
@@ -53,6 +58,7 @@ namespace ConfigExcelEnhancer.UI
             txtLog = new RichTextBox();
             pnlSettings.SuspendLayout();
             pnlModeGroup.SuspendLayout();
+            pnlNamingGroup.SuspendLayout();
             pnlListBar.SuspendLayout();
             pnlBatchExtra.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvClasses).BeginInit();
@@ -70,10 +76,12 @@ namespace ConfigExcelEnhancer.UI
             pnlSettings.Controls.Add(btnBrowseTemplate);
             pnlSettings.Controls.Add(lblMode);
             pnlSettings.Controls.Add(pnlModeGroup);
+            pnlSettings.Controls.Add(lblNaming);
+            pnlSettings.Controls.Add(pnlNamingGroup);
             pnlSettings.Dock = DockStyle.Top;
             pnlSettings.Location = new Point(0, 0);
             pnlSettings.Name = "pnlSettings";
-            pnlSettings.Size = new Size(764, 110);
+            pnlSettings.Size = new Size(764, 148);
             pnlSettings.TabIndex = 6;
             // 
             // lblXmlFolder
@@ -172,13 +180,64 @@ namespace ConfigExcelEnhancer.UI
             rdoBatch.Text = "批量导出";
             rdoBatch.CheckedChanged += rdoBatch_CheckedChanged;
             // 
+            // lblNaming
+            // 
+            lblNaming.AutoSize = true;
+            lblNaming.Location = new Point(12, 121);
+            lblNaming.Name = "lblNaming";
+            lblNaming.Size = new Size(68, 17);
+            lblNaming.TabIndex = 9;
+            lblNaming.Text = "文件命名：";
+            // 
+            // pnlNamingGroup
+            // 
+            pnlNamingGroup.Controls.Add(rdoNameAsIs);
+            pnlNamingGroup.Controls.Add(rdoNameCamel);
+            pnlNamingGroup.Controls.Add(rdoNameSnake);
+            pnlNamingGroup.Location = new Point(76, 116);
+            pnlNamingGroup.Name = "pnlNamingGroup";
+            pnlNamingGroup.Size = new Size(400, 26);
+            pnlNamingGroup.TabIndex = 10;
+            // 
+            // rdoNameAsIs
+            // 
+            rdoNameAsIs.AutoSize = true;
+            rdoNameAsIs.Checked = true;
+            rdoNameAsIs.Location = new Point(5, 3);
+            rdoNameAsIs.Name = "rdoNameAsIs";
+            rdoNameAsIs.Size = new Size(74, 21);
+            rdoNameAsIs.TabIndex = 0;
+            rdoNameAsIs.TabStop = true;
+            rdoNameAsIs.Text = "类名不变";
+            rdoNameAsIs.CheckedChanged += rdoNameAsIs_CheckedChanged;
+            // 
+            // rdoNameCamel
+            // 
+            rdoNameCamel.AutoSize = true;
+            rdoNameCamel.Location = new Point(88, 3);
+            rdoNameCamel.Name = "rdoNameCamel";
+            rdoNameCamel.Size = new Size(134, 21);
+            rdoNameCamel.TabIndex = 1;
+            rdoNameCamel.Text = "驼峰（首字母小写）";
+            rdoNameCamel.CheckedChanged += rdoNameCamel_CheckedChanged;
+            // 
+            // rdoNameSnake
+            // 
+            rdoNameSnake.AutoSize = true;
+            rdoNameSnake.Location = new Point(225, 3);
+            rdoNameSnake.Name = "rdoNameSnake";
+            rdoNameSnake.Size = new Size(103, 21);
+            rdoNameSnake.TabIndex = 2;
+            rdoNameSnake.Text = "全小写_下划线";
+            rdoNameSnake.CheckedChanged += rdoNameSnake_CheckedChanged;
+            // 
             // pnlListBar
             // 
             pnlListBar.Controls.Add(btnRefresh);
             pnlListBar.Controls.Add(btnSelectAll);
             pnlListBar.Controls.Add(btnDeselectAll);
             pnlListBar.Dock = DockStyle.Top;
-            pnlListBar.Location = new Point(0, 180);
+            pnlListBar.Location = new Point(0, 218);
             pnlListBar.Name = "pnlListBar";
             pnlListBar.Size = new Size(764, 36);
             pnlListBar.TabIndex = 4;
@@ -220,7 +279,7 @@ namespace ConfigExcelEnhancer.UI
             pnlBatchExtra.Controls.Add(lblClassName);
             pnlBatchExtra.Controls.Add(txtSuffix);
             pnlBatchExtra.Dock = DockStyle.Top;
-            pnlBatchExtra.Location = new Point(0, 110);
+            pnlBatchExtra.Location = new Point(0, 148);
             pnlBatchExtra.Name = "pnlBatchExtra";
             pnlBatchExtra.Size = new Size(764, 70);
             pnlBatchExtra.TabIndex = 5;
@@ -297,12 +356,12 @@ namespace ConfigExcelEnhancer.UI
             dgvClasses.BackgroundColor = SystemColors.Window;
             dgvClasses.Columns.AddRange(new DataGridViewColumn[] { colEnabled, colClassName, colSourceFile, colTargetPath, colBrowse });
             dgvClasses.Dock = DockStyle.Fill;
-            dgvClasses.Location = new Point(0, 216);
+            dgvClasses.Location = new Point(0, 254);
             dgvClasses.Name = "dgvClasses";
             dgvClasses.RowHeadersVisible = false;
             dgvClasses.ScrollBars = ScrollBars.Vertical;
             dgvClasses.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvClasses.Size = new Size(764, 118);
+            dgvClasses.Size = new Size(764, 80);
             dgvClasses.TabIndex = 3;
             dgvClasses.CellContentClick += dgvClasses_CellContentClick;
             dgvClasses.CellValueChanged += dgvClasses_CellValueChanged;
@@ -434,6 +493,8 @@ namespace ConfigExcelEnhancer.UI
             pnlSettings.PerformLayout();
             pnlModeGroup.ResumeLayout(false);
             pnlModeGroup.PerformLayout();
+            pnlNamingGroup.ResumeLayout(false);
+            pnlNamingGroup.PerformLayout();
             pnlListBar.ResumeLayout(false);
             pnlBatchExtra.ResumeLayout(false);
             pnlBatchExtra.PerformLayout();
@@ -455,6 +516,11 @@ namespace ConfigExcelEnhancer.UI
         private Panel       pnlModeGroup       = null!;
         private RadioButton rdoList            = null!;
         private RadioButton rdoBatch           = null!;
+        private Label       lblNaming          = null!;
+        private Panel       pnlNamingGroup     = null!;
+        private RadioButton rdoNameAsIs        = null!;
+        private RadioButton rdoNameCamel       = null!;
+        private RadioButton rdoNameSnake       = null!;
 
         private Panel  pnlListBar    = null!;
         private Button btnRefresh    = null!;

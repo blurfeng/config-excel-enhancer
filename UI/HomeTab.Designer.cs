@@ -28,6 +28,7 @@ namespace ConfigExcelEnhancer.UI
             pnlProjectName = new Panel();
             lblProjectNameCaption = new Label();
             txtProjectName = new TextBox();
+            chkFuzzyFindProjectRoot = new CheckBox();
             pnlActions = new Panel();
             grpStatus = new GroupBox();
             lblProjectRootDot = new Label();
@@ -158,6 +159,7 @@ namespace ConfigExcelEnhancer.UI
             //
             pnlProjectName.Controls.Add(lblProjectNameCaption);
             pnlProjectName.Controls.Add(txtProjectName);
+            pnlProjectName.Controls.Add(chkFuzzyFindProjectRoot);
             pnlProjectName.Dock = DockStyle.Top;
             pnlProjectName.Location = new Point(0, 80);
             pnlProjectName.Name = "pnlProjectName";
@@ -181,6 +183,18 @@ namespace ConfigExcelEnhancer.UI
             txtProjectName.Size = new Size(200, 23);
             txtProjectName.TabIndex = 1;
             toolTip.SetToolTip(txtProjectName, "通用参数，用于自动设置本地项目根目录等。");
+            //
+            // chkFuzzyFindProjectRoot
+            //
+            chkFuzzyFindProjectRoot.AutoSize = true;
+            chkFuzzyFindProjectRoot.Checked = true;
+            chkFuzzyFindProjectRoot.CheckState = CheckState.Checked;
+            chkFuzzyFindProjectRoot.Location = new Point(280, 7);
+            chkFuzzyFindProjectRoot.Name = "chkFuzzyFindProjectRoot";
+            chkFuzzyFindProjectRoot.TabIndex = 2;
+            chkFuzzyFindProjectRoot.Text = "模糊查找根目录";
+            toolTip.SetToolTip(chkFuzzyFindProjectRoot, "勾选后忽略大小写及连字符/下划线差异（如 GodsClash 可匹配 gods-clash）");
+            chkFuzzyFindProjectRoot.UseVisualStyleBackColor = true;
             //
             // pnlActions
             //
@@ -432,6 +446,7 @@ namespace ConfigExcelEnhancer.UI
         private Panel pnlProjectName;
         private Label lblProjectNameCaption;
         private TextBox txtProjectName;
+        private CheckBox chkFuzzyFindProjectRoot;
 
         private Panel pnlActions;
         private Button btnOneClick;

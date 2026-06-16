@@ -54,9 +54,11 @@ namespace ConfigExcelEnhancer.UI
             chkIncludeEnum.Checked = settings.HomeIncludeEnum;
             chkIncludeEnum.CheckedChanged += chkIncludeEnum_CheckedChanged;
 
-            // 项目名称输入框
+            // 项目名称输入框 + 模糊查找勾选项
             txtProjectName.Text = settings.ProjectName;
             txtProjectName.Leave += txtProjectName_Leave;
+            chkFuzzyFindProjectRoot.Checked = settings.FuzzyFindProjectRoot;
+            chkFuzzyFindProjectRoot.CheckedChanged += chkFuzzyFindProjectRoot_CheckedChanged;
 
             // 若本机项目根目录未配置，尝试按项目名称自动定位
             TryAutoDetectProjectRoot();
@@ -523,7 +525,7 @@ namespace ConfigExcelEnhancer.UI
             if (!string.IsNullOrEmpty(_localState.ProjectRoot) && Directory.Exists(_localState.ProjectRoot))
                 return;
 
-            var found = FunctionLibrary.TryFindProjectRoot(_settings.ProjectName, AppContext.BaseDirectory);
+            var found = FunctionLibrary.TryFindProjectRoot(_settings.ProjectName, AppContext.BaseDirectory, _settings.FuzzyFindProjectRoot);
             if (found == null) return;
 
             _localState.ProjectRoot = found;
@@ -537,6 +539,15 @@ namespace ConfigExcelEnhancer.UI
             if (string.Equals(newName, _settings.ProjectName, StringComparison.Ordinal)) return;
 
             _settings.ProjectName = newName;
+            SettingsManager.Save(_settings);
+            TryAutoDetectProjectRoot();
+            RefreshStatus();
+        }
+
+        private void chkFuzzyFindProjectRoot_CheckedChanged(object? sender, EventArgs e)
+        {
+            if (_settings == null) return;
+            _settings.FuzzyFindProjectRoot = chkFuzzyFindProjectRoot.Checked;
             SettingsManager.Save(_settings);
             TryAutoDetectProjectRoot();
             RefreshStatus();
