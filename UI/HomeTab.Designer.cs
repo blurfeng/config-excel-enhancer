@@ -324,12 +324,15 @@ namespace ConfigExcelEnhancer.UI
             // 
             // lblProjectRoot
             // 
-            lblProjectRoot.AutoSize = true;
+            lblProjectRoot.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            lblProjectRoot.AutoEllipsis = true;
+            lblProjectRoot.AutoSize = false;
             lblProjectRoot.Location = new Point(28, 9);
             lblProjectRoot.Name = "lblProjectRoot";
-            lblProjectRoot.Size = new Size(140, 17);
+            lblProjectRoot.Size = new Size(481, 17);
             lblProjectRoot.TabIndex = 31;
             lblProjectRoot.Text = "本地项目根目录：未配置";
+            lblProjectRoot.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // pnlSecCheck
             // 

@@ -99,6 +99,7 @@ namespace ConfigExcelEnhancer.UI
             {
                 lblProjectRootDot.ForeColor = Color.Red;
                 lblProjectRoot.Text = "本地项目根目录：未配置";
+                toolTip.SetToolTip(lblProjectRoot, "本地项目根目录：未配置");
             }
             else
             {
@@ -109,11 +110,13 @@ namespace ConfigExcelEnhancer.UI
                 {
                     lblProjectRootDot.ForeColor = Color.LightGreen;
                     lblProjectRoot.Text = $"本地项目根目录：{ShortenPath(projectRoot, 60)}";
+                    toolTip.SetToolTip(lblProjectRoot, $"本地项目根目录：{projectRoot}");
                 }
                 else
                 {
                     lblProjectRootDot.ForeColor = Color.Yellow;
                     lblProjectRoot.Text = $"本地项目根目录：{ShortenPath(projectRoot, 45)}（本地名称与项目名称不一致，项目名称：{_settings.ProjectName}）";
+                    toolTip.SetToolTip(lblProjectRoot, $"本地项目根目录：{projectRoot}\n（本地名称与项目名称不一致，项目名称：{_settings.ProjectName}）");
                 }
             }
 
