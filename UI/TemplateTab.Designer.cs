@@ -17,20 +17,24 @@ namespace ConfigExcelEnhancer.UI
             toolTip = new ToolTip(components);
             txtTablesClassPath = new TextBox();
             btnBrowseTablesClass = new Button();
+            btnOpenTablesClass = new Button();
             btnRunAll = new Button();
             btnRunSelected = new Button();
             btnCancel = new Button();
             txtDisplayName = new TextBox();
             txtJsonFile = new TextBox();
             btnBrowseJsonFile = new Button();
+            btnOpenJsonFile = new Button();
             txtOutputDir = new TextBox();
             btnBrowseOutputDir = new Button();
+            btnOpenOutputDir = new Button();
             txtNamespace = new TextBox();
             chkUseGeneratedSuffix = new CheckBox();
             txtNameField = new TextBox();
             chkGenerateIds = new CheckBox();
             txtIdsOutputDir = new TextBox();
             btnBrowseIdsOutputDir = new Button();
+            btnOpenIdsOutputDir = new Button();
             txtIdsNamespace = new TextBox();
             txtIdsClassName = new TextBox();
             chkIdsUsePartialClass = new CheckBox();
@@ -96,7 +100,7 @@ namespace ConfigExcelEnhancer.UI
             txtTablesClassPath.Location = new Point(90, 10);
             txtTablesClassPath.Name = "txtTablesClassPath";
             txtTablesClassPath.PlaceholderText = "Luban 生成的 Tables.cs 路径（全局一次性配置）";
-            txtTablesClassPath.Size = new Size(637, 23);
+            txtTablesClassPath.Size = new Size(611, 23);
             txtTablesClassPath.TabIndex = 1;
             toolTip.SetToolTip(txtTablesClassPath, "Luban 生成的 Tables.cs 绝对路径。\n工具通过解析该文件自动推断每张表的命名空间和访问器属性，\n无需手动填写 $TableAccessor、$LubanNamespace 等占位符。\n同一个项目只需配置一次，所有导出任务共用。");
             txtTablesClassPath.TextChanged += txtTablesClassPath_TextChanged;
@@ -111,6 +115,17 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseTablesClass.Text = "浏览...";
             toolTip.SetToolTip(btnBrowseTablesClass, "点击选择 Tables.cs 文件（通常在 Luban 输出目录下）。");
             btnBrowseTablesClass.Click += btnBrowseTablesClass_Click;
+            //
+            // btnOpenTablesClass
+            //
+            btnOpenTablesClass.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenTablesClass.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenTablesClass.Location = new Point(705, 7);
+            btnOpenTablesClass.Name = "btnOpenTablesClass";
+            btnOpenTablesClass.Size = new Size(28, 28);
+            btnOpenTablesClass.TabIndex = 3;
+            btnOpenTablesClass.Text = "📂";
+            btnOpenTablesClass.Click += btnOpenTablesClass_Click;
             // 
             // btnRunAll
             // 
@@ -159,7 +174,7 @@ namespace ConfigExcelEnhancer.UI
             txtJsonFile.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtJsonFile.Location = new Point(90, 51);
             txtJsonFile.Name = "txtJsonFile";
-            txtJsonFile.Size = new Size(408, 23);
+            txtJsonFile.Size = new Size(382, 23);
             txtJsonFile.TabIndex = 1;
             toolTip.SetToolTip(txtJsonFile, "Luban 导出的 JSON 配置文件路径。\n工具通过该文件名在 Tables.cs 中查找对应的表映射。\n例如：...\\output\\unit_tbpawn.json");
             txtJsonFile.TextChanged += txtJsonFile_TextChanged;
@@ -174,13 +189,24 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseJsonFile.Text = "浏览...";
             toolTip.SetToolTip(btnBrowseJsonFile, "点击选择 Luban 导出的 JSON 文件。");
             btnBrowseJsonFile.Click += btnBrowseJsonFile_Click;
+            //
+            // btnOpenJsonFile
+            //
+            btnOpenJsonFile.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenJsonFile.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenJsonFile.Location = new Point(476, 49);
+            btnOpenJsonFile.Name = "btnOpenJsonFile";
+            btnOpenJsonFile.Size = new Size(26, 26);
+            btnOpenJsonFile.TabIndex = 3;
+            btnOpenJsonFile.Text = "📂";
+            btnOpenJsonFile.Click += btnOpenJsonFile_Click;
             // 
             // txtOutputDir
             // 
             txtOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtOutputDir.Location = new Point(90, 78);
             txtOutputDir.Name = "txtOutputDir";
-            txtOutputDir.Size = new Size(408, 23);
+            txtOutputDir.Size = new Size(383, 23);
             txtOutputDir.TabIndex = 3;
             toolTip.SetToolTip(txtOutputDir, "生成的模板类 .cs 文件的输出目录（绝对路径）。\n目录不存在时会自动创建。");
             txtOutputDir.TextChanged += txtOutputDir_TextChanged;
@@ -195,6 +221,17 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseOutputDir.Text = "浏览...";
             toolTip.SetToolTip(btnBrowseOutputDir, "点击选择模板类的输出目录。");
             btnBrowseOutputDir.Click += btnBrowseOutputDir_Click;
+            //
+            // btnOpenOutputDir
+            //
+            btnOpenOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenOutputDir.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenOutputDir.Location = new Point(477, 76);
+            btnOpenOutputDir.Name = "btnOpenOutputDir";
+            btnOpenOutputDir.Size = new Size(26, 26);
+            btnOpenOutputDir.TabIndex = 5;
+            btnOpenOutputDir.Text = "📂";
+            btnOpenOutputDir.Click += btnOpenOutputDir_Click;
             // 
             // txtNamespace
             // 
@@ -247,7 +284,7 @@ namespace ConfigExcelEnhancer.UI
             txtIdsOutputDir.Location = new Point(90, 51);
             txtIdsOutputDir.Name = "txtIdsOutputDir";
             txtIdsOutputDir.PlaceholderText = "Ids 文件输出目录";
-            txtIdsOutputDir.Size = new Size(408, 23);
+            txtIdsOutputDir.Size = new Size(382, 23);
             txtIdsOutputDir.TabIndex = 1;
             toolTip.SetToolTip(txtIdsOutputDir, "Ids 文件的输出目录（不含文件名）。\n文件名由工具自动拼：{类名}[.Generated].cs。");
             txtIdsOutputDir.TextChanged += txtIdsOutputDir_TextChanged;
@@ -262,6 +299,17 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseIdsOutputDir.Text = "浏览...";
             toolTip.SetToolTip(btnBrowseIdsOutputDir, "点击选择 Ids 文件的输出目录。");
             btnBrowseIdsOutputDir.Click += btnBrowseIdsOutputDir_Click;
+            //
+            // btnOpenIdsOutputDir
+            //
+            btnOpenIdsOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenIdsOutputDir.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenIdsOutputDir.Location = new Point(476, 49);
+            btnOpenIdsOutputDir.Name = "btnOpenIdsOutputDir";
+            btnOpenIdsOutputDir.Size = new Size(26, 26);
+            btnOpenIdsOutputDir.TabIndex = 3;
+            btnOpenIdsOutputDir.Text = "📂";
+            btnOpenIdsOutputDir.Click += btnOpenIdsOutputDir_Click;
             // 
             // txtIdsNamespace
             // 
@@ -395,6 +443,7 @@ namespace ConfigExcelEnhancer.UI
             pnlTablesPath.Controls.Add(lblTablesClass);
             pnlTablesPath.Controls.Add(txtTablesClassPath);
             pnlTablesPath.Controls.Add(btnBrowseTablesClass);
+            pnlTablesPath.Controls.Add(btnOpenTablesClass);
             pnlTablesPath.Dock = DockStyle.Top;
             pnlTablesPath.Location = new Point(0, 0);
             pnlTablesPath.Name = "pnlTablesPath";
@@ -503,6 +552,7 @@ namespace ConfigExcelEnhancer.UI
             grpIds.Controls.Add(lblIdsOutputDir);
             grpIds.Controls.Add(txtIdsOutputDir);
             grpIds.Controls.Add(btnBrowseIdsOutputDir);
+            grpIds.Controls.Add(btnOpenIdsOutputDir);
             grpIds.Controls.Add(lblIdsNamespace);
             grpIds.Controls.Add(txtIdsNamespace);
             grpIds.Controls.Add(lblIdsClassName);
@@ -551,9 +601,11 @@ namespace ConfigExcelEnhancer.UI
             grpBasic.Controls.Add(lblJsonFile);
             grpBasic.Controls.Add(txtJsonFile);
             grpBasic.Controls.Add(btnBrowseJsonFile);
+            grpBasic.Controls.Add(btnOpenJsonFile);
             grpBasic.Controls.Add(lblOutputDir);
             grpBasic.Controls.Add(txtOutputDir);
             grpBasic.Controls.Add(btnBrowseOutputDir);
+            grpBasic.Controls.Add(btnOpenOutputDir);
             grpBasic.Controls.Add(lblNamespace);
             grpBasic.Controls.Add(txtNamespace);
             grpBasic.Controls.Add(chkUseGeneratedSuffix);
@@ -710,6 +762,7 @@ namespace ConfigExcelEnhancer.UI
         private Label lblTablesClass = null!;
         private TextBox txtTablesClassPath = null!;
         private Button btnBrowseTablesClass = null!;
+        private Button btnOpenTablesClass = null!;
         private Panel pnlLeft = null!;
         private ListBox lstJobs = null!;
         private Panel pnlJobButtons = null!;
@@ -722,9 +775,11 @@ namespace ConfigExcelEnhancer.UI
         private Label lblJsonFile = null!;
         private TextBox txtJsonFile = null!;
         private Button btnBrowseJsonFile = null!;
+        private Button btnOpenJsonFile = null!;
         private Label lblOutputDir = null!;
         private TextBox txtOutputDir = null!;
         private Button btnBrowseOutputDir = null!;
+        private Button btnOpenOutputDir = null!;
         private Label lblNamespace = null!;
         private TextBox txtNamespace = null!;
         private CheckBox chkUseGeneratedSuffix = null!;
@@ -735,6 +790,7 @@ namespace ConfigExcelEnhancer.UI
         private Label lblIdsOutputDir = null!;
         private TextBox txtIdsOutputDir = null!;
         private Button btnBrowseIdsOutputDir = null!;
+        private Button btnOpenIdsOutputDir = null!;
         private Label lblIdsNamespace = null!;
         private TextBox txtIdsNamespace = null!;
         private Label lblIdsClassName = null!;

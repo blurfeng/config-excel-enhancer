@@ -41,6 +41,9 @@ namespace ConfigExcelEnhancer.UI
         /// <summary>获取当前已加载的 Luban 配置（用于外部检查配置一致性）。</summary>
         public LubanConfig? GetCurrentConfig() => _config;
 
+        private void btnOpenBat_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(Settings.GenBatPath);
+
         private void btnBrowseBat_Click(object sender, EventArgs e)
         {
             var files = DialogHelper.BrowseFiles(

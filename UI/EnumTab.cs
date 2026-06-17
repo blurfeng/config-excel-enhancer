@@ -38,6 +38,9 @@ namespace ConfigExcelEnhancer.UI
         private void txtXmlDir_TextChanged(object sender, EventArgs e)
             => Settings.XmlDirectory = txtXmlDir.Text;
 
+        private void btnOpenXml_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtXmlDir.Text);
+
         private void excelPicker_ValueChanged(object? sender, EventArgs e)
         {
             Settings.EnumExcelMode = excelPicker.Mode;

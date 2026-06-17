@@ -130,6 +130,9 @@ namespace ConfigExcelEnhancer.UI
                 txtDir.Text = path;
         }
 
+        private void btnOpenDir_Click(object sender, EventArgs e)
+            => Utils.ExplorerHelper.RevealInExplorer(txtDir.Text);
+
         private void btnAdd_Click(object sender, EventArgs e)
         {
             var files = DialogHelper.BrowseFiles(

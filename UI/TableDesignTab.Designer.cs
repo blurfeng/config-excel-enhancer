@@ -18,6 +18,7 @@ namespace ConfigExcelEnhancer.UI
             lblSourceExcel = new Label();
             txtSourceExcel = new TextBox();
             btnBrowseSource = new Button();
+            btnOpenSource = new Button();
             excelPicker = new ExcelPickerControl();
             grpOptions = new GroupBox();
             chkIgnoreUnderscoreFiles = new CheckBox();
@@ -50,6 +51,7 @@ namespace ConfigExcelEnhancer.UI
             pnlConfig.Controls.Add(lblSourceExcel);
             pnlConfig.Controls.Add(txtSourceExcel);
             pnlConfig.Controls.Add(btnBrowseSource);
+            pnlConfig.Controls.Add(btnOpenSource);
             pnlConfig.Controls.Add(excelPicker);
             pnlConfig.Controls.Add(grpOptions);
             pnlConfig.Controls.Add(btnApply);
@@ -75,7 +77,7 @@ namespace ConfigExcelEnhancer.UI
             txtSourceExcel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtSourceExcel.Location = new Point(92, 11);
             txtSourceExcel.Name = "txtSourceExcel";
-            txtSourceExcel.Size = new Size(480, 23);
+            txtSourceExcel.Size = new Size(452, 23);
             txtSourceExcel.TabIndex = 2;
             txtSourceExcel.TextChanged += txtSourceExcel_TextChanged;
             // 
@@ -88,6 +90,17 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseSource.TabIndex = 3;
             btnBrowseSource.Text = "浏览...";
             btnBrowseSource.Click += btnBrowseSource_Click;
+            //
+            // btnOpenSource
+            //
+            btnOpenSource.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenSource.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenSource.Location = new Point(548, 9);
+            btnOpenSource.Name = "btnOpenSource";
+            btnOpenSource.Size = new Size(28, 28);
+            btnOpenSource.TabIndex = 4;
+            btnOpenSource.Text = "📂";
+            btnOpenSource.Click += btnOpenSource_Click;
             // 
             // excelPicker
             // 
@@ -329,6 +342,7 @@ namespace ConfigExcelEnhancer.UI
         private Label lblSourceExcel = null!;
         private TextBox txtSourceExcel = null!;
         private Button btnBrowseSource = null!;
+        private Button btnOpenSource = null!;
         private ExcelPickerControl excelPicker = null!;
         private GroupBox grpOptions = null!;
         private CheckBox chkIgnoreUnderscoreFiles = null!;

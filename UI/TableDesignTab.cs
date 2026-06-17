@@ -91,6 +91,9 @@ namespace ConfigExcelEnhancer.UI
 
         // ── 文件 / 目录浏览 ───────────────────────────────────────────────
 
+        private void btnOpenSource_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtSourceExcel.Text);
+
         private void btnBrowseSource_Click(object sender, EventArgs e)
         {
             var files = DialogHelper.BrowseFiles(

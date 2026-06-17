@@ -18,6 +18,7 @@ namespace ConfigExcelEnhancer.UI
             lblXmlDir = new Label();
             txtXmlDir = new TextBox();
             btnBrowseXml = new Button();
+            btnOpenXml = new Button();
             excelPicker = new ExcelPickerControl();
             grpOptions = new GroupBox();
             chkHideEnumDataSheet = new CheckBox();
@@ -41,6 +42,7 @@ namespace ConfigExcelEnhancer.UI
             pnlConfig.Controls.Add(lblXmlDir);
             pnlConfig.Controls.Add(txtXmlDir);
             pnlConfig.Controls.Add(btnBrowseXml);
+            pnlConfig.Controls.Add(btnOpenXml);
             pnlConfig.Controls.Add(excelPicker);
             pnlConfig.Controls.Add(grpOptions);
             pnlConfig.Controls.Add(btnUpdate);
@@ -66,7 +68,7 @@ namespace ConfigExcelEnhancer.UI
             txtXmlDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtXmlDir.Location = new Point(141, 12);
             txtXmlDir.Name = "txtXmlDir";
-            txtXmlDir.Size = new Size(431, 23);
+            txtXmlDir.Size = new Size(403, 23);
             txtXmlDir.TabIndex = 2;
             txtXmlDir.TextChanged += txtXmlDir_TextChanged;
             // 
@@ -79,6 +81,17 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseXml.TabIndex = 3;
             btnBrowseXml.Text = "浏览...";
             btnBrowseXml.Click += btnBrowseXml_Click;
+            //
+            // btnOpenXml
+            //
+            btnOpenXml.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenXml.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenXml.Location = new Point(548, 9);
+            btnOpenXml.Name = "btnOpenXml";
+            btnOpenXml.Size = new Size(28, 28);
+            btnOpenXml.TabIndex = 4;
+            btnOpenXml.Text = "📂";
+            btnOpenXml.Click += btnOpenXml_Click;
             // 
             // excelPicker
             // 
@@ -217,6 +230,7 @@ namespace ConfigExcelEnhancer.UI
         private Label lblXmlDir = null!;
         private TextBox txtXmlDir = null!;
         private Button btnBrowseXml = null!;
+        private Button btnOpenXml = null!;
         private ExcelPickerControl excelPicker = null!;
         private GroupBox grpOptions = null!;
         private CheckBox chkHideEnumDataSheet = null!;

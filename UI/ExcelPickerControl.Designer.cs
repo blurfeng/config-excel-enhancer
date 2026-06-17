@@ -19,6 +19,7 @@ namespace ConfigExcelEnhancer.UI
             rdoList = new RadioButton();
             pnlDirMode = new Panel();
             txtDir = new TextBox();
+            btnOpenDir = new Button();
             btnBrowse = new Button();
             pnlListMode = new Panel();
             lstFiles = new ListBox();
@@ -74,6 +75,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             pnlDirMode.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             pnlDirMode.Controls.Add(txtDir);
+            pnlDirMode.Controls.Add(btnOpenDir);
             pnlDirMode.Controls.Add(btnBrowse);
             pnlDirMode.Location = new Point(0, 34);
             pnlDirMode.Name = "pnlDirMode";
@@ -85,7 +87,7 @@ namespace ConfigExcelEnhancer.UI
             txtDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtDir.Location = new Point(0, 4);
             txtDir.Name = "txtDir";
-            txtDir.Size = new Size(560, 23);
+            txtDir.Size = new Size(532, 23);
             txtDir.TabIndex = 0;
             txtDir.TextChanged += txtDir_TextChanged;
             // 
@@ -98,6 +100,17 @@ namespace ConfigExcelEnhancer.UI
             btnBrowse.TabIndex = 1;
             btnBrowse.Text = "浏览...";
             btnBrowse.Click += btnBrowse_Click;
+            //
+            // btnOpenDir
+            //
+            btnOpenDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenDir.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenDir.Location = new Point(536, 2);
+            btnOpenDir.Name = "btnOpenDir";
+            btnOpenDir.Size = new Size(28, 28);
+            btnOpenDir.TabIndex = 2;
+            btnOpenDir.Text = "📂";
+            btnOpenDir.Click += btnOpenDir_Click;
             // 
             // pnlListMode
             // 
@@ -177,6 +190,7 @@ namespace ConfigExcelEnhancer.UI
         private RadioButton rdoList = null!;
         private Panel pnlDirMode = null!;
         private TextBox txtDir = null!;
+        private Button btnOpenDir = null!;
         private Button btnBrowse = null!;
         private Panel pnlListMode = null!;
         private ListBox lstFiles = null!;

@@ -87,6 +87,18 @@ namespace ConfigExcelEnhancer.UI
 
         // ── 浏览按钮 ──────────────────────────────────────────────────────
 
+        private void btnOpenXmlFolder_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtXmlFolder.Text);
+
+        private void btnOpenTemplate_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtDesignTemplate.Text);
+
+        private void btnOpenListFolder_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtListTargetFolder.Text);
+
+        private void btnOpenTargetFolder_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtTargetFolder.Text);
+
         private void btnBrowseXmlFolder_Click(object sender, EventArgs e)
         {
             var path = DialogHelper.BrowseFolder("选择 XML 定义文件夹", txtXmlFolder.Text);

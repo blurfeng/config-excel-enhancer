@@ -18,6 +18,7 @@ namespace ConfigExcelEnhancer.UI
             lblBatPath = new Label();
             txtBatPath = new TextBox();
             btnBrowseBat = new Button();
+            btnOpenBat = new Button();
             pnlConfigActions = new Panel();
             btnSave = new Button();
             btnReset = new Button();
@@ -41,6 +42,7 @@ namespace ConfigExcelEnhancer.UI
             pnlTop.Controls.Add(lblBatPath);
             pnlTop.Controls.Add(txtBatPath);
             pnlTop.Controls.Add(btnBrowseBat);
+            pnlTop.Controls.Add(btnOpenBat);
             pnlTop.Dock = DockStyle.Top;
             pnlTop.Location = new Point(0, 0);
             pnlTop.Name = "pnlTop";
@@ -62,7 +64,7 @@ namespace ConfigExcelEnhancer.UI
             txtBatPath.Location = new Point(90, 9);
             txtBatPath.Name = "txtBatPath";
             txtBatPath.ReadOnly = true;
-            txtBatPath.Size = new Size(480, 23);
+            txtBatPath.Size = new Size(454, 23);
             txtBatPath.TabIndex = 1;
             // 
             // btnBrowseBat
@@ -74,6 +76,17 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseBat.TabIndex = 2;
             btnBrowseBat.Text = "浏览...";
             btnBrowseBat.Click += btnBrowseBat_Click;
+            //
+            // btnOpenBat
+            //
+            btnOpenBat.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenBat.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenBat.Location = new Point(548, 8);
+            btnOpenBat.Name = "btnOpenBat";
+            btnOpenBat.Size = new Size(28, 28);
+            btnOpenBat.TabIndex = 3;
+            btnOpenBat.Text = "📂";
+            btnOpenBat.Click += btnOpenBat_Click;
             // 
             // pnlConfigActions
             // 
@@ -211,6 +224,7 @@ namespace ConfigExcelEnhancer.UI
         private Label lblBatPath = null!;
         private TextBox txtBatPath = null!;
         private Button btnBrowseBat = null!;
+        private Button btnOpenBat = null!;
         private Panel pnlConfigActions = null!;
         private Button btnSave = null!;
         private Button btnReset = null!;

@@ -18,9 +18,11 @@ namespace ConfigExcelEnhancer.UI
             lblXmlFolder = new Label();
             txtXmlFolder = new TextBox();
             btnBrowseXmlFolder = new Button();
+            btnOpenXmlFolder = new Button();
             lblTemplate = new Label();
             txtDesignTemplate = new TextBox();
             btnBrowseTemplate = new Button();
+            btnOpenTemplate = new Button();
             pnlNaming = new Panel();
             lblNaming = new Label();
             pnlNamingGroup = new Panel();
@@ -47,11 +49,13 @@ namespace ConfigExcelEnhancer.UI
             lblListTargetFolder = new Label();
             txtListTargetFolder = new TextBox();
             btnBrowseListFolder = new Button();
+            btnOpenListFolder = new Button();
             tabPageBatch = new TabPage();
             pnlBatchTarget = new Panel();
             lblTargetFolder = new Label();
             txtTargetFolder = new TextBox();
             btnBrowseTargetFolder = new Button();
+            btnOpenTargetFolder = new Button();
             pnlAction = new Panel();
             btnExport = new Button();
             btnCancel = new Button();
@@ -83,9 +87,11 @@ namespace ConfigExcelEnhancer.UI
             pnlSettings.Controls.Add(lblXmlFolder);
             pnlSettings.Controls.Add(txtXmlFolder);
             pnlSettings.Controls.Add(btnBrowseXmlFolder);
+            pnlSettings.Controls.Add(btnOpenXmlFolder);
             pnlSettings.Controls.Add(lblTemplate);
             pnlSettings.Controls.Add(txtDesignTemplate);
             pnlSettings.Controls.Add(btnBrowseTemplate);
+            pnlSettings.Controls.Add(btnOpenTemplate);
             pnlSettings.Dock = DockStyle.Top;
             pnlSettings.Location = new Point(0, 0);
             pnlSettings.Name = "pnlSettings";
@@ -106,7 +112,7 @@ namespace ConfigExcelEnhancer.UI
             txtXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtXmlFolder.Location = new Point(125, 9);
             txtXmlFolder.Name = "txtXmlFolder";
-            txtXmlFolder.Size = new Size(544, 23);
+            txtXmlFolder.Size = new Size(518, 23);
             txtXmlFolder.TabIndex = 1;
             txtXmlFolder.TextChanged += txtXmlFolder_TextChanged;
             // 
@@ -119,6 +125,17 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseXmlFolder.TabIndex = 2;
             btnBrowseXmlFolder.Text = "浏览...";
             btnBrowseXmlFolder.Click += btnBrowseXmlFolder_Click;
+            //
+            // btnOpenXmlFolder
+            //
+            btnOpenXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenXmlFolder.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenXmlFolder.Location = new Point(647, 6);
+            btnOpenXmlFolder.Name = "btnOpenXmlFolder";
+            btnOpenXmlFolder.Size = new Size(28, 28);
+            btnOpenXmlFolder.TabIndex = 6;
+            btnOpenXmlFolder.Text = "📂";
+            btnOpenXmlFolder.Click += btnOpenXmlFolder_Click;
             // 
             // lblTemplate
             // 
@@ -134,7 +151,7 @@ namespace ConfigExcelEnhancer.UI
             txtDesignTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtDesignTemplate.Location = new Point(125, 45);
             txtDesignTemplate.Name = "txtDesignTemplate";
-            txtDesignTemplate.Size = new Size(544, 23);
+            txtDesignTemplate.Size = new Size(518, 23);
             txtDesignTemplate.TabIndex = 4;
             txtDesignTemplate.TextChanged += txtDesignTemplate_TextChanged;
             // 
@@ -147,6 +164,17 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseTemplate.TabIndex = 5;
             btnBrowseTemplate.Text = "浏览...";
             btnBrowseTemplate.Click += btnBrowseTemplate_Click;
+            //
+            // btnOpenTemplate
+            //
+            btnOpenTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenTemplate.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenTemplate.Location = new Point(647, 44);
+            btnOpenTemplate.Name = "btnOpenTemplate";
+            btnOpenTemplate.Size = new Size(28, 28);
+            btnOpenTemplate.TabIndex = 7;
+            btnOpenTemplate.Text = "📂";
+            btnOpenTemplate.Click += btnOpenTemplate_Click;
             // 
             // pnlNaming
             // 
@@ -370,6 +398,7 @@ namespace ConfigExcelEnhancer.UI
             pnlListCommon.Controls.Add(lblListTargetFolder);
             pnlListCommon.Controls.Add(txtListTargetFolder);
             pnlListCommon.Controls.Add(btnBrowseListFolder);
+            pnlListCommon.Controls.Add(btnOpenListFolder);
             pnlListCommon.Dock = DockStyle.Top;
             pnlListCommon.Location = new Point(3, 3);
             pnlListCommon.Name = "pnlListCommon";
@@ -390,7 +419,7 @@ namespace ConfigExcelEnhancer.UI
             txtListTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtListTargetFolder.Location = new Point(118, 5);
             txtListTargetFolder.Name = "txtListTargetFolder";
-            txtListTargetFolder.Size = new Size(544, 23);
+            txtListTargetFolder.Size = new Size(518, 23);
             txtListTargetFolder.TabIndex = 1;
             txtListTargetFolder.TextChanged += txtListTargetFolder_TextChanged;
             // 
@@ -403,6 +432,17 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseListFolder.TabIndex = 2;
             btnBrowseListFolder.Text = "浏览...";
             btnBrowseListFolder.Click += btnBrowseListFolder_Click;
+            //
+            // btnOpenListFolder
+            //
+            btnOpenListFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenListFolder.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenListFolder.Location = new Point(640, 3);
+            btnOpenListFolder.Name = "btnOpenListFolder";
+            btnOpenListFolder.Size = new Size(28, 28);
+            btnOpenListFolder.TabIndex = 3;
+            btnOpenListFolder.Text = "📂";
+            btnOpenListFolder.Click += btnOpenListFolder_Click;
             // 
             // tabPageBatch
             // 
@@ -419,6 +459,7 @@ namespace ConfigExcelEnhancer.UI
             pnlBatchTarget.Controls.Add(lblTargetFolder);
             pnlBatchTarget.Controls.Add(txtTargetFolder);
             pnlBatchTarget.Controls.Add(btnBrowseTargetFolder);
+            pnlBatchTarget.Controls.Add(btnOpenTargetFolder);
             pnlBatchTarget.Dock = DockStyle.Top;
             pnlBatchTarget.Location = new Point(3, 3);
             pnlBatchTarget.Name = "pnlBatchTarget";
@@ -439,7 +480,7 @@ namespace ConfigExcelEnhancer.UI
             txtTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtTargetFolder.Location = new Point(118, 5);
             txtTargetFolder.Name = "txtTargetFolder";
-            txtTargetFolder.Size = new Size(544, 23);
+            txtTargetFolder.Size = new Size(518, 23);
             txtTargetFolder.TabIndex = 1;
             txtTargetFolder.TextChanged += txtTargetFolder_TextChanged;
             // 
@@ -452,6 +493,17 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseTargetFolder.TabIndex = 2;
             btnBrowseTargetFolder.Text = "浏览...";
             btnBrowseTargetFolder.Click += btnBrowseTargetFolder_Click;
+            //
+            // btnOpenTargetFolder
+            //
+            btnOpenTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenTargetFolder.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenTargetFolder.Location = new Point(640, 3);
+            btnOpenTargetFolder.Name = "btnOpenTargetFolder";
+            btnOpenTargetFolder.Size = new Size(28, 28);
+            btnOpenTargetFolder.TabIndex = 3;
+            btnOpenTargetFolder.Text = "📂";
+            btnOpenTargetFolder.Click += btnOpenTargetFolder_Click;
             // 
             // pnlAction
             // 
@@ -598,9 +650,11 @@ namespace ConfigExcelEnhancer.UI
         private Label       lblXmlFolder          = null!;
         private TextBox     txtXmlFolder          = null!;
         private Button      btnBrowseXmlFolder    = null!;
+        private Button      btnOpenXmlFolder      = null!;
         private Label       lblTemplate           = null!;
         private TextBox     txtDesignTemplate     = null!;
         private Button      btnBrowseTemplate     = null!;
+        private Button      btnOpenTemplate       = null!;
 
         private Panel       pnlNaming             = null!;
         private Label       lblNaming             = null!;
@@ -619,6 +673,7 @@ namespace ConfigExcelEnhancer.UI
         private Label       lblListTargetFolder   = null!;
         private TextBox     txtListTargetFolder   = null!;
         private Button      btnBrowseListFolder   = null!;
+        private Button      btnOpenListFolder     = null!;
         private Panel       pnlListBar            = null!;
         private Button      btnRefresh            = null!;
         private Button      btnSelectAll          = null!;
@@ -635,6 +690,7 @@ namespace ConfigExcelEnhancer.UI
         private Label       lblTargetFolder       = null!;
         private TextBox     txtTargetFolder       = null!;
         private Button      btnBrowseTargetFolder = null!;
+        private Button      btnOpenTargetFolder   = null!;
 
         private Panel       pnlAction             = null!;
         private Button      btnExport             = null!;

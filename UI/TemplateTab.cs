@@ -321,6 +321,18 @@ namespace ConfigExcelEnhancer.UI
 
         // ── 浏览按钮 ─────────────────────────────────────────────────────
 
+        private void btnOpenTablesClass_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtTablesClassPath.Text);
+
+        private void btnOpenJsonFile_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtJsonFile.Text);
+
+        private void btnOpenOutputDir_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtOutputDir.Text);
+
+        private void btnOpenIdsOutputDir_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtIdsOutputDir.Text);
+
         private void btnBrowseTablesClass_Click(object sender, EventArgs e)
         {
             var files = DialogHelper.BrowseFiles("选择 Tables.cs", "C# 文件 (*.cs)|*.cs", Settings.TablesClassPath);
