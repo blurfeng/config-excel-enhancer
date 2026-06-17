@@ -72,10 +72,12 @@ namespace ConfigExcelEnhancer.UI
                 txtProjectName.Leave += txtProjectName_Leave;
                 chkFuzzyFindProjectRoot.CheckedChanged += chkFuzzyFindProjectRoot_CheckedChanged;
                 _initialized = true;
-            }
 
-            // 若本机项目根目录未配置，尝试按项目名称自动定位
-            TryAutoDetectProjectRoot();
+                // 自动检测仅在首次初始化（启动）时执行：避免后续重载（尤其是「清空」
+                // 触发的重载）把用户显式清空的根目录又自动填回。改名、模糊查找勾选等
+                // 显式操作会单独调用 TryAutoDetectProjectRoot，不受此处影响。
+                TryAutoDetectProjectRoot();
+            }
         }
 
         /// <summary>
