@@ -437,8 +437,12 @@ namespace ConfigExcelEnhancer.Core
 
         /// <summary>
         /// 将 <paramref name="absolutePath"/> 转为相对于 <paramref name="baseDir"/> 的相对路径。
-        /// 跨盘符或转换失败时原样返回绝对路径。
-        /// <paramref name="baseDir"/> 为空时直接返回原路径（无法计算相对关系）。
+        /// <list type="bullet">
+        ///   <item>仅当路径位于 <paramref name="baseDir"/> 子树内时才相对化（保证可移植、不污染版本控制）。</item>
+        ///   <item>子树外的路径（相对结果以 ".." 开头）、跨盘符或转换失败时原样返回绝对路径，
+        ///   避免临时跨项目路径被错误绑定到根目录、在根目录变更后解析到错误位置。</item>
+        ///   <item><paramref name="baseDir"/> 为空时直接返回原路径（无法计算相对关系）。</item>
+        /// </list>
         /// </summary>
         public static string ToProjectRelative(string absolutePath, string baseDir)
         {
@@ -447,7 +451,18 @@ namespace ConfigExcelEnhancer.Core
             try
             {
                 var rel = Path.GetRelativePath(baseDir, Path.GetFullPath(absolutePath));
-                return Path.IsPathRooted(rel) ? absolutePath : rel;
+
+                // 跨盘符：GetRelativePath 返回 rooted 路径 → 原样存绝对路径。
+                if (Path.IsPathRooted(rel)) return absolutePath;
+
+                // 子树外：相对结果以 ".." 段开头 → 原样存绝对路径，
+                // 不生成依赖根目录的 "..\" 相对路径。
+                if (rel == ".." ||
+                    rel.StartsWith(".." + Path.DirectorySeparatorChar) ||
+                    rel.StartsWith(".." + Path.AltDirectorySeparatorChar))
+                    return absolutePath;
+
+                return rel;
             }
             catch { return absolutePath; }
         }
