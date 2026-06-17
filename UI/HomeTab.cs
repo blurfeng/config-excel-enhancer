@@ -20,6 +20,16 @@ namespace ConfigExcelEnhancer.UI
 
         private bool _isExecuting;
 
+        // 控件事件是否已订阅。Initialize 可能因 LoadSettings 重载而被多次调用，
+        // 用此守卫确保控件事件只订阅一次，避免重复订阅。
+        private bool _initialized;
+
+        /// <summary>
+        /// 本机项目根目录（ProjectRoot）发生变化时触发（自动探测或手动浏览）。
+        /// MainForm 订阅此事件以从磁盘按新根重新还原设置。
+        /// </summary>
+        public event EventHandler? ProjectRootChanged;
+
         protected override RichTextBox? LogBox => txtLog;
 
         public HomeTab()
@@ -50,15 +60,19 @@ namespace ConfigExcelEnhancer.UI
             _settings = settings;
             _localState = localState;
 
-            // 从设置加载勾选状态
+            // 从设置加载勾选状态与项目名称（每次重载都刷新）
             chkIncludeEnum.Checked = settings.HomeIncludeEnum;
-            chkIncludeEnum.CheckedChanged += chkIncludeEnum_CheckedChanged;
-
-            // 项目名称输入框 + 模糊查找勾选项
             txtProjectName.Text = settings.ProjectName;
-            txtProjectName.Leave += txtProjectName_Leave;
             chkFuzzyFindProjectRoot.Checked = settings.FuzzyFindProjectRoot;
-            chkFuzzyFindProjectRoot.CheckedChanged += chkFuzzyFindProjectRoot_CheckedChanged;
+
+            // 控件事件只订阅一次，避免重载时重复订阅
+            if (!_initialized)
+            {
+                chkIncludeEnum.CheckedChanged += chkIncludeEnum_CheckedChanged;
+                txtProjectName.Leave += txtProjectName_Leave;
+                chkFuzzyFindProjectRoot.CheckedChanged += chkFuzzyFindProjectRoot_CheckedChanged;
+                _initialized = true;
+            }
 
             // 若本机项目根目录未配置，尝试按项目名称自动定位
             TryAutoDetectProjectRoot();
@@ -143,14 +157,12 @@ namespace ConfigExcelEnhancer.UI
                 lblLastExportDot.ForeColor = Color.Gray;
             }
 
-            // 配置检查
-            var (issues, commonRoot) = BuildConfigIssues();
+            // 配置检查（公共根仅用于内部一致性判断，显示的「根目录」统一为本地项目根目录）
+            var (issues, _) = BuildConfigIssues();
             if (issues.Count == 0)
             {
                 lblCheckDot.ForeColor = Color.LightGreen;
-                lblCheckSummary.Text = !string.IsNullOrEmpty(commonRoot)
-                    ? $"配置检查通过，根目录：{ShortenPath(commonRoot, 80)}"
-                    : "配置检查通过";
+                lblCheckSummary.Text = "配置检查通过";
                 lblCheckIssues.Visible = false;
             }
             else
@@ -216,6 +228,10 @@ namespace ConfigExcelEnhancer.UI
             string projectRoot = _localState?.ProjectRoot ?? string.Empty;
             if (string.IsNullOrEmpty(projectRoot) || !Directory.Exists(projectRoot))
                 issues.Add("项目根目录未配置或不存在，settings.json 中的相对路径将无法正确解析");
+
+            // 检查 0.1：gen.bat 未配置或文件不存在（与主页红点判定一致）
+            if (string.IsNullOrEmpty(_settings.GenBatPath) || !File.Exists(_settings.GenBatPath))
+                issues.Add("gen.bat 未配置或文件不存在");
 
             var allPaths = new List<string>();
             var genBatDir = string.Empty;
@@ -514,13 +530,12 @@ namespace ConfigExcelEnhancer.UI
         // ── 项目根目录 ────────────────────────────────────────
 
         /// <summary>
-        /// 若本机项目根目录未配置或已失效，且 ProjectName 已设置，
-        /// 则从工具目录逐级向上查找同名文件夹并自动设置 ProjectRoot。
+        /// 若本机项目根目录未配置或已失效，则自动定位并设置 ProjectRoot（不覆盖已有的有效根目录）。
+        /// 定位策略见 <see cref="FindProjectRootHybrid"/>。
         /// </summary>
         private void TryAutoDetectProjectRoot()
         {
             if (_localState == null || _settings == null) return;
-            if (string.IsNullOrEmpty(_settings.ProjectName)) return;
 
             // 已有有效的根目录则不覆盖
             if (!string.IsNullOrEmpty(_localState.ProjectRoot) && Directory.Exists(_localState.ProjectRoot))
@@ -528,16 +543,36 @@ namespace ConfigExcelEnhancer.UI
 
             try
             {
-                var found = FunctionLibrary.TryFindProjectRoot(_settings.ProjectName, AppContext.BaseDirectory, _settings.FuzzyFindProjectRoot);
+                var found = FindProjectRootHybrid();
                 if (found == null) return;
 
                 _localState.ProjectRoot = found;
                 LocalStateManager.Save(_localState);
+                ProjectRootChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 Log($"自动检测项目根目录失败：{ex.Message}", LogLevel.Warn);
             }
+        }
+
+        /// <summary>
+        /// 混合策略定位项目根目录：优先用 settings.json 中已配置的相对路径做「指纹」验证候选根目录；
+        /// 若一个路径都没配置（指纹法无从验证），再回退到按 ProjectName 查找同名文件夹。
+        /// 均未命中返回 null。
+        /// </summary>
+        private string? FindProjectRootHybrid()
+        {
+            // 指纹法：用已配置的相对路径验证候选根目录
+            var relativePaths = SettingsManager.GetConfiguredRelativePaths();
+            var found = FunctionLibrary.TryFindProjectRootByPaths(relativePaths, AppContext.BaseDirectory);
+            if (found != null) return found;
+
+            // 回退：按项目名称查找同名文件夹
+            if (_settings != null && !string.IsNullOrEmpty(_settings.ProjectName))
+                return FunctionLibrary.TryFindProjectRoot(_settings.ProjectName, AppContext.BaseDirectory, _settings.FuzzyFindProjectRoot);
+
+            return null;
         }
 
         private void txtProjectName_Leave(object? sender, EventArgs e)
@@ -578,7 +613,49 @@ namespace ConfigExcelEnhancer.UI
 
             _localState.ProjectRoot = dlg.SelectedPath;
             LocalStateManager.Save(_localState);
-            SettingsManager.Save(_settings);
+            // 根目录变化后，由 MainForm 从磁盘按新根重新还原设置（settings.json 的相对路径为唯一事实来源）。
+            // 不在此处保存内存中的 _settings，避免把基于旧根的路径固化写回。
+            ProjectRootChanged?.Invoke(this, EventArgs.Empty);
+            RefreshStatus();
+        }
+
+        private void btnClearProjectRoot_Click(object sender, EventArgs e)
+        {
+            if (_localState == null) return;
+            if (string.IsNullOrEmpty(_localState.ProjectRoot)) return;
+
+            _localState.ProjectRoot = string.Empty;
+            LocalStateManager.Save(_localState);
+            // 清空后同样从磁盘重新还原（此时回退到 exe 目录基准）。
+            ProjectRootChanged?.Invoke(this, EventArgs.Empty);
+            RefreshStatus();
+        }
+
+        private void btnFindProjectRoot_Click(object sender, EventArgs e)
+        {
+            if (_localState == null || _settings == null) return;
+
+            string? found;
+            try { found = FindProjectRootHybrid(); }
+            catch (Exception ex)
+            {
+                Log($"自动查找项目根目录失败：{ex.Message}", LogLevel.Warn);
+                return;
+            }
+
+            if (found == null)
+            {
+                MessageBox.Show(
+                    "未能自动定位项目根目录。\n\n请确认工具位于项目目录内，且 settings.json 中已配置至少一个相对路径（或已填写项目名称）。\n也可点击「设置根目录...」手动指定。",
+                    "自动查找根目录",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
+            _localState.ProjectRoot = found;
+            LocalStateManager.Save(_localState);
+            ProjectRootChanged?.Invoke(this, EventArgs.Empty);
             RefreshStatus();
         }
 

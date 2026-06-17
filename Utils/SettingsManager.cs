@@ -67,6 +67,24 @@ namespace ConfigExcelEnhancer.Utils
             catch { }
         }
 
+        /// <summary>
+        /// 读取磁盘上 settings.json 中原始（未还原）的所有路径字段，返回其中的相对路径。
+        /// 用于「指纹法」自动定位项目根目录：在候选根目录下验证这些相对路径是否真实存在。
+        /// 复用 <see cref="TransformPaths"/> 的字段登记表，避免遗漏新增字段。
+        /// </summary>
+        public static IReadOnlyList<string> GetConfiguredRelativePaths()
+        {
+            var raw = JsonFileHelper.Load(SettingsPath, () => new AppSettings());
+            var collected = new List<string>();
+            TransformPaths(raw, string.Empty, (p, _) =>
+            {
+                if (!string.IsNullOrWhiteSpace(p) && !Path.IsPathRooted(p))
+                    collected.Add(p);
+                return p;
+            });
+            return collected;
+        }
+
         #endregion
 
         #region 路径规范化辅助

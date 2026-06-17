@@ -30,6 +30,8 @@ namespace ConfigExcelEnhancer
             excelExportTab.ExecutionStateChanged += OnTabExecutionStateChanged;
             homeTab.ExecutionStateChanged += OnTabExecutionStateChanged;
             tabControl.Selecting += (_, e) => { if (_executingCount > 0) e.Cancel = true; };
+            // 项目根目录变化后，从磁盘按新根重新还原设置中的相对路径
+            homeTab.ProjectRootChanged += (_, _) => LoadSettings();
             LoadSettings();
         }
 

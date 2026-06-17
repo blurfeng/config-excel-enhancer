@@ -369,6 +369,41 @@ namespace ConfigExcelEnhancer.Core
         /// 统一移除后再比较（如 "GodsClash" 可匹配 "gods-clash"、"gods_clash"）。
         /// </para>
         /// </summary>
+        /// <summary>
+        /// 「指纹法」定位项目根目录：从 <paramref name="startDir"/> 逐级向上，对每个候选目录，
+        /// 用 settings.json 中已配置的相对路径 <paramref name="relativePaths"/> 验证——
+        /// 若候选目录下任一相对路径真实存在（文件或目录），即认定该候选目录为项目根目录。
+        /// 自深至浅扫描，返回首个命中的候选目录；无可用相对路径或均未命中时返回 null。
+        /// </summary>
+        public static string? TryFindProjectRootByPaths(IEnumerable<string> relativePaths, string startDir)
+        {
+            if (string.IsNullOrEmpty(startDir)) return null;
+
+            var rels = relativePaths
+                .Where(p => !string.IsNullOrWhiteSpace(p) && !Path.IsPathRooted(p))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (rels.Count == 0) return null;
+
+            var dir = startDir;
+            for (int i = 0; i <= MaxProjectLookupDepth; i++)
+            {
+                if (string.IsNullOrEmpty(dir)) break;
+
+                foreach (var rel in rels)
+                {
+                    string candidate;
+                    try { candidate = Path.GetFullPath(Path.Combine(dir, rel)); }
+                    catch { continue; }
+                    if (File.Exists(candidate) || Directory.Exists(candidate))
+                        return dir;
+                }
+
+                dir = Path.GetDirectoryName(dir);
+            }
+            return null;
+        }
+
         public static string? TryFindProjectRoot(string projectName, string startDir, bool fuzzy = false)
         {
             if (string.IsNullOrEmpty(projectName) || string.IsNullOrEmpty(startDir))

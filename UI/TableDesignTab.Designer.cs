@@ -90,9 +90,9 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseSource.TabIndex = 3;
             btnBrowseSource.Text = "浏览...";
             btnBrowseSource.Click += btnBrowseSource_Click;
-            //
+            // 
             // btnOpenSource
-            //
+            // 
             btnOpenSource.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenSource.Font = new Font("Segoe UI Emoji", 9F);
             btnOpenSource.Location = new Point(548, 9);
@@ -156,7 +156,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             pnlScopeGroup.Controls.Add(rdoScopeAll);
             pnlScopeGroup.Controls.Add(rdoScopeFirst);
-            pnlScopeGroup.Location = new Point(92, 45);
+            pnlScopeGroup.Location = new Point(94, 45);
             pnlScopeGroup.Name = "pnlScopeGroup";
             pnlScopeGroup.Size = new Size(121, 29);
             pnlScopeGroup.TabIndex = 10;
