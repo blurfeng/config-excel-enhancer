@@ -385,23 +385,39 @@ namespace ConfigExcelEnhancer.Core
                 .ToList();
             if (rels.Count == 0) return null;
 
+            // 逐层向上遍历，对每一层统计能命中的相对路径条数，
+            // 选命中数最高的层级。相对路径是相对真正的根目录存储的，
+            // 只有在真正的根目录下命中数才最高，从而避免 exe 目录等中间层的偶然单条命中。
+            string? bestDir = null;
+            int bestHits = 0;
+
             var dir = startDir;
             for (int i = 0; i <= MaxProjectLookupDepth; i++)
             {
                 if (string.IsNullOrEmpty(dir)) break;
 
+                int hits = 0;
                 foreach (var rel in rels)
                 {
                     string candidate;
                     try { candidate = Path.GetFullPath(Path.Combine(dir, rel)); }
                     catch { continue; }
                     if (File.Exists(candidate) || Directory.Exists(candidate))
-                        return dir;
+                        hits++;
+                }
+
+                // 严格大于：命中数相同时保留更靠近 exe 的较低层级（先遍历到者），
+                // 仅当更高层级命中更多时才上移。
+                if (hits > bestHits)
+                {
+                    bestHits = hits;
+                    bestDir = dir;
                 }
 
                 dir = Path.GetDirectoryName(dir);
             }
-            return null;
+
+            return bestHits > 0 ? bestDir : null;
         }
 
         public static string? TryFindProjectRoot(string projectName, string startDir, bool fuzzy = false)
