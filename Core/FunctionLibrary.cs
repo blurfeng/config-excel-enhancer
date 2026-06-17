@@ -208,6 +208,71 @@ namespace ConfigExcelEnhancer.Core
         }
 
         /// <summary>
+        /// 单元格样式的纯值快照。用于在「清空工作表 → 重排重发」流程中跨清空保留样式：
+        /// ClosedXML 的 <see cref="IXLStyle"/> 是共享样式的 facade，赋值并非深拷贝，清空后会失真，
+        /// 故拆成普通值字段存储（与 <see cref="AdjustHeaderRows"/> 的做法一致）。
+        /// </summary>
+        public readonly record struct StyleSnapshot(
+            XLColor FillColor,
+            XLFillPatternValues FillPattern,
+            XLBorderStyleValues BTop, XLColor CTop,
+            XLBorderStyleValues BBottom, XLColor CBottom,
+            XLBorderStyleValues BLeft, XLColor CLeft,
+            XLBorderStyleValues BRight, XLColor CRight,
+            XLAlignmentHorizontalValues AlignH,
+            XLAlignmentVerticalValues AlignV,
+            bool WrapText,
+            bool Bold,
+            double FontSize,
+            string FontName,
+            XLColor FontColor,
+            string NumberFormat,
+            int NumberFormatId);
+
+        /// <summary>读取单元格样式为纯值快照。</summary>
+        public static StyleSnapshot CaptureStyle(IXLStyle s) => new(
+            s.Fill.BackgroundColor, s.Fill.PatternType,
+            s.Border.TopBorder,    s.Border.TopBorderColor,
+            s.Border.BottomBorder, s.Border.BottomBorderColor,
+            s.Border.LeftBorder,   s.Border.LeftBorderColor,
+            s.Border.RightBorder,  s.Border.RightBorderColor,
+            s.Alignment.Horizontal, s.Alignment.Vertical, s.Alignment.WrapText,
+            s.Font.Bold, s.Font.FontSize, s.Font.FontName, s.Font.FontColor,
+            s.NumberFormat.Format, s.NumberFormat.NumberFormatId);
+
+        /// <summary>将样式快照应用到单元格。</summary>
+        public static void ApplyStyle(IXLCell cell, StyleSnapshot snap)
+        {
+            var d = cell.Style;
+
+            if (!snap.FillColor.Equals(XLColor.NoColor))
+            {
+                d.Fill.BackgroundColor = snap.FillColor;
+                d.Fill.PatternType     = snap.FillPattern;
+            }
+
+            d.Border.TopBorder         = snap.BTop;    d.Border.TopBorderColor    = snap.CTop;
+            d.Border.BottomBorder      = snap.BBottom; d.Border.BottomBorderColor = snap.CBottom;
+            d.Border.LeftBorder        = snap.BLeft;   d.Border.LeftBorderColor   = snap.CLeft;
+            d.Border.RightBorder       = snap.BRight;  d.Border.RightBorderColor  = snap.CRight;
+
+            d.Alignment.Horizontal = snap.AlignH;
+            d.Alignment.Vertical   = snap.AlignV;
+            d.Alignment.WrapText   = snap.WrapText;
+
+            d.Font.Bold      = snap.Bold;
+            d.Font.FontSize  = snap.FontSize;
+            d.Font.FontName  = snap.FontName;
+            d.Font.FontColor = snap.FontColor;
+
+            // NumberFormat：自定义格式串优先，否则用内置格式 Id。
+            if (!string.IsNullOrEmpty(snap.NumberFormat))
+                d.NumberFormat.Format = snap.NumberFormat;
+            else
+                d.NumberFormat.NumberFormatId = snap.NumberFormatId;
+        }
+
+        /// <summary>
         /// 合并表头中的空白单元格。<paramref name="keywords"/> 中每项为从 1 开始的行号
         /// （如 "3"）或文本模式（如 "##type"）。行号匹配或 A 列包含该模式时处理该行：
         /// 从某个非空单元格起，向右合并其后连续的空单元格。

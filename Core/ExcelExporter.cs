@@ -163,6 +163,7 @@ namespace ConfigExcelEnhancer.Core
                     FunctionLibrary.ExtendHeaderRowStyles(ws, targetHeaderRows, templateLastCol, dataLastCol);
 
                 // 4. 智能表调整为覆盖「B[注释行] : [末列][数据行]」。此时新范围内表头格均已填唯一值。
+                DeduplicateCommentRow(ws, targetHeaderRows, dataLastCol);
                 ResizeOrCreateTable(ws, targetHeaderRows, targetHeaderRows + 1, dataLastCol);
 
                 // 5. 模板比目标更宽时，清理表外多余列的残留模板内容（已移出智能表，清空不会触发改名）。
@@ -293,6 +294,7 @@ namespace ConfigExcelEnhancer.Core
                 int rebuildLastCol = 2 + targetColumns.Count;
                 FunctionLibrary.MergeHeaderEmptyCells(ws, ["1", "2"], rebuildHeaderRows, rebuildLastCol, HeaderSymbol);
                 FinalizeDataRow(ws, rebuildHeaderRows, rebuildLastCol, targetColumns.Count);
+                DeduplicateCommentRow(ws, rebuildHeaderRows, rebuildLastCol);
                 ResizeOrCreateTable(ws, rebuildHeaderRows, rebuildHeaderRows + 1, rebuildLastCol);
                 ws.SheetView.FreezeRows(rebuildHeaderRows);
                 FunctionLibrary.AutoFitColumns(ws, rebuildLastCol);
@@ -318,6 +320,25 @@ namespace ConfigExcelEnhancer.Core
             if (toKeep.Count > 0)
                 log($"  保留字段：{toKeep.Count} 个", LogLevel.Info);
 
+            // 是否需要子字段行（结构体 Bean 展开）。orderMatches 判定与重排重建均要用。
+            bool needsSubRow = targetColumns.Any(c => !string.IsNullOrEmpty(c.SubVarName));
+            bool hadSubRow   = headerInfo.SubVarRow > 0;
+
+            // 物理列顺序是否已与 XML 完全一致（含结构体子列、子字段行结构）。
+            // 一致 → 走下方轻量更新（仅刷新表头/样式，最小化 git diff）；
+            // 不一致（增/删/顺序/子列结构变化）→ 列重排重建，使列顺序与 XML 逐列对齐。
+            var existingKeys = BuildExistingColumnKeys(ws, headerInfo);
+            var targetKeys   = targetColumns.Select(c => c.Key).ToList();
+            bool orderMatches = existingKeys.SequenceEqual(targetKeys, StringComparer.Ordinal)
+                                && needsSubRow == hadSubRow;
+
+            if (!orderMatches)
+            {
+                RebuildColumnsInOrder(ws, headerInfo, targetColumns, task.LeafBean.Name);
+                if (loadedFromStream) wb.SaveAs(task.TargetExcelPath); else wb.Save();
+                return;
+            }
+
             // 收集需要删除的列（从右到左，防止索引偏移）
             var colsToDelete = existingGroups
                 .Where(g => toDelete.Contains(g.Key))
@@ -328,10 +349,9 @@ namespace ConfigExcelEnhancer.Core
             foreach (var col in colsToDelete)
                 ws.Column(col).Delete();
 
-            // 处理表头行数变化（是否需要子字段行）
-            bool needsSubRow = targetColumns.Any(c => !string.IsNullOrEmpty(c.SubVarName));
-            bool hadSubRow   = headerInfo.SubVarRow > 0;
-
+            // 处理表头行数变化（needsSubRow/hadSubRow 已在上方计算）。
+            // 注：能走到这里说明 orderMatches==true，故 needsSubRow==hadSubRow，
+            // 下面两个分支实际不会进入；保留以兼容潜在的其他调用路径。
             if (needsSubRow && !hadSubRow)
             {
                 // 需要插入一个子字段行。
@@ -401,6 +421,7 @@ namespace ConfigExcelEnhancer.Core
             // 5. 调整智能表(Excel Table)：覆盖「## 注释行 ~ 末行数据」。表头列名已由
             //    ApplyTableHeaderNames 保证唯一非空，写入时活动智能表不会抛重复 key 异常。
             int updLastDataRow = Math.Max(ws.LastRowUsed()?.RowNumber() ?? headerRows, headerRows + 1);
+            DeduplicateCommentRow(ws, headerInfo.CommentRow > 0 ? headerInfo.CommentRow : headerRows, finalLastCol);
             ResizeOrCreateTable(ws, headerRows, updLastDataRow, finalLastCol);
 
             if (loadedFromStream)
@@ -596,6 +617,308 @@ namespace ConfigExcelEnhancer.Core
                 groups.Add(new ColumnGroup(currentGroupKey, groupStart, lastCol - groupStart + 1));
 
             return groups;
+        }
+
+        /// <summary>
+        /// 逐物理数据列（C..末列）求其「列身份键」，与 <see cref="ExpandFields"/> 产出的
+        /// <see cref="ExcelColumnMeta.Key"/> 一一对应：##var 向右顺延得顶层字段名 topVar
+        /// （结构体子列仅首列有 ##var），子字段行非空时取 subVar，
+        /// Key = subVar 非空 ? "topVar.subVar" : "topVar"。用于「顺序是否一致」判定与重排匹配。
+        /// </summary>
+        private static List<string> BuildExistingColumnKeys(IXLWorksheet ws, HeaderInfo info)
+        {
+            var keys = new List<string>();
+            if (info.VarRow <= 0) return keys;
+
+            int lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 0;
+            string topVar = string.Empty;
+            for (int col = 3; col <= lastCol; col++)
+            {
+                var v = ws.Cell(info.VarRow, col).GetString().Trim();
+                if (!string.IsNullOrEmpty(v)) topVar = v;
+                string sub = info.SubVarRow > 0 ? ws.Cell(info.SubVarRow, col).GetString().Trim() : string.Empty;
+                keys.Add(sub.Length > 0 ? $"{topVar}.{sub}" : topVar);
+            }
+            return keys;
+        }
+
+        // ── 注释行物理去重（智能表要求表头列名唯一非空）──────────────────────
+
+        /// <summary>
+        /// 对物理 ## 注释行（列 2..<paramref name="lastCol"/>）去重：以「数据类名」(B 列) 为种子，
+        /// 重复或为空的单元格写回 _2/_3… 后缀。避免 ClosedXML 创建/调整智能表时因表头列名
+        /// 重复抛「An item with the same key has already been added」。
+        /// 与 <see cref="ApplyTableHeaderNames"/> 不同：本方法作用于已写入的物理单元格，
+        /// 可清除历史残留/重复的注释；且匹配数据列用 ##var 身份，故此处去重不影响列匹配。
+        /// </summary>
+        private static void DeduplicateCommentRow(IXLWorksheet ws, int commentRow, int lastCol)
+        {
+            if (commentRow <= 0 || lastCol < 2) return;
+
+            // 种子：B 列（$type 列）注释固定为「数据类名」，保留不动，仅占位以便字段列与之撞名时退让。
+            var seen = new HashSet<string>(StringComparer.Ordinal)
+            {
+                ClassNameLabel,
+                ws.Cell(commentRow, 2).GetString().Trim(),
+            };
+            int placeholder = 0;
+            for (int col = 3; col <= lastCol; col++)
+            {
+                var cell = ws.Cell(commentRow, col);
+                string name = cell.GetString().Trim();
+                if (name.Length == 0)
+                    name = $"列{++placeholder}";
+
+                string unique = name;
+                int n = 2;
+                while (!seen.Add(unique))
+                    unique = $"{name}_{n++}";
+
+                if (unique != cell.GetString())
+                    cell.Value = unique;
+            }
+        }
+
+        /// <summary>为 [firstDataRow..lastDataRow] 每个数据行的 B 列写入计算列公式。</summary>
+        private static void SetComputedColumnFormula(IXLWorksheet ws, int firstDataRow, int lastDataRow)
+        {
+            for (int r = firstDataRow; r <= lastDataRow; r++)
+                ws.Cell(r, 2).FormulaA1 = $"IF(C{r}<>\"\",$B$2,\"\")";
+        }
+
+        // ── 列重排重建（顺序与 XML 一致 + 保留数据/样式）────────────────────
+
+        private enum HeaderRole { Var, Type, SubVar, Group, Comment }
+
+        private record CapturedCell(XLCellValue Value, string? Formula, FunctionLibrary.StyleSnapshot Style);
+
+        private record CapturedColumn(
+            double Width,
+            Dictionary<HeaderRole, FunctionLibrary.StyleSnapshot> HeaderStyle,
+            CapturedCell?[] Data);
+
+        /// <summary>
+        /// 列重排重建：快照旧表（每列数据+样式+列宽，按身份键），清空工作表后按 XML 顺序重发。
+        /// 保留列还原数据/样式/列宽；新增列数据留空、样式借相邻保留列；删除列丢弃。
+        /// 调用前提：已确认列顺序与 XML 不一致（见 UpdateExcel 的 orderMatches 判定）。
+        /// </summary>
+        private static void RebuildColumnsInOrder(
+            IXLWorksheet ws,
+            HeaderInfo info,
+            List<ExcelColumnMeta> targetColumns,
+            string className)
+        {
+            int existingHeaderRows = info.CommentRow > 0 ? info.CommentRow : info.GroupRow;
+            int lastCol  = ws.LastColumnUsed()?.ColumnNumber() ?? 2;
+            int dataStart = info.DataStartRow > 0 ? info.DataStartRow : existingHeaderRows + 1;
+            int lastRow  = ws.LastRowUsed()?.RowNumber() ?? existingHeaderRows;
+            int dataCount = Math.Max(0, lastRow - dataStart + 1);
+
+            // 旧表各行角色 → 行号
+            var existingRole = new Dictionary<HeaderRole, int>
+            {
+                [HeaderRole.Var]     = info.VarRow,
+                [HeaderRole.Type]    = info.TypeRow,
+                [HeaderRole.Group]   = info.GroupRow,
+                [HeaderRole.Comment] = info.CommentRow,
+            };
+            if (info.SubVarRow > 0) existingRole[HeaderRole.SubVar] = info.SubVarRow;
+
+            // ── 快照（清空前，只读）──
+            var bHeader = CaptureHeaderStyles(ws, 2, existingRole);
+            var bData   = CaptureColumnData(ws, 2, dataStart, dataCount);
+
+            var existingKeys = BuildExistingColumnKeys(ws, info);
+            var captured = new Dictionary<string, CapturedColumn>(StringComparer.Ordinal);
+            for (int i = 0; i < existingKeys.Count; i++)
+            {
+                int col = 3 + i;
+                string key = existingKeys[i];
+                if (string.IsNullOrEmpty(key) || captured.ContainsKey(key)) continue; // 重复键以首列为准
+                captured[key] = new CapturedColumn(
+                    ws.Column(col).Width,
+                    CaptureHeaderStyles(ws, col, existingRole),
+                    CaptureColumnData(ws, col, dataStart, dataCount));
+            }
+
+            var headerRowHeight = new Dictionary<HeaderRole, double>();
+            foreach (var kv in existingRole) headerRowHeight[kv.Key] = ws.Row(kv.Value).Height;
+            var dataRowHeight = new double[dataCount];
+            for (int k = 0; k < dataCount; k++) dataRowHeight[k] = ws.Row(dataStart + k).Height;
+
+            // ── 安全清空：先删活动智能表，再取消所有合并，最后清内容+样式 ──
+            // 必须先移除智能表，否则清空表头（注释行）会触发 ClosedXML 列名自动改名并产生重复键。
+            foreach (var name in ws.Tables.Select(t => t.Name).ToList())
+                ws.Tables.Remove(name);
+            foreach (var mr in ws.MergedRanges.ToList()) mr.Unmerge();
+            ws.RangeUsed()?.Clear(XLClearOptions.All);
+
+            // ── 目标行布局（依目标是否含结构体子字段行）──
+            bool needsSubRow = targetColumns.Any(c => !string.IsNullOrEmpty(c.SubVarName));
+            int tVar = 1, tType = 2;
+            int tSub     = needsSubRow ? 3 : 0;
+            int tGroup   = needsSubRow ? 4 : 3;
+            int tComment = needsSubRow ? 5 : 4;
+            int targetHeaderRows = tComment;
+
+            var targetRole = new Dictionary<HeaderRole, int>
+            {
+                [HeaderRole.Var]     = tVar,
+                [HeaderRole.Type]    = tType,
+                [HeaderRole.Group]   = tGroup,
+                [HeaderRole.Comment] = tComment,
+            };
+            if (tSub > 0) targetRole[HeaderRole.SubVar] = tSub;
+
+            // A 列标记
+            ws.Cell(tVar, 1).Value  = "##var";
+            ws.Cell(tType, 1).Value = "##type";
+            if (tSub > 0) ws.Cell(tSub, 1).Value = "##var";
+            ws.Cell(tGroup, 1).Value   = "##group";
+            ws.Cell(tComment, 1).Value = "##";
+
+            int finalLastCol = 2 + targetColumns.Count;
+            int outputDataRows = Math.Max(dataCount, 1); // 至少保留一行承载计算列
+            int lastDataRow = targetHeaderRows + outputDataRows;
+
+            // ── B 列（$type）：表头值固定、样式还原；数据样式还原（公式稍后统一回填）──
+            EmitColumnHeader(ws, 2, targetRole, BHeaderValue(className), bHeader, null);
+            EmitColumnData(ws, 2, targetHeaderRows, bData, styleOnly: true);
+
+            // ── 字段列：按目标顺序逐列重发 ──
+            for (int i = 0; i < targetColumns.Count; i++)
+            {
+                int outCol = 3 + i;
+                var meta = targetColumns[i];
+
+                if (captured.TryGetValue(meta.Key, out var cap))
+                {
+                    EmitColumnHeader(ws, outCol, targetRole, MetaHeaderValue(meta), cap.HeaderStyle, null);
+                    EmitColumnData(ws, outCol, targetHeaderRows, cap.Data, styleOnly: false);
+                    ws.Column(outCol).Width = cap.Width;
+                }
+                else
+                {
+                    // 新增列：样式/列宽借最近的保留列；数据留空但套用其行样式以保持表格外观一致
+                    var refCap = FindReferenceColumn(targetColumns, captured, i);
+                    EmitColumnHeader(ws, outCol, targetRole, MetaHeaderValue(meta), refCap?.HeaderStyle, null);
+                    if (refCap != null)
+                    {
+                        for (int k = 0; k < refCap.Data.Length; k++)
+                            if (refCap.Data[k] is { } rc)
+                                FunctionLibrary.ApplyStyle(ws.Cell(targetHeaderRows + 1 + k, outCol), rc.Style);
+                        if (refCap.Width > 0) ws.Column(outCol).Width = refCap.Width;
+                    }
+                }
+            }
+
+            // ── 收尾 ──
+            FunctionLibrary.MergeHeaderEmptyCells(ws,
+                [tVar.ToString(), tType.ToString()], targetHeaderRows, finalLastCol, HeaderSymbol);
+
+            // 还原行高（表头按角色、数据按偏移）
+            foreach (var kv in targetRole)
+                if (headerRowHeight.TryGetValue(kv.Key, out var h) && h > 0)
+                    ws.Row(kv.Value).Height = h;
+            for (int k = 0; k < dataCount; k++)
+                if (dataRowHeight[k] > 0) ws.Row(targetHeaderRows + 1 + k).Height = dataRowHeight[k];
+
+            SetComputedColumnFormula(ws, targetHeaderRows + 1, lastDataRow);
+            ws.SheetView.FreezeRows(targetHeaderRows);
+
+            DeduplicateCommentRow(ws, tComment, finalLastCol);
+            ResizeOrCreateTable(ws, tComment, lastDataRow, finalLastCol);
+        }
+
+        /// <summary>取目标顺序中离 index 最近、且为「保留列」的捕获列，作为新增列的样式参考。</summary>
+        private static CapturedColumn? FindReferenceColumn(
+            List<ExcelColumnMeta> targetColumns,
+            Dictionary<string, CapturedColumn> captured,
+            int index)
+        {
+            for (int d = 1; d < targetColumns.Count; d++)
+            {
+                int l = index - d, r = index + d;
+                if (l >= 0 && captured.TryGetValue(targetColumns[l].Key, out var cl)) return cl;
+                if (r < targetColumns.Count && captured.TryGetValue(targetColumns[r].Key, out var cr)) return cr;
+            }
+            return null;
+        }
+
+        private static Func<HeaderRole, string> MetaHeaderValue(ExcelColumnMeta m) => role => role switch
+        {
+            HeaderRole.Var     => m.VarName,
+            HeaderRole.Type    => m.TypeName,
+            HeaderRole.SubVar  => m.SubVarName,
+            HeaderRole.Group   => m.Group,
+            HeaderRole.Comment => m.Comment,
+            _ => string.Empty,
+        };
+
+        private static Func<HeaderRole, string> BHeaderValue(string className) => role => role switch
+        {
+            HeaderRole.Var     => TypeColumnLabel,
+            HeaderRole.Type    => className,
+            HeaderRole.Comment => ClassNameLabel,
+            _ => string.Empty,
+        };
+
+        private static Dictionary<HeaderRole, FunctionLibrary.StyleSnapshot> CaptureHeaderStyles(
+            IXLWorksheet ws, int col, Dictionary<HeaderRole, int> roles)
+        {
+            var d = new Dictionary<HeaderRole, FunctionLibrary.StyleSnapshot>();
+            foreach (var kv in roles)
+                d[kv.Key] = FunctionLibrary.CaptureStyle(ws.Cell(kv.Value, col).Style);
+            return d;
+        }
+
+        private static CapturedCell?[] CaptureColumnData(IXLWorksheet ws, int col, int dataStart, int dataCount)
+        {
+            var arr = new CapturedCell?[dataCount];
+            for (int k = 0; k < dataCount; k++)
+            {
+                var cell = ws.Cell(dataStart + k, col);
+                var style = FunctionLibrary.CaptureStyle(cell.Style);
+                arr[k] = cell.HasFormula
+                    ? new CapturedCell(default, cell.FormulaA1, style)
+                    : new CapturedCell(cell.Value, null, style);
+            }
+            return arr;
+        }
+
+        private static void EmitColumnHeader(
+            IXLWorksheet ws, int outCol,
+            Dictionary<HeaderRole, int> targetRole,
+            Func<HeaderRole, string> valueFor,
+            Dictionary<HeaderRole, FunctionLibrary.StyleSnapshot>? capturedHeader,
+            FunctionLibrary.StyleSnapshot? fallback)
+        {
+            foreach (var kv in targetRole)
+            {
+                var cell = ws.Cell(kv.Value, outCol);
+                cell.Value = valueFor(kv.Key);
+                if (capturedHeader != null && capturedHeader.TryGetValue(kv.Key, out var st))
+                    FunctionLibrary.ApplyStyle(cell, st);
+                else if (capturedHeader != null && capturedHeader.TryGetValue(HeaderRole.Var, out var vst))
+                    FunctionLibrary.ApplyStyle(cell, vst); // 目标新增角色行（如新出现的子字段行）借父行样式
+                else if (fallback.HasValue)
+                    FunctionLibrary.ApplyStyle(cell, fallback.Value);
+            }
+        }
+
+        private static void EmitColumnData(
+            IXLWorksheet ws, int outCol, int targetHeaderRows,
+            CapturedCell?[] data, bool styleOnly)
+        {
+            for (int k = 0; k < data.Length; k++)
+            {
+                if (data[k] is not { } cc) continue;
+                var cell = ws.Cell(targetHeaderRows + 1 + k, outCol);
+                FunctionLibrary.ApplyStyle(cell, cc.Style);
+                if (styleOnly) continue;
+                if (cc.Formula != null) cell.FormulaA1 = cc.Formula;
+                else cell.Value = cc.Value;
+            }
         }
 
         // ── 字段展开 ──────────────────────────────────────────────────────
