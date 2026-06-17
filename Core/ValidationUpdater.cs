@@ -285,13 +285,9 @@ namespace ConfigExcelEnhancer.Core
             bool rewriteValidation,
             Dictionary<string, Dictionary<string, string>>? beanFieldEnumMap = null)
         {
-            int typeRow = FindTypeRow(ws);
+            var (typeRow, dataStartRow, lastDataRow) = ScanSheetMarkers(ws);
             if (typeRow < 0) return;
-
-            int dataStartRow = FindDataStartRow(ws, typeRow + 1);
             if (dataStartRow < 0) return;
-
-            int lastDataRow = FindLastDataRow(ws, dataStartRow);
             if (lastDataRow < dataStartRow) return;
 
             int lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 0;
@@ -385,39 +381,52 @@ namespace ConfigExcelEnhancer.Core
                 dv.RemoveRange(range);
         }
 
-        private static int FindTypeRow(IXLWorksheet ws)
+        /// <summary>
+        /// 单次扫描工作表首列标记行，返回三元组：
+        /// <list type="bullet">
+        ///   <item><c>typeRow</c>：A 列为 "##type" 的行；未找到为 -1。</item>
+        ///   <item><c>dataStartRow</c>：typeRow 之后首个 A 列不以 "##" 开头的行；未找到为 -1。</item>
+        ///   <item><c>lastDataRow</c>：自底向上首个含数据的行（≥ dataStartRow）；无数据为 dataStartRow-1。</item>
+        /// </list>
+        /// 合并原 FindTypeRow / FindDataStartRow 的两段首列读取为一次前向遍历，避免重复读取 A 列；
+        /// 返回值语义与原三个独立方法完全一致。
+        /// </summary>
+        private static (int typeRow, int dataStartRow, int lastDataRow) ScanSheetMarkers(IXLWorksheet ws)
         {
             int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+
+            // 前向遍历 A 列：先定位 ##type 行，再向下找首个非 ## 行作为数据起始行。
+            int typeRow = -1;
+            int dataStartRow = -1;
             for (int r = 1; r <= lastRow; r++)
             {
-                if (ws.Cell(r, 1).GetString().Trim() == "##type")
-                    return r;
-            }
-            return -1;
-        }
-
-        private static int FindDataStartRow(IXLWorksheet ws, int searchFrom)
-        {
-            int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
-            for (int r = searchFrom; r <= lastRow; r++)
-            {
                 var a = ws.Cell(r, 1).GetString();
+                if (typeRow < 0)
+                {
+                    if (a.Trim() == "##type") typeRow = r;
+                    continue; // ##type 行本身不参与数据起始行判定（等价于从 typeRow+1 起搜）
+                }
                 if (!a.StartsWith("##"))
-                    return r;
+                {
+                    dataStartRow = r;
+                    break;
+                }
             }
-            return -1;
-        }
 
-        private static int FindLastDataRow(IXLWorksheet ws, int dataStartRow)
-        {
-            // 使用 CellsUsed 避免通过 ws.Cell() 创建空单元格
-            int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+            if (typeRow < 0 || dataStartRow < 0)
+                return (typeRow, dataStartRow, dataStartRow - 1);
+
+            // 自底向上定位末数据行（CellsUsed 避免隐式创建空单元格）。
+            int lastDataRow = dataStartRow - 1;
             for (int r = lastRow; r >= dataStartRow; r--)
             {
                 if (ws.Row(r).CellsUsed().Any())
-                    return r;
+                {
+                    lastDataRow = r;
+                    break;
+                }
             }
-            return dataStartRow - 1;
+            return (typeRow, dataStartRow, lastDataRow);
         }
 
         public static bool RefreshFormulasViaExcel(IReadOnlyList<string> filePaths)
@@ -465,10 +474,8 @@ namespace ConfigExcelEnhancer.Core
             foreach (var ws in wb.Worksheets)
             {
                 if (ws.Name == EnumSheetName) continue;
-                int typeRow = FindTypeRow(ws);
+                var (typeRow, dataStartRow, _) = ScanSheetMarkers(ws);
                 if (typeRow < 0) continue;
-
-                int dataStartRow = beanFieldEnumMap != null ? FindDataStartRow(ws, typeRow + 1) : -1;
                 int lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 0;
 
                 for (int col = 2; col <= lastCol; col++)

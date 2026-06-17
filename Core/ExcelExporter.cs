@@ -139,6 +139,12 @@ namespace ConfigExcelEnhancer.Core
                 wb.AddWorksheet(task.LeafBean.Name);
             }
 
+            // templateMs 须在 wb 之后释放（SaveAs 惰性复制模板 parts，提前关闭流会报
+            // "Cannot access a closed Stream"）。using var 按声明逆序释放，故先声明
+            // templateMs 作用域、后声明 wb 作用域；同时保证异常路径下两者都被释放。
+            using var templateScope = templateMs;
+            using var wbScope = wb;
+
             var ws = wb.Worksheets.First();
             ws.Name = task.LeafBean.Name;
 
@@ -179,8 +185,7 @@ namespace ConfigExcelEnhancer.Core
             FunctionLibrary.AutoFitColumns(ws, dataLastCol);
 
             wb.SaveAs(task.TargetExcelPath);
-            wb.Dispose();
-            templateMs?.Dispose(); // SaveAs 完成后再关闭
+            // wb / templateMs 由方法末尾的 using var 作用域统一释放。
         }
 
         /// <summary>
@@ -267,6 +272,13 @@ namespace ConfigExcelEnhancer.Core
                 wb = new XLWorkbook(strippedMs);
                 loadedFromStream = true;
             }
+
+            // strippedMs 须在 wb 之后释放（SaveAs 完成前不能关闭流）。using var 按声明逆序释放，
+            // 故先声明 strippedMs 作用域、后声明 wb 作用域，确保 wb 先于 strippedMs 释放；
+            // 同时保证任意异常路径下两者都被释放（修复原先异常时的资源泄漏）。
+            using var strippedScope = strippedMs;
+            using var wbScope = wb;
+
             var ws = wb.Worksheets.First();
 
             // 检测现有表头
@@ -285,8 +297,6 @@ namespace ConfigExcelEnhancer.Core
                 ws.SheetView.FreezeRows(rebuildHeaderRows);
                 FunctionLibrary.AutoFitColumns(ws, rebuildLastCol);
                 if (loadedFromStream) wb.SaveAs(task.TargetExcelPath); else wb.Save();
-                wb.Dispose();
-                strippedMs?.Dispose();
                 return;
             }
 
@@ -397,8 +407,7 @@ namespace ConfigExcelEnhancer.Core
                 wb.SaveAs(task.TargetExcelPath); // 从 MemoryStream 加载时须用 SaveAs
             else
                 wb.Save();
-            wb.Dispose();
-            strippedMs?.Dispose(); // SaveAs 完成后再关闭
+            // wb / strippedMs 由方法末尾的 using var 作用域统一释放。
         }
 
         // ── 表头写入 ──────────────────────────────────────────────────────

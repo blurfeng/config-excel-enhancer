@@ -5,7 +5,7 @@ namespace ConfigExcelEnhancer.Core
 {
     public static class FunctionLibrary
     {
-        // ── 表头样式公共方法（TableDesignApplier 与 ExcelExporter 共用）──────
+        #region 表头样式公共方法（TableDesignApplier 与 ExcelExporter 共用）
 
         /// <summary>
         /// 统计从首行起 A 列包含 <paramref name="headerSymbol"/> 的连续行数（表头行数）。
@@ -304,6 +304,10 @@ namespace ConfigExcelEnhancer.Core
         private static bool IsEffectivelyEmpty(IXLCell cell)
             => cell.IsEmpty() || string.IsNullOrWhiteSpace(cell.GetString());
 
+        #endregion
+
+        #region 公式刷新（Excel COM）
+
         /// <summary>
         /// 用 Excel COM 批量刷新公式缓存值。必须在 STA 线程上调用。
         /// </summary>
@@ -350,11 +354,16 @@ namespace ConfigExcelEnhancer.Core
             return result;
         }
 
-        // ── 路径工具 ─────────────────────────────────────────────────────────
+        #endregion
+
+        #region 路径工具
+
+        // 自动查找项目根目录时，最多向上回溯的父级层数。
+        private const int MaxProjectLookupDepth = 4;
 
         /// <summary>
         /// 从 <paramref name="startDir"/> 开始逐级向上查找名为 <paramref name="projectName"/> 的兄弟目录。
-        /// 最多向上查找 4 层，找到则返回其完整路径，否则返回 null。
+        /// 最多向上查找 <see cref="MaxProjectLookupDepth"/> 层，找到则返回其完整路径，否则返回 null。
         /// <para>
         /// <paramref name="fuzzy"/> 为 true 时启用模糊匹配：忽略大小写，并将连字符、下划线、空格
         /// 统一移除后再比较（如 "GodsClash" 可匹配 "gods-clash"、"gods_clash"）。
@@ -368,7 +377,7 @@ namespace ConfigExcelEnhancer.Core
             var normalizedTarget = fuzzy ? NormalizeProjectName(projectName) : null;
 
             var dir = startDir;
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < MaxProjectLookupDepth; i++)
             {
                 var parent = Path.GetDirectoryName(dir);
                 if (parent == null) break;
@@ -424,7 +433,9 @@ namespace ConfigExcelEnhancer.Core
             catch { return path; }
         }
 
-        // ── 命名规范转换 ──────────────────────────────────────────────────────
+        #endregion
+
+        #region 命名规范转换
 
         /// <summary>
         /// 按命名规范转换名称：0 = 类名不变，1 = 驼峰（首字母大写），2 = 全小写_下划线。
@@ -457,5 +468,7 @@ namespace ConfigExcelEnhancer.Core
             }
             return sb.ToString();
         }
+
+        #endregion
     }
 }
