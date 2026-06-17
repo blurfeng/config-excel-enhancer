@@ -38,6 +38,8 @@ namespace ConfigExcelEnhancer.UI
             rdoNameCamel.Checked = Settings.ExcelExportNameConvention == 1;
             rdoNameSnake.Checked = Settings.ExcelExportNameConvention == 2;
 
+            chkRunEnumValidation.Checked = Settings.ExcelExportRunEnumValidation;
+
             if (!string.IsNullOrEmpty(Settings.ExcelExportXmlFolder))
                 RefreshClassList(rescanXml: false);
         }
@@ -79,6 +81,9 @@ namespace ConfigExcelEnhancer.UI
         {
             if (rdoNameSnake.Checked) Settings.ExcelExportNameConvention = 2;
         }
+
+        private void chkRunEnumValidation_CheckedChanged(object sender, EventArgs e)
+            => Settings.ExcelExportRunEnumValidation = chkRunEnumValidation.Checked;
 
         // ── 浏览按钮 ──────────────────────────────────────────────────────
 
@@ -250,6 +255,7 @@ namespace ConfigExcelEnhancer.UI
             txtDesignTemplate.Enabled  = !locked;
             btnBrowseTemplate.Enabled  = !locked;
             tabMode.Enabled            = !locked;
+            chkRunEnumValidation.Enabled = !locked;
         }
 
         private async void btnExport_Click(object sender, EventArgs e)
@@ -336,8 +342,13 @@ namespace ConfigExcelEnhancer.UI
                         token);
                 }, token);
 
-                ProgressBarHelper.SetProgress(pbExport, 100);
                 Log($"导出完成。共处理 {tasks.Count} 个数据类。", LogLevel.Ok);
+
+                // 导出后可选地对导出的 Excel 执行 Enum 数据验证（复用枚举验证功能）。
+                if (chkRunEnumValidation.Checked)
+                    await RunEnumValidationOnExportAsync(xmlFolder, tasks, token);
+
+                ProgressBarHelper.SetProgress(pbExport, 100);
             }
             catch (OperationCanceledException)
             {
@@ -356,6 +367,57 @@ namespace ConfigExcelEnhancer.UI
                 _cts?.Dispose();
                 _cts = null;
             }
+        }
+
+        /// <summary>
+        /// 对刚导出的 Excel 文件执行 Enum 数据验证：复用 <see cref="EnumValidationService"/> 扫描
+        /// 本页 XML 文件夹的枚举定义，再交给 <see cref="ValidationUpdater"/> 写入验证规则。
+        /// 验证开关与 HideEnumDataSheet/BoolValidation/EnumForceRewrite 均复用全局设置。
+        /// </summary>
+        private async Task RunEnumValidationOnExportAsync(
+            string xmlFolder, List<ExcelExportTask> tasks, CancellationToken token)
+        {
+            LogDivider();
+            Log("对导出的 Excel 执行 Enum 验证...", LogLevel.Section);
+
+            var files = tasks
+                .Select(t => t.TargetExcelPath)
+                .Where(p => !string.IsNullOrEmpty(p) && File.Exists(p))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (files.Count == 0)
+            {
+                Log("没有可验证的导出文件。", LogLevel.Warn);
+                return;
+            }
+
+            await Task.Run(() =>
+            {
+                var prepared = EnumValidationService.PrepareEnums(
+                    xmlFolder, Settings.BoolValidation, (m, l) => Log(m, l), token);
+
+                if (!prepared.HasAny)
+                {
+                    Log("未找到任何 Enum 定义，跳过验证。", LogLevel.Warn);
+                    return;
+                }
+
+                var results = ValidationUpdater.UpdateFiles(
+                    files,
+                    prepared.EnumsForValidation,
+                    Settings.HideEnumDataSheet,
+                    r => Log(
+                        r.HasError      ? $"  {r.FileName}  —  错误：{r.ErrorMessage}"
+                        : r.WasSkipped  ? $"  {r.FileName}  —  跳过（文件被占用）"
+                        : $"  {r.FileName}  —  {r.EnumColumnsFound} 个枚举列",
+                        r.HasError ? LogLevel.Error : r.WasSkipped ? LogLevel.Warn : LogLevel.Ok),
+                    forceRewrite: Settings.EnumForceRewrite,
+                    beanFieldEnumMap: prepared.BeanFieldEnumMap);
+
+                int cols = results.Sum(r => r.EnumColumnsFound);
+                Log($"Enum 验证完成。处理 {results.Count} 个文件，共 {cols} 个枚举列。", LogLevel.Ok);
+            }, token);
         }
 
         private void btnCancel_Click(object sender, EventArgs e) => _cts?.Cancel();

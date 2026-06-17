@@ -56,6 +56,9 @@ namespace ConfigExcelEnhancer.UI
             btnExport = new Button();
             btnCancel = new Button();
             pbExport = new ProgressBar();
+            pnlExportSettings = new Panel();
+            lblExportSettings = new Label();
+            chkRunEnumValidation = new CheckBox();
             ctxLog = new ContextMenuStrip(components);
             ctxMenuItemClearLog = new ToolStripMenuItem();
             ctxMenuItemCopyLog = new ToolStripMenuItem();
@@ -71,6 +74,7 @@ namespace ConfigExcelEnhancer.UI
             tabPageBatch.SuspendLayout();
             pnlBatchTarget.SuspendLayout();
             pnlAction.SuspendLayout();
+            pnlExportSettings.SuspendLayout();
             ctxLog.SuspendLayout();
             SuspendLayout();
             // 
@@ -174,7 +178,7 @@ namespace ConfigExcelEnhancer.UI
             pnlNamingGroup.Controls.Add(rdoNameSnake);
             pnlNamingGroup.Location = new Point(76, 5);
             pnlNamingGroup.Name = "pnlNamingGroup";
-            pnlNamingGroup.Size = new Size(420, 26);
+            pnlNamingGroup.Size = new Size(339, 26);
             pnlNamingGroup.TabIndex = 1;
             // 
             // rdoNameAsIs
@@ -487,9 +491,41 @@ namespace ConfigExcelEnhancer.UI
             pbExport.Size = new Size(534, 22);
             pbExport.TabIndex = 2;
             pbExport.Visible = false;
-            // 
+            //
+            // pnlExportSettings
+            //
+            pnlExportSettings.Controls.Add(chkRunEnumValidation);
+            pnlExportSettings.Controls.Add(lblExportSettings);
+            pnlExportSettings.Dock = DockStyle.Bottom;
+            pnlExportSettings.Location = new Point(0, 300);
+            pnlExportSettings.Name = "pnlExportSettings";
+            pnlExportSettings.Size = new Size(764, 34);
+            pnlExportSettings.TabIndex = 5;
+            //
+            // lblExportSettings
+            //
+            lblExportSettings.AutoSize = true;
+            lblExportSettings.Location = new Point(12, 9);
+            lblExportSettings.Name = "lblExportSettings";
+            lblExportSettings.Size = new Size(68, 17);
+            lblExportSettings.TabIndex = 0;
+            lblExportSettings.Text = "导出设置：";
+            //
+            // chkRunEnumValidation
+            //
+            chkRunEnumValidation.AutoSize = true;
+            chkRunEnumValidation.Checked = true;
+            chkRunEnumValidation.CheckState = CheckState.Checked;
+            chkRunEnumValidation.Location = new Point(86, 8);
+            chkRunEnumValidation.Name = "chkRunEnumValidation";
+            chkRunEnumValidation.Size = new Size(126, 21);
+            chkRunEnumValidation.TabIndex = 1;
+            chkRunEnumValidation.Text = "执行 Enum 验证";
+            chkRunEnumValidation.UseVisualStyleBackColor = true;
+            chkRunEnumValidation.CheckedChanged += chkRunEnumValidation_CheckedChanged;
+            //
             // ctxLog
-            // 
+            //
             ctxLog.Items.AddRange(new ToolStripItem[] { ctxMenuItemClearLog, ctxMenuItemCopyLog });
             ctxLog.Name = "ctxLog";
             ctxLog.Size = new Size(101, 48);
@@ -528,6 +564,7 @@ namespace ConfigExcelEnhancer.UI
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(tabMode);
+            Controls.Add(pnlExportSettings);
             Controls.Add(pnlAction);
             Controls.Add(txtLog);
             Controls.Add(pnlNaming);
@@ -550,6 +587,8 @@ namespace ConfigExcelEnhancer.UI
             pnlBatchTarget.ResumeLayout(false);
             pnlBatchTarget.PerformLayout();
             pnlAction.ResumeLayout(false);
+            pnlExportSettings.ResumeLayout(false);
+            pnlExportSettings.PerformLayout();
             ctxLog.ResumeLayout(false);
             ResumeLayout(false);
         }
@@ -601,6 +640,9 @@ namespace ConfigExcelEnhancer.UI
         private Button      btnExport             = null!;
         private Button      btnCancel               = null!;
         private ProgressBar pbExport              = null!;
+        private Panel       pnlExportSettings     = null!;
+        private Label       lblExportSettings     = null!;
+        private CheckBox    chkRunEnumValidation  = null!;
 
         private ContextMenuStrip  ctxLog              = null!;
         private ToolStripMenuItem ctxMenuItemClearLog = null!;

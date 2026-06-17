@@ -128,67 +128,21 @@ namespace ConfigExcelEnhancer.UI
 
             try
             {
-                // ── 步骤1：扫描数据定义 XML ──────────────────────────
-                Log("扫描数据定义 XML Enum 定义...", LogLevel.Info);
+                // ── 步骤1：扫描数据定义 XML（复用 Core 公共流程 EnumValidationService）──
                 var sw = Stopwatch.StartNew();
+                var prepared = await Task.Run(
+                    () => EnumValidationService.PrepareEnums(xmlDir, Settings.BoolValidation, (m, l) => Log(m, l), token),
+                    token);
 
-                List<EnumInfo> enums = await Task.Run(() => EnumScanner.ScanDirectory(xmlDir), token);
-                sw.Stop();
-
-                token.ThrowIfCancellationRequested();
-
-                if (enums.Count == 0 && !Settings.BoolValidation)
+                if (prepared.RealEnumCount == 0 && !Settings.BoolValidation)
                 {
                     Log("未找到任何 Enum 定义，请检查数据定义 XML 目录。", LogLevel.Warn);
                     ProgressBarHelper.SetProgress(pbUpdate, 100);
                     return false;
                 }
-                else if (enums.Count == 0)
-                {
-                    Log("未找到任何 Enum 定义，将仅执行布尔值验证。", LogLevel.Info);
-                }
 
-                // 枚举列表（超过 8 个时截断显示）
-                var enumNameSet = enums.Select(e => e.Name).ToHashSet(StringComparer.Ordinal);
-                if (enums.Count > 0)
-                {
-                    const int maxShow = 8;
-                    var enumNames = enumNameSet.ToList();
-                    var namesDisplay = enumNames.Count <= maxShow
-                        ? string.Join("、", enumNames)
-                        : string.Join("、", enumNames.Take(maxShow)) + $" (+{enumNames.Count - maxShow})";
-                    Log($"找到 {enums.Count} 个 Enum：{namesDisplay}", LogLevel.Ok);
-
-                    // 警告没有 value=0 的枚举（默认值将使用第一项）
-                    foreach (var ei in enums)
-                    {
-                        if (!ei.Options.Any(o => o.Value == "0"))
-                            Log($"  ⚠ {ei.Name} 没有 value=0 的选项，默认将使用第一项：{ei.Options.FirstOrDefault()?.Name}", LogLevel.Warn);
-                    }
-                }
-
-                // 布尔值验证：注入合成 bool 枚举（Name="bool"，选项 FALSE/TRUE）
-                var enumsForValidation = enums.ToList();
-                if (Settings.BoolValidation)
-                {
-                    enumNameSet.Add("bool");
-                    enumsForValidation.Add(new EnumInfo
-                    {
-                        Name = "bool",
-                        Options =
-                        [
-                            new EnumOption { Name = "FALSE", Value = "0" },
-                            new EnumOption { Name = "TRUE",  Value = "1" }
-                        ]
-                    });
-                    Log("布尔值数据验证已启用（FALSE/TRUE）。", LogLevel.Info);
-                }
-
-                // 扫描 bean 字段枚举映射
-                var beanFieldEnumMap = await Task.Run(
-                    () => EnumScanner.ScanBeanEnumFields(xmlDir, enumNameSet), token);
-                if (beanFieldEnumMap.Count > 0)
-                    Log($"找到 {beanFieldEnumMap.Count} 个含枚举/布尔字段的 Bean。", LogLevel.Info);
+                var enumsForValidation = prepared.EnumsForValidation;
+                var beanFieldEnumMap = prepared.BeanFieldEnumMap;
 
                 ProgressBarHelper.SetProgress(pbUpdate, 20);
 
@@ -251,7 +205,7 @@ namespace ConfigExcelEnhancer.UI
                 ProgressBarHelper.SetProgress(pbUpdate, 75);
 
                 // ── 步骤3：汇总
-                PrintSummary(enums.Count, results, sw.Elapsed);
+                PrintSummary(prepared.RealEnumCount, results, sw.Elapsed);
 
                 // ── 步骤4：Excel COM 刷新公式缓存值 ─────────
                 var savedFiles = results.Where(r => r.WasSaved).Select(r => r.FilePath).ToList();

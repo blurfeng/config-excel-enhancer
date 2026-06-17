@@ -187,6 +187,7 @@ namespace ConfigExcelEnhancer.Utils
             ExcelExportNamePrefix             = src.ExcelExportNamePrefix,
             ExcelExportNameSuffix             = src.ExcelExportNameSuffix,
             ExcelExportNameConvention         = src.ExcelExportNameConvention,
+            ExcelExportRunEnumValidation      = src.ExcelExportRunEnumValidation,
         };
 
         #endregion

@@ -122,5 +122,8 @@ namespace ConfigExcelEnhancer.Models
 
         /// <summary>导出 Excel 文件的类名转换方式：0 = 类名不变，1 = 驼峰（首字母大写），2 = 全小写_下划线。</summary>
         public int ExcelExportNameConvention { get; set; } = 0;
+
+        /// <summary>导出 Excel 后是否对导出的文件执行 Enum 数据验证（复用枚举验证功能）。</summary>
+        public bool ExcelExportRunEnumValidation { get; set; } = true;
     }
 }
