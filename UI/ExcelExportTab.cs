@@ -9,12 +9,8 @@ namespace ConfigExcelEnhancer.UI
     /// 导出 Excel 功能选项卡。
     /// 根据 Luban XML 定义自动创建或更新 Excel 文件，支持列表模式和批量导出两种模式。
     /// </summary>
-    public partial class ExcelExportTab : UserControl
+    public partial class ExcelExportTab : TabBase
     {
-        private CancellationTokenSource? _cts;
-
-        public event EventHandler<bool>? ExecutionStateChanged;
-
         public ExcelExportTab()
         {
             InitializeComponent();
@@ -23,7 +19,7 @@ namespace ConfigExcelEnhancer.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
-        public void CancelRunningTask() => _cts?.Cancel();
+        protected override RichTextBox? LogBox => txtLog;
 
         // ── 设置加载 ──────────────────────────────────────────────────────
 
@@ -314,9 +310,9 @@ namespace ConfigExcelEnhancer.UI
             var token = _cts.Token;
 
             SetUILocked(true);
-            ExecutionStateChanged?.Invoke(this, true);
+            RaiseExecutionState(true);
             btnExport.Enabled = false;
-            btnStop.Enabled   = true;
+            btnCancel.Enabled   = true;
             ProgressBarHelper.SetProgressBegin(pbExport);
             LogDivider();
             Log($"开始导出 {tasks.Count} 个数据类...", LogLevel.Section);
@@ -334,8 +330,7 @@ namespace ConfigExcelEnhancer.UI
                             if (level == LogLevel.Ok)
                             {
                                 done++;
-                                ProgressBarHelper.SetProgress(pbExport,
-                                    10 + (int)(done * 80.0 / tasks.Count));
+                                ProgressBarHelper.SetProgress(pbExport, ScaledProgress(done, tasks.Count));
                             }
                         },
                         token);
@@ -355,15 +350,15 @@ namespace ConfigExcelEnhancer.UI
             finally
             {
                 SetUILocked(false);
-                ExecutionStateChanged?.Invoke(this, false);
+                RaiseExecutionState(false);
                 btnExport.Enabled = true;
-                btnStop.Enabled   = false;
+                btnCancel.Enabled   = false;
                 _cts?.Dispose();
                 _cts = null;
             }
         }
 
-        private void btnStop_Click(object sender, EventArgs e) => _cts?.Cancel();
+        private void btnCancel_Click(object sender, EventArgs e) => _cts?.Cancel();
 
         private void btnClearLog_Click(object sender, EventArgs e) => txtLog.Clear();
 
@@ -432,12 +427,5 @@ namespace ConfigExcelEnhancer.UI
             return tasks;
         }
 
-        // ── 日志辅助 ──────────────────────────────────────────────────────
-
-        private void Log(string msg, LogLevel level = LogLevel.Info)
-            => LogLibrary.Write(txtLog, msg, level);
-
-        private void LogDivider()
-            => LogLibrary.Divider(txtLog);
     }
 }

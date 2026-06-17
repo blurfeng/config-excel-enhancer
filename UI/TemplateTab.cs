@@ -10,13 +10,10 @@ namespace ConfigExcelEnhancer.UI
     /// 读取 Luban 生成的 JSON 配置，结合 Tables.cs 自动推断表访问器，
     /// 生成/更新 C# 模板类和 Ids 文件。
     /// </summary>
-    public partial class TemplateTab : UserControl
+    public partial class TemplateTab : TabBase
     {
-        private CancellationTokenSource? _cts;
         private bool _loadingJob;         // 正在从 job 加载 UI，抑制回写
         private TemplateExportJob? _currentJob;
-
-        public event EventHandler<bool>? ExecutionStateChanged;
 
         public TemplateTab()
         {
@@ -26,7 +23,7 @@ namespace ConfigExcelEnhancer.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
-        public void CancelRunningTask() => _cts?.Cancel();
+        protected override RichTextBox? LogBox => txtLog;
 
         // ── 设置同步 ──────────────────────────────────────────────────────
 
@@ -411,10 +408,10 @@ namespace ConfigExcelEnhancer.UI
             var token = _cts.Token;
 
             SetUILocked(true);
-            ExecutionStateChanged?.Invoke(this, true);
+            RaiseExecutionState(true);
             btnRunAll.Enabled = false;
             btnRunSelected.Enabled = false;
-            btnStop.Enabled = true;
+            btnCancel.Enabled = true;
             ProgressBarHelper.SetProgressBegin(pbRun);
             LogDivider();
 
@@ -567,10 +564,10 @@ namespace ConfigExcelEnhancer.UI
             finally
             {
                 SetUILocked(false);
-                ExecutionStateChanged?.Invoke(this, false);
+                RaiseExecutionState(false);
                 btnRunAll.Enabled = true;
                 btnRunSelected.Enabled = true;
-                btnStop.Enabled = false;
+                btnCancel.Enabled = false;
                 _cts?.Dispose();
                 _cts = null;
                 LogDivider();
@@ -578,19 +575,11 @@ namespace ConfigExcelEnhancer.UI
             return anySuccess;
         }
 
-        private void btnStop_Click(object sender, EventArgs e)
+        private void btnCancel_Click(object sender, EventArgs e)
         {
             _cts?.Cancel();
-            btnStop.Enabled = false;
+            btnCancel.Enabled = false;
         }
-
-        // ── 日志工具 ──────────────────────────────────────────────────────
-
-        private void Log(string msg, LogLevel level = LogLevel.Ok)
-            => LogLibrary.Write(txtLog, msg, level);
-
-        private void LogDivider()
-            => LogLibrary.Divider(txtLog);
 
         private void btnClearLog_Click(object? sender, EventArgs e) => txtLog.Clear();
 

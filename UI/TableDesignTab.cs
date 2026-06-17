@@ -9,13 +9,8 @@ namespace ConfigExcelEnhancer.UI
     /// 表格设计选项卡。从模板 Excel 将样式（表头行、列宽、单元格合并等）应用到目标 Excel 文件，
     /// 并可选地在应用后强制更新枚举验证规则和刷新公式缓存。
     /// </summary>
-    public partial class TableDesignTab : UserControl
+    public partial class TableDesignTab : TabBase
     {
-        private CancellationTokenSource? _cts;
-
-        /// <summary>任务执行状态变化时触发（true = 开始执行，false = 执行结束）。</summary>
-        public event EventHandler<bool>? ExecutionStateChanged;
-
         public TableDesignTab()
         {
             InitializeComponent();
@@ -24,8 +19,7 @@ namespace ConfigExcelEnhancer.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
-        /// <summary>取消当前正在进行的任务（供窗口关闭时调用）。</summary>
-        public void CancelRunningTask() => _cts?.Cancel();
+        protected override RichTextBox? LogBox => txtLog;
 
         /// <summary>将 AppSettings 的值同步到界面控件。</summary>
         public void LoadFromSettings()
@@ -143,9 +137,9 @@ namespace ConfigExcelEnhancer.UI
             var token = _cts.Token;
 
             SetUILocked(true);
-            ExecutionStateChanged?.Invoke(this, true);
+            RaiseExecutionState(true);
             btnApply.Enabled = false;
-            btnStop.Enabled = true;
+            btnCancel.Enabled = true;
             ProgressBarHelper.SetProgressBegin(pbApply);
             LogDivider();
 
@@ -168,8 +162,7 @@ namespace ConfigExcelEnhancer.UI
             var progress = new Progress<string>(_ =>
             {
                 processed++;
-                int v = total > 0 ? 10 + (int)(processed * 80.0 / total) : 90;
-                ProgressBarHelper.SetProgress(pbApply, Math.Min(v, 90));
+                ProgressBarHelper.SetProgress(pbApply, ScaledProgress(processed, total));
             });
 
             try
@@ -192,9 +185,9 @@ namespace ConfigExcelEnhancer.UI
             finally
             {
                 SetUILocked(false);
-                ExecutionStateChanged?.Invoke(this, false);
+                RaiseExecutionState(false);
                 btnApply.Enabled = true;
-                btnStop.Enabled = false;
+                btnCancel.Enabled = false;
                 _cts?.Dispose();
                 _cts = null;
                 Log("─ 结束 ─", LogLevel.Info);
@@ -202,19 +195,11 @@ namespace ConfigExcelEnhancer.UI
             }
         }
 
-        private void btnStop_Click(object sender, EventArgs e)
+        private void btnCancel_Click(object sender, EventArgs e)
         {
             _cts?.Cancel();
-            btnStop.Enabled = false;
+            btnCancel.Enabled = false;
         }
-
-        // ── 日志工具 ──────────────────────────────────────────────────────
-
-        private void Log(string message, LogLevel level = LogLevel.Ok)
-            => LogLibrary.Write(txtLog, message, level);
-
-        private void LogDivider()
-            => LogLibrary.Divider(txtLog);
 
         private void btnClearLog_Click(object? sender, EventArgs e) => txtLog.Clear();
 

@@ -6,24 +6,16 @@ using ConfigExcelEnhancer.Utils;
 
 namespace ConfigExcelEnhancer.UI
 {
-    public partial class EnumTab : UserControl
+    public partial class EnumTab : TabBase
     {
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
-        public event EventHandler<bool>? ExecutionStateChanged;
-
-        private CancellationTokenSource? _cts;
+        protected override RichTextBox? LogBox => txtLog;
 
         public EnumTab()
         {
             InitializeComponent();
-        }
-
-        /// <summary>取消当前正在进行的任务（供窗口关闭时调用）。</summary>
-        public void CancelRunningTask()
-        {
-            _cts?.Cancel();
         }
 
         protected override void OnLoad(EventArgs e)
@@ -126,9 +118,9 @@ namespace ConfigExcelEnhancer.UI
             var token = _cts.Token;
 
             SetUILocked(true);
-            ExecutionStateChanged?.Invoke(this, true);
+            RaiseExecutionState(true);
             btnUpdate.Enabled = false;
-            btnStop.Enabled = true;
+            btnCancel.Enabled = true;
             ProgressBarHelper.SetProgressBegin(pbUpdate);
             LogDivider();
 
@@ -294,9 +286,9 @@ namespace ConfigExcelEnhancer.UI
             finally
             {
                 SetUILocked(false);
-                ExecutionStateChanged?.Invoke(this, false);
+                RaiseExecutionState(false);
                 btnUpdate.Enabled = true;
-                btnStop.Enabled = false;
+                btnCancel.Enabled = false;
                 _cts?.Dispose();
                 _cts = null;
                 Log("─ 结束 ─", LogLevel.Info);
@@ -311,10 +303,10 @@ namespace ConfigExcelEnhancer.UI
             await RunAsync();
         }
 
-        private void btnStop_Click(object sender, EventArgs e)
+        private void btnCancel_Click(object sender, EventArgs e)
         {
             _cts?.Cancel();
-            btnStop.Enabled = false;
+            btnCancel.Enabled = false;
         }
 
         private void btnClearLog_Click(object? sender, EventArgs e)
@@ -404,13 +396,5 @@ namespace ConfigExcelEnhancer.UI
             else
                 Log("完成 | 无更新内容", LogLevel.Skip);
         }
-
-        // ── 日志工具 ──────────────────────────────────────────
-
-        private void Log(string message, LogLevel level = LogLevel.Ok)
-            => LogLibrary.Write(txtLog, message, level);
-
-        private void LogDivider()
-            => LogLibrary.Divider(txtLog);
     }
 }

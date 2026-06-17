@@ -19,7 +19,7 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseTablesClass = new Button();
             btnRunAll = new Button();
             btnRunSelected = new Button();
-            btnStop = new Button();
+            btnCancel = new Button();
             txtDisplayName = new TextBox();
             txtJsonFile = new TextBox();
             btnBrowseJsonFile = new Button();
@@ -132,16 +132,16 @@ namespace ConfigExcelEnhancer.UI
             toolTip.SetToolTip(btnRunSelected, "仅导出当前在左侧列表中选中的任务。");
             btnRunSelected.Click += btnRunSelected_Click;
             // 
-            // btnStop
+            // btnCancel
             // 
-            btnStop.Enabled = false;
-            btnStop.Location = new Point(245, 3);
-            btnStop.Name = "btnStop";
-            btnStop.Size = new Size(80, 32);
-            btnStop.TabIndex = 2;
-            btnStop.Text = "■ 停止";
-            toolTip.SetToolTip(btnStop, "取消正在执行的任务（当前文件写完后停止）。");
-            btnStop.Click += btnStop_Click;
+            btnCancel.Enabled = false;
+            btnCancel.Location = new Point(245, 3);
+            btnCancel.Name = "btnCancel";
+            btnCancel.Size = new Size(80, 32);
+            btnCancel.TabIndex = 2;
+            btnCancel.Text = "■ 取消";
+            toolTip.SetToolTip(btnCancel, "取消正在执行的任务（当前文件写完后停止）。");
+            btnCancel.Click += btnCancel_Click;
             // 
             // txtDisplayName
             // 
@@ -652,7 +652,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             pnlRunButtons.Controls.Add(btnRunAll);
             pnlRunButtons.Controls.Add(btnRunSelected);
-            pnlRunButtons.Controls.Add(btnStop);
+            pnlRunButtons.Controls.Add(btnCancel);
             pnlRunButtons.Controls.Add(pbRun);
             pnlRunButtons.Dock = DockStyle.Top;
             pnlRunButtons.Location = new Point(0, 2);
@@ -754,7 +754,7 @@ namespace ConfigExcelEnhancer.UI
         private Panel pnlRunButtons = null!;
         private Button btnRunAll = null!;
         private Button btnRunSelected = null!;
-        private Button btnStop = null!;
+        private Button btnCancel = null!;
         private ProgressBar pbRun = null!;
         private ContextMenuStrip ctxLog = null!;
         private ToolStripMenuItem ctxMenuItemClearLog = null!;

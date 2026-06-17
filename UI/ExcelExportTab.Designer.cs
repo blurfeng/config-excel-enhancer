@@ -54,7 +54,7 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseTargetFolder = new Button();
             pnlAction = new Panel();
             btnExport = new Button();
-            btnStop = new Button();
+            btnCancel = new Button();
             pbExport = new ProgressBar();
             ctxLog = new ContextMenuStrip(components);
             ctxMenuItemClearLog = new ToolStripMenuItem();
@@ -452,7 +452,7 @@ namespace ConfigExcelEnhancer.UI
             // pnlAction
             // 
             pnlAction.Controls.Add(btnExport);
-            pnlAction.Controls.Add(btnStop);
+            pnlAction.Controls.Add(btnCancel);
             pnlAction.Controls.Add(pbExport);
             pnlAction.Dock = DockStyle.Bottom;
             pnlAction.Location = new Point(0, 334);
@@ -469,15 +469,15 @@ namespace ConfigExcelEnhancer.UI
             btnExport.Text = "▶ 导出";
             btnExport.Click += btnExport_Click;
             // 
-            // btnStop
+            // btnCancel
             // 
-            btnStop.Enabled = false;
-            btnStop.Location = new Point(130, 7);
-            btnStop.Name = "btnStop";
-            btnStop.Size = new Size(80, 32);
-            btnStop.TabIndex = 1;
-            btnStop.Text = "■ 停止";
-            btnStop.Click += btnStop_Click;
+            btnCancel.Enabled = false;
+            btnCancel.Location = new Point(130, 7);
+            btnCancel.Name = "btnCancel";
+            btnCancel.Size = new Size(80, 32);
+            btnCancel.TabIndex = 1;
+            btnCancel.Text = "■ 取消";
+            btnCancel.Click += btnCancel_Click;
             // 
             // pbExport
             // 
@@ -599,7 +599,7 @@ namespace ConfigExcelEnhancer.UI
 
         private Panel       pnlAction             = null!;
         private Button      btnExport             = null!;
-        private Button      btnStop               = null!;
+        private Button      btnCancel               = null!;
         private ProgressBar pbExport              = null!;
 
         private ContextMenuStrip  ctxLog              = null!;

@@ -8,8 +8,10 @@ namespace ConfigExcelEnhancer
     /// </summary>
     public partial class MainForm : Form
     {
-        // 当前是否有任务正在执行（任意 Tab 运行中均为 true），用于阻止 Tab 切换
-        private bool _isExecuting;
+        // 正在执行任务的 Tab 计数（>0 表示有任务运行中），用于阻止 Tab 切换。
+        // 用计数器而非单一 bool：HomeTab 一键导出会串联触发子 Tab 的状态事件，
+        // 单一 bool 会被先结束的子任务误置为 false，导致执行期间仍可切换 Tab。
+        private int _executingCount;
 
         // 本地状态（不进入版本控制）
         private LocalState _localState = LocalStateManager.Load();
@@ -21,14 +23,23 @@ namespace ConfigExcelEnhancer
         {
             InitializeComponent();
             settingsTab.SettingsCleared += (_, _) => LoadSettings();
-            enumTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
-            lubanTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
-            tableDesignTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
-            templateTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
-            excelExportTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
-            homeTab.ExecutionStateChanged += (_, executing) => _isExecuting = executing;
-            tabControl.Selecting += (_, e) => { if (_isExecuting) e.Cancel = true; };
+            enumTab.ExecutionStateChanged += OnTabExecutionStateChanged;
+            lubanTab.ExecutionStateChanged += OnTabExecutionStateChanged;
+            tableDesignTab.ExecutionStateChanged += OnTabExecutionStateChanged;
+            templateTab.ExecutionStateChanged += OnTabExecutionStateChanged;
+            excelExportTab.ExecutionStateChanged += OnTabExecutionStateChanged;
+            homeTab.ExecutionStateChanged += OnTabExecutionStateChanged;
+            tabControl.Selecting += (_, e) => { if (_executingCount > 0) e.Cancel = true; };
             LoadSettings();
+        }
+
+        /// <summary>
+        /// 任一 Tab 执行状态变化时更新计数：开始 +1，结束 -1（钳制非负）。
+        /// </summary>
+        private void OnTabExecutionStateChanged(object? sender, bool executing)
+        {
+            if (executing) _executingCount++;
+            else _executingCount = Math.Max(0, _executingCount - 1);
         }
 
         /// <summary>

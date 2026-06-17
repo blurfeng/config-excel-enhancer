@@ -24,7 +24,7 @@ namespace ConfigExcelEnhancer.UI
             chkForceRewrite = new CheckBox();
             chkBoolValidation = new CheckBox();
             btnUpdate = new Button();
-            btnStop = new Button();
+            btnCancel = new Button();
             pbUpdate = new ProgressBar();
             ctxLog = new ContextMenuStrip(components);
             ctxMenuItemClearLog = new ToolStripMenuItem();
@@ -44,7 +44,7 @@ namespace ConfigExcelEnhancer.UI
             pnlConfig.Controls.Add(excelPicker);
             pnlConfig.Controls.Add(grpOptions);
             pnlConfig.Controls.Add(btnUpdate);
-            pnlConfig.Controls.Add(btnStop);
+            pnlConfig.Controls.Add(btnCancel);
             pnlConfig.Controls.Add(pbUpdate);
             pnlConfig.Dock = DockStyle.Top;
             pnlConfig.Location = new Point(0, 0);
@@ -143,15 +143,15 @@ namespace ConfigExcelEnhancer.UI
             btnUpdate.Text = "▶ 更新 Enum 验证";
             btnUpdate.Click += btnUpdate_Click;
             // 
-            // btnStop
+            // btnCancel
             // 
-            btnStop.Enabled = false;
-            btnStop.Location = new Point(160, 282);
-            btnStop.Name = "btnStop";
-            btnStop.Size = new Size(80, 32);
-            btnStop.TabIndex = 9;
-            btnStop.Text = "■ 停止";
-            btnStop.Click += btnStop_Click;
+            btnCancel.Enabled = false;
+            btnCancel.Location = new Point(160, 282);
+            btnCancel.Name = "btnCancel";
+            btnCancel.Size = new Size(80, 32);
+            btnCancel.TabIndex = 9;
+            btnCancel.Text = "■ 取消";
+            btnCancel.Click += btnCancel_Click;
             // 
             // pbUpdate
             // 
@@ -223,7 +223,7 @@ namespace ConfigExcelEnhancer.UI
         private CheckBox chkForceRewrite = null!;
         private CheckBox chkBoolValidation = null!;
         private Button btnUpdate = null!;
-        private Button btnStop = null!;
+        private Button btnCancel = null!;
         private ProgressBar pbUpdate = null!;
         private ContextMenuStrip ctxLog = null!;
         private ToolStripMenuItem ctxMenuItemClearLog = null!;

@@ -33,7 +33,7 @@ namespace ConfigExcelEnhancer.UI
             lblMergeKeywords = new Label();
             txtMergeKeywords = new TextBox();
             btnApply = new Button();
-            btnStop = new Button();
+            btnCancel = new Button();
             pbApply = new ProgressBar();
             ctxLog = new ContextMenuStrip(components);
             ctxMenuItemClearLog = new ToolStripMenuItem();
@@ -53,7 +53,7 @@ namespace ConfigExcelEnhancer.UI
             pnlConfig.Controls.Add(excelPicker);
             pnlConfig.Controls.Add(grpOptions);
             pnlConfig.Controls.Add(btnApply);
-            pnlConfig.Controls.Add(btnStop);
+            pnlConfig.Controls.Add(btnCancel);
             pnlConfig.Controls.Add(pbApply);
             pnlConfig.Dock = DockStyle.Top;
             pnlConfig.Location = new Point(0, 0);
@@ -253,15 +253,15 @@ namespace ConfigExcelEnhancer.UI
             btnApply.Text = "▶ 应用表设计";
             btnApply.Click += btnApply_Click;
             // 
-            // btnStop
+            // btnCancel
             // 
-            btnStop.Enabled = false;
-            btnStop.Location = new Point(130, 342);
-            btnStop.Name = "btnStop";
-            btnStop.Size = new Size(80, 32);
-            btnStop.TabIndex = 19;
-            btnStop.Text = "■ 停止";
-            btnStop.Click += btnStop_Click;
+            btnCancel.Enabled = false;
+            btnCancel.Location = new Point(130, 342);
+            btnCancel.Name = "btnCancel";
+            btnCancel.Size = new Size(80, 32);
+            btnCancel.TabIndex = 19;
+            btnCancel.Text = "■ 取消";
+            btnCancel.Click += btnCancel_Click;
             // 
             // pbApply
             // 
@@ -344,7 +344,7 @@ namespace ConfigExcelEnhancer.UI
         private Label lblMergeKeywords = null!;
         private TextBox txtMergeKeywords = null!;
         private Button btnApply = null!;
-        private Button btnStop = null!;
+        private Button btnCancel = null!;
         private ProgressBar pbApply = null!;
         private ContextMenuStrip ctxLog = null!;
         private ToolStripMenuItem ctxMenuItemClearLog = null!;

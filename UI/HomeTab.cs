@@ -7,7 +7,7 @@ namespace ConfigExcelEnhancer.UI
     /// <summary>
     /// 主页选项卡，提供最常用的快捷操作：一键导出（Enum 验证 + Luban 导表 + 导出模板类）。
     /// </summary>
-    public partial class HomeTab : UserControl
+    public partial class HomeTab : TabBase
     {
         private EnumTab? _enumTab;
         private LubanTab? _lubanTab;
@@ -20,7 +20,7 @@ namespace ConfigExcelEnhancer.UI
 
         private bool _isExecuting;
 
-        public event EventHandler<bool>? ExecutionStateChanged;
+        protected override RichTextBox? LogBox => txtLog;
 
         public HomeTab()
         {
@@ -342,7 +342,7 @@ namespace ConfigExcelEnhancer.UI
             }
 
             SetUILocked(true);
-            ExecutionStateChanged?.Invoke(this, true);
+            RaiseExecutionState(true);
             txtLog.Clear();
             LogDivider();
 
@@ -414,7 +414,7 @@ namespace ConfigExcelEnhancer.UI
             finally
             {
                 SetUILocked(false);
-                ExecutionStateChanged?.Invoke(this, false);
+                RaiseExecutionState(false);
                 LogDivider();
             }
         }
@@ -428,7 +428,7 @@ namespace ConfigExcelEnhancer.UI
             }
 
             SetUILocked(true);
-            ExecutionStateChanged?.Invoke(this, true);
+            RaiseExecutionState(true);
             txtLog.Clear();
             LogDivider();
 
@@ -441,7 +441,7 @@ namespace ConfigExcelEnhancer.UI
             SetOverallProgress(1, 1);
 
             SetUILocked(false);
-            ExecutionStateChanged?.Invoke(this, false);
+            RaiseExecutionState(false);
             LogDivider();
         }
 
@@ -489,8 +489,9 @@ namespace ConfigExcelEnhancer.UI
 
         /// <summary>
         /// 供 MainForm 在窗口关闭时调用，取消当前正在执行的任务。
+        /// HomeTab 编排子 Tab，重写为向各子 Tab 转发取消。
         /// </summary>
-        public void CancelRunningTask()
+        public override void CancelRunningTask()
         {
             if (_isExecuting)
                 btnCancel_Click(this, EventArgs.Empty);
@@ -525,11 +526,18 @@ namespace ConfigExcelEnhancer.UI
             if (!string.IsNullOrEmpty(_localState.ProjectRoot) && Directory.Exists(_localState.ProjectRoot))
                 return;
 
-            var found = FunctionLibrary.TryFindProjectRoot(_settings.ProjectName, AppContext.BaseDirectory, _settings.FuzzyFindProjectRoot);
-            if (found == null) return;
+            try
+            {
+                var found = FunctionLibrary.TryFindProjectRoot(_settings.ProjectName, AppContext.BaseDirectory, _settings.FuzzyFindProjectRoot);
+                if (found == null) return;
 
-            _localState.ProjectRoot = found;
-            LocalStateManager.Save(_localState);
+                _localState.ProjectRoot = found;
+                LocalStateManager.Save(_localState);
+            }
+            catch (Exception ex)
+            {
+                Log($"自动检测项目根目录失败：{ex.Message}", LogLevel.Warn);
+            }
         }
 
         private void txtProjectName_Leave(object? sender, EventArgs e)
@@ -585,12 +593,5 @@ namespace ConfigExcelEnhancer.UI
                 Clipboard.SetText(txtLog.Text);
         }
 
-        // ── 日志工具 ──────────────────────────────────────────
-
-        private void Log(string message, LogLevel level = LogLevel.Ok)
-            => LogLibrary.Write(txtLog, message, level);
-
-        private void LogDivider()
-            => LogLibrary.Divider(txtLog);
     }
 }

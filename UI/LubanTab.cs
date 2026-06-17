@@ -5,10 +5,12 @@ using ConfigExcelEnhancer.Utils;
 
 namespace ConfigExcelEnhancer.UI
 {
-    public partial class LubanTab : UserControl
+    public partial class LubanTab : TabBase
     {
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
+
+        protected override RichTextBox? LogBox => txtLog;
 
         private LubanConfig? _config;
         private LubanRunner? _runner;
@@ -21,7 +23,6 @@ namespace ConfigExcelEnhancer.UI
         // 是否有未保存的修改（一旦有改动就置 true，重置/保存后清除）
         private bool _isDirty;
 
-        public event EventHandler<bool>? ExecutionStateChanged;
         private bool _preLockSaveEnabled;
         private bool _preLockResetEnabled;
 
@@ -519,7 +520,7 @@ namespace ConfigExcelEnhancer.UI
             var tcs = new TaskCompletionSource<bool>();
 
             SetUILocked(true);
-            ExecutionStateChanged?.Invoke(this, true);
+            RaiseExecutionState(true);
             btnRun.Enabled = false;
             btnCancel.Enabled = true;
             int cmdCount = _config?.Commands.Count ?? 1;
@@ -553,7 +554,7 @@ namespace ConfigExcelEnhancer.UI
                     Log($"导表失败，退出码：{code}", LogLevel.Error);
                 ProgressBarHelper.SetProgress(pbRun, 100);
                 SetUILocked(false);
-                ExecutionStateChanged?.Invoke(this, false);
+                RaiseExecutionState(false);
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
                 _runner = null;
@@ -570,7 +571,7 @@ namespace ConfigExcelEnhancer.UI
             {
                 Log($"启动失败：{ex.Message}", LogLevel.Error);
                 SetUILocked(false);
-                ExecutionStateChanged?.Invoke(this, false);
+                RaiseExecutionState(false);
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
                 ProgressBarHelper.SetProgress(pbRun, 100);
@@ -692,12 +693,6 @@ namespace ConfigExcelEnhancer.UI
             value.Contains('\\') || value.Contains('/') ||
             value == "." || value.StartsWith("..");
 
-        private void Log(string message, LogLevel level = LogLevel.Ok)
-            => LogLibrary.Write(txtLog, message, level);
-
-        private void LogDivider()
-            => LogLibrary.Divider(txtLog);
-
         private void btnClearLog_Click(object? sender, EventArgs e)
         {
             txtLog.Clear();
@@ -709,8 +704,8 @@ namespace ConfigExcelEnhancer.UI
                 Clipboard.SetText(txtLog.Text);
         }
 
-        /// <summary>取消当前正在进行的任务（供窗口关闭时调用）。</summary>
-        public void CancelRunningTask()
+        /// <summary>取消当前正在进行的任务（供窗口关闭时调用）。Luban 为事件驱动型，重写为通过取消按钮停止。</summary>
+        public override void CancelRunningTask()
         {
             if (btnCancel.Enabled)
                 btnCancel_Click(this, EventArgs.Empty);

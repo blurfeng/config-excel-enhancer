@@ -36,7 +36,7 @@ namespace ConfigExcelEnhancer.UI
                 else
                     rdoDirectory.Checked = true;
                 _suppressEvents = false;
-                UpdateModeVisibility();
+                // 无需再调用 UpdateModeVisibility()：被选中单选按钮的 CheckedChanged 处理器已调用。
             }
         }
 
