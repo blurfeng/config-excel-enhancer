@@ -725,6 +725,8 @@ namespace ConfigExcelEnhancer.Core
             if (info.SubVarRow > 0) existingRole[HeaderRole.SubVar] = info.SubVarRow;
 
             // ── 快照（清空前，只读）──
+            var aHeader = CaptureHeaderStyles(ws, 1, existingRole);
+            var aData   = CaptureColumnData(ws, 1, dataStart, dataCount);
             var bHeader = CaptureHeaderStyles(ws, 2, existingRole);
             var bData   = CaptureColumnData(ws, 2, dataStart, dataCount);
 
@@ -746,13 +748,6 @@ namespace ConfigExcelEnhancer.Core
             var dataRowHeight = new double[dataCount];
             for (int k = 0; k < dataCount; k++) dataRowHeight[k] = ws.Row(dataStart + k).Height;
 
-            // ── 安全清空：先删活动智能表，再取消所有合并，最后清内容+样式 ──
-            // 必须先移除智能表，否则清空表头（注释行）会触发 ClosedXML 列名自动改名并产生重复键。
-            foreach (var name in ws.Tables.Select(t => t.Name).ToList())
-                ws.Tables.Remove(name);
-            foreach (var mr in ws.MergedRanges.ToList()) mr.Unmerge();
-            ws.RangeUsed()?.Clear(XLClearOptions.All);
-
             // ── 目标行布局（依目标是否含结构体子字段行）──
             bool needsSubRow = targetColumns.Any(c => !string.IsNullOrEmpty(c.SubVarName));
             int tVar = 1, tType = 2;
@@ -770,16 +765,49 @@ namespace ConfigExcelEnhancer.Core
             };
             if (tSub > 0) targetRole[HeaderRole.SubVar] = tSub;
 
-            // A 列标记
-            ws.Cell(tVar, 1).Value  = "##var";
-            ws.Cell(tType, 1).Value = "##type";
-            if (tSub > 0) ws.Cell(tSub, 1).Value = "##var";
-            ws.Cell(tGroup, 1).Value   = "##group";
-            ws.Cell(tComment, 1).Value = "##";
-
             int finalLastCol = 2 + targetColumns.Count;
             int outputDataRows = Math.Max(dataCount, 1); // 至少保留一行承载计算列
             int lastDataRow = targetHeaderRows + outputDataRows;
+            int maxCol = Math.Max(lastCol, finalLastCol);
+            int maxRow = Math.Max(lastRow, lastDataRow);
+
+            // ── 保留智能表：用「临时唯一表头」桥接，避免清空/调整时触发 ClosedXML 列名改名 ──
+            // 不移除智能表（移除后重建会丢失其 Theme/条纹等样式）。改为：先把表头改成临时唯一值，
+            // 把表 Resize 到最终几何（表头行随之就位，Theme 与所有表级属性原样保留），
+            // 再清空表外区域并用真实值覆盖临时表头。
+            foreach (var mr in ws.MergedRanges.ToList())
+                if (mr.RangeAddress.FirstAddress.RowNumber <= Math.Max(existingHeaderRows, targetHeaderRows))
+                    mr.Unmerge();
+
+            var table = ws.Tables.FirstOrDefault();
+            if (table != null)
+            {
+                // 旧表头改临时唯一值（保持当前表有效）；目标表头行也填临时唯一值（供 Resize）。
+                for (int c = 2; c <= lastCol; c++)
+                    ws.Cell(info.CommentRow, c).Value = $"__tmp_h_{c}";
+                for (int c = 2; c <= finalLastCol; c++)
+                    ws.Cell(targetHeaderRows, c).Value = $"__tmp_t_{c}";
+                table.Resize(ws.Range(targetHeaderRows, 2, lastDataRow, finalLastCol));
+            }
+
+            // 移除旧的数据验证（枚举/布尔下拉）：它们按列位置绑定，列重排后全部失位；
+            // 尤其落在「被删除列」上的验证，清空单元格后会残留空 sqref，导致 Excel「需要修复」。
+            // 统一清除，由导出后的 Enum 验证步骤按新列位置重新应用。
+            ws.DataValidations.Delete(_ => true);
+
+            // ── 清空智能表之外的区域；当前表头行(targetHeaderRows, 2..finalLastCol) 保留待真实值覆盖 ──
+            if (targetHeaderRows > 1)
+                ws.Range(1, 1, targetHeaderRows - 1, maxCol).Clear(XLClearOptions.All);
+            ws.Cell(targetHeaderRows, 1).Clear(XLClearOptions.All);
+            if (maxCol > finalLastCol)
+                ws.Range(targetHeaderRows, finalLastCol + 1, targetHeaderRows, maxCol).Clear(XLClearOptions.All);
+            if (maxRow > targetHeaderRows)
+                ws.Range(targetHeaderRows + 1, 1, maxRow, maxCol).Clear(XLClearOptions.All);
+
+            // A 列：行标记 + 还原表头/数据单元格样式。
+            // A 列在智能表之外，清空时被一并清掉，数据行的填充色等需手动还原。
+            EmitColumnHeader(ws, 1, targetRole, AHeaderValue(), aHeader, null);
+            EmitColumnData(ws, 1, targetHeaderRows, aData, styleOnly: true);
 
             // ── B 列（$type）：表头值固定、样式还原；数据样式还原（公式稍后统一回填）──
             EmitColumnHeader(ws, 2, targetRole, BHeaderValue(className), bHeader, null);
@@ -827,7 +855,10 @@ namespace ConfigExcelEnhancer.Core
             ws.SheetView.FreezeRows(targetHeaderRows);
 
             DeduplicateCommentRow(ws, tComment, finalLastCol);
-            ResizeOrCreateTable(ws, tComment, lastDataRow, finalLastCol);
+
+            // 智能表已在上方 Resize 到最终几何（保留原 Theme）；仅当原本无表（流路径剥离后）才新建。
+            if (table == null)
+                ResizeOrCreateTable(ws, tComment, lastDataRow, finalLastCol);
         }
 
         /// <summary>取目标顺序中离 index 最近、且为「保留列」的捕获列，作为新增列的样式参考。</summary>
@@ -852,6 +883,16 @@ namespace ConfigExcelEnhancer.Core
             HeaderRole.SubVar  => m.SubVarName,
             HeaderRole.Group   => m.Group,
             HeaderRole.Comment => m.Comment,
+            _ => string.Empty,
+        };
+
+        private static Func<HeaderRole, string> AHeaderValue() => role => role switch
+        {
+            HeaderRole.Var     => "##var",
+            HeaderRole.Type    => "##type",
+            HeaderRole.SubVar  => "##var",
+            HeaderRole.Group   => "##group",
+            HeaderRole.Comment => "##",
             _ => string.Empty,
         };
 
