@@ -14,6 +14,7 @@ namespace ConfigExcelEnhancer.UI
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            toolTip = new ToolTip(components);
             pnlTop = new Panel();
             lblBatPath = new Label();
             txtBatPath = new TextBox();
@@ -36,6 +37,12 @@ namespace ConfigExcelEnhancer.UI
             pnlBottom.SuspendLayout();
             ctxLog.SuspendLayout();
             SuspendLayout();
+            //
+            // toolTip
+            //
+            toolTip.AutoPopDelay = 8000;
+            toolTip.InitialDelay = 400;
+            toolTip.ReshowDelay = 200;
             // 
             // pnlTop
             // 
@@ -57,6 +64,7 @@ namespace ConfigExcelEnhancer.UI
             lblBatPath.Size = new Size(64, 17);
             lblBatPath.TabIndex = 0;
             lblBatPath.Text = "gen.bat：";
+            toolTip.SetToolTip(lblBatPath, "Luban 导表脚本（gen.bat）的路径，工具会解析其中的命令，供下方编辑参数后执行。");
             // 
             // txtBatPath
             // 
@@ -106,6 +114,7 @@ namespace ConfigExcelEnhancer.UI
             btnSave.Size = new Size(110, 28);
             btnSave.TabIndex = 0;
             btnSave.Text = "保存配置";
+            toolTip.SetToolTip(btnSave, "保存对各命令参数的修改。");
             btnSave.Click += btnSave_Click;
             // 
             // btnReset
@@ -116,6 +125,7 @@ namespace ConfigExcelEnhancer.UI
             btnReset.Size = new Size(80, 28);
             btnReset.TabIndex = 1;
             btnReset.Text = "重置";
+            toolTip.SetToolTip(btnReset, "放弃未保存的修改，还原为 gen.bat 中的原始参数。");
             btnReset.Click += btnReset_Click;
             // 
             // tabsCommands
@@ -146,6 +156,7 @@ namespace ConfigExcelEnhancer.UI
             btnRun.Size = new Size(110, 32);
             btnRun.TabIndex = 1;
             btnRun.Text = "▶ 执行导表";
+            toolTip.SetToolTip(btnRun, "以子进程运行 gen.bat 执行 Luban 导表，并在下方实时输出日志。");
             btnRun.Click += btnRun_Click;
             // 
             // btnCancel
@@ -220,6 +231,7 @@ namespace ConfigExcelEnhancer.UI
             ResumeLayout(false);
         }
 
+        private ToolTip toolTip = null!;
         private Panel pnlTop = null!;
         private Label lblBatPath = null!;
         private TextBox txtBatPath = null!;

@@ -14,6 +14,7 @@ namespace ConfigExcelEnhancer.UI
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            toolTip = new ToolTip(components);
             pnlConfig = new Panel();
             lblSourceExcel = new Label();
             txtSourceExcel = new TextBox();
@@ -45,6 +46,12 @@ namespace ConfigExcelEnhancer.UI
             pnlScopeGroup.SuspendLayout();
             ctxLog.SuspendLayout();
             SuspendLayout();
+            //
+            // toolTip
+            //
+            toolTip.AutoPopDelay = 8000;
+            toolTip.InitialDelay = 400;
+            toolTip.ReshowDelay = 200;
             // 
             // pnlConfig
             // 
@@ -71,6 +78,7 @@ namespace ConfigExcelEnhancer.UI
             lblSourceExcel.Size = new Size(77, 17);
             lblSourceExcel.TabIndex = 1;
             lblSourceExcel.Text = "模板 Excel：";
+            toolTip.SetToolTip(lblSourceExcel, "作为设计/格式来源的模板 Excel 文件，其样式将被套用到所选目标文件。");
             // 
             // txtSourceExcel
             // 
@@ -141,6 +149,7 @@ namespace ConfigExcelEnhancer.UI
             chkIgnoreUnderscoreFiles.Size = new Size(121, 21);
             chkIgnoreUnderscoreFiles.TabIndex = 8;
             chkIgnoreUnderscoreFiles.Text = "忽略__开头的文件";
+            toolTip.SetToolTip(chkIgnoreUnderscoreFiles, "跳过文件名以 __ 开头的 Excel（约定为非导出/临时文件），不套用表设计。");
             chkIgnoreUnderscoreFiles.CheckedChanged += chkIgnoreUnderscoreFiles_CheckedChanged;
             // 
             // lblSheetScope
@@ -151,6 +160,7 @@ namespace ConfigExcelEnhancer.UI
             lblSheetScope.TabIndex = 9;
             lblSheetScope.Text = "Sheet 范围：";
             lblSheetScope.TextAlign = ContentAlignment.MiddleLeft;
+            toolTip.SetToolTip(lblSheetScope, "决定对每个 Excel 处理哪些工作表：全部 Sheet 还是仅第一张。");
             // 
             // pnlScopeGroup
             // 
@@ -171,6 +181,7 @@ namespace ConfigExcelEnhancer.UI
             rdoScopeAll.TabIndex = 0;
             rdoScopeAll.TabStop = true;
             rdoScopeAll.Text = "所有";
+            toolTip.SetToolTip(rdoScopeAll, "处理文件内的所有工作表。");
             rdoScopeAll.CheckedChanged += rdoScopeAll_CheckedChanged;
             // 
             // rdoScopeFirst
@@ -181,6 +192,7 @@ namespace ConfigExcelEnhancer.UI
             rdoScopeFirst.Size = new Size(62, 21);
             rdoScopeFirst.TabIndex = 1;
             rdoScopeFirst.Text = "第一张";
+            toolTip.SetToolTip(rdoScopeFirst, "仅处理文件内的第一张工作表。");
             rdoScopeFirst.CheckedChanged += rdoScopeFirst_CheckedChanged;
             // 
             // chkIgnoreUnderscoreSheets
@@ -193,6 +205,7 @@ namespace ConfigExcelEnhancer.UI
             chkIgnoreUnderscoreSheets.Size = new Size(129, 21);
             chkIgnoreUnderscoreSheets.TabIndex = 11;
             chkIgnoreUnderscoreSheets.Text = "忽略__开头的Sheet";
+            toolTip.SetToolTip(chkIgnoreUnderscoreSheets, "跳过名称以 __ 开头的工作表（约定为非导出/辅助 Sheet）。");
             chkIgnoreUnderscoreSheets.CheckedChanged += chkIgnoreUnderscoreSheets_CheckedChanged;
             // 
             // lblHeaderSymbol
@@ -203,6 +216,7 @@ namespace ConfigExcelEnhancer.UI
             lblHeaderSymbol.Size = new Size(68, 17);
             lblHeaderSymbol.TabIndex = 12;
             lblHeaderSymbol.Text = "表头符号：";
+            toolTip.SetToolTip(lblHeaderSymbol, "用于标识表头行的符号（默认 ##），工具据此定位需要套用样式/合并的表头区域。");
             // 
             // txtHeaderSymbol
             // 
@@ -223,6 +237,7 @@ namespace ConfigExcelEnhancer.UI
             chkAutoColumnWidth.Size = new Size(147, 21);
             chkAutoColumnWidth.TabIndex = 14;
             chkAutoColumnWidth.Text = "按列内容自动调整列宽";
+            toolTip.SetToolTip(chkAutoColumnWidth, "根据每列内容自动调整列宽，使表格更易阅读。");
             chkAutoColumnWidth.CheckedChanged += chkAutoColumnWidth_CheckedChanged;
             // 
             // chkMergeHeaderCells
@@ -235,6 +250,7 @@ namespace ConfigExcelEnhancer.UI
             chkMergeHeaderCells.Size = new Size(135, 21);
             chkMergeHeaderCells.TabIndex = 15;
             chkMergeHeaderCells.Text = "合并表头空白单元格";
+            toolTip.SetToolTip(chkMergeHeaderCells, "将表头中连续的空白单元格向左合并，形成跨列表头。");
             chkMergeHeaderCells.CheckedChanged += chkMergeHeaderCells_CheckedChanged;
             // 
             // lblMergeKeywords
@@ -245,6 +261,7 @@ namespace ConfigExcelEnhancer.UI
             lblMergeKeywords.Size = new Size(121, 17);
             lblMergeKeywords.TabIndex = 16;
             lblMergeKeywords.Text = "合并行标识符/行号：";
+            toolTip.SetToolTip(lblMergeKeywords, "触发空白单元格合并的行标识符或行号，多个用逗号或分号分隔（如 ##type,1,2）。");
             // 
             // txtMergeKeywords
             // 
@@ -264,6 +281,7 @@ namespace ConfigExcelEnhancer.UI
             btnApply.Size = new Size(110, 32);
             btnApply.TabIndex = 18;
             btnApply.Text = "▶ 应用表设计";
+            toolTip.SetToolTip(btnApply, "将模板 Excel 的样式/格式按上述选项套用到所选的目标文件。");
             btnApply.Click += btnApply_Click;
             // 
             // btnCancel
@@ -338,6 +356,7 @@ namespace ConfigExcelEnhancer.UI
             ResumeLayout(false);
         }
 
+        private ToolTip toolTip = null!;
         private Panel pnlConfig = null!;
         private Label lblSourceExcel = null!;
         private TextBox txtSourceExcel = null!;

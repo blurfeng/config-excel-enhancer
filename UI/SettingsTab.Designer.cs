@@ -13,11 +13,19 @@ namespace ConfigExcelEnhancer.UI
 
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
+            toolTip = new ToolTip(components);
             groupBoxSettings = new GroupBox();
             lblClearDesc = new Label();
             btnClearSettings = new Button();
             groupBoxSettings.SuspendLayout();
             SuspendLayout();
+            //
+            // toolTip
+            //
+            toolTip.AutoPopDelay = 8000;
+            toolTip.InitialDelay = 400;
+            toolTip.ReshowDelay = 200;
             // 
             // groupBoxSettings
             // 
@@ -46,6 +54,7 @@ namespace ConfigExcelEnhancer.UI
             btnClearSettings.Size = new Size(150, 32);
             btnClearSettings.TabIndex = 1;
             btnClearSettings.Text = "清空 settings.json";
+            toolTip.SetToolTip(btnClearSettings, "清空 settings.json，将所有工具设置恢复为默认值（不影响 local_state.json 等机器本地状态）。");
             btnClearSettings.Click += BtnClearSettings_Click;
             // 
             // SettingsTab
@@ -59,6 +68,7 @@ namespace ConfigExcelEnhancer.UI
             ResumeLayout(false);
         }
 
+        private ToolTip toolTip = null!;
         private GroupBox groupBoxSettings = null!;
         private Button btnClearSettings = null!;
         private Label lblClearDesc = null!;

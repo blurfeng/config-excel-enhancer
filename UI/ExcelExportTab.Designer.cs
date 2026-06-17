@@ -14,6 +14,7 @@ namespace ConfigExcelEnhancer.UI
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            toolTip = new ToolTip(components);
             pnlSettings = new Panel();
             lblXmlFolder = new Label();
             txtXmlFolder = new TextBox();
@@ -81,9 +82,15 @@ namespace ConfigExcelEnhancer.UI
             pnlExportSettings.SuspendLayout();
             ctxLog.SuspendLayout();
             SuspendLayout();
-            // 
+            //
+            // toolTip
+            //
+            toolTip.AutoPopDelay = 8000;
+            toolTip.InitialDelay = 400;
+            toolTip.ReshowDelay = 200;
+            //
             // pnlSettings
-            // 
+            //
             pnlSettings.Controls.Add(lblXmlFolder);
             pnlSettings.Controls.Add(txtXmlFolder);
             pnlSettings.Controls.Add(btnBrowseXmlFolder);
@@ -106,6 +113,7 @@ namespace ConfigExcelEnhancer.UI
             lblXmlFolder.Size = new Size(110, 17);
             lblXmlFolder.TabIndex = 0;
             lblXmlFolder.Text = "XML 来源文件夹：";
+            toolTip.SetToolTip(lblXmlFolder, "存放 Luban .xml 数据定义的文件夹，工具据此识别需要导出为 Excel 的数据类。");
             // 
             // txtXmlFolder
             // 
@@ -145,6 +153,7 @@ namespace ConfigExcelEnhancer.UI
             lblTemplate.Size = new Size(101, 17);
             lblTemplate.TabIndex = 3;
             lblTemplate.Text = "Excel 设计模板：";
+            toolTip.SetToolTip(lblTemplate, "导出的 Excel 所使用的样式/格式模板文件（可空，留空则导出无格式的基础表）。");
             // 
             // txtDesignTemplate
             // 
@@ -198,6 +207,7 @@ namespace ConfigExcelEnhancer.UI
             lblNaming.Size = new Size(68, 17);
             lblNaming.TabIndex = 0;
             lblNaming.Text = "文件命名：";
+            toolTip.SetToolTip(lblNaming, "导出 Excel 文件名的命名规则，基于数据类名转换。");
             // 
             // pnlNamingGroup
             // 
@@ -219,6 +229,7 @@ namespace ConfigExcelEnhancer.UI
             rdoNameAsIs.TabIndex = 0;
             rdoNameAsIs.TabStop = true;
             rdoNameAsIs.Text = "类名不变";
+            toolTip.SetToolTip(rdoNameAsIs, "文件名直接使用数据类名，不做大小写转换。");
             rdoNameAsIs.CheckedChanged += rdoNameAsIs_CheckedChanged;
             // 
             // rdoNameCamel
@@ -229,6 +240,7 @@ namespace ConfigExcelEnhancer.UI
             rdoNameCamel.Size = new Size(134, 21);
             rdoNameCamel.TabIndex = 1;
             rdoNameCamel.Text = "驼峰（首字母大写）";
+            toolTip.SetToolTip(rdoNameCamel, "文件名转为大驼峰（PascalCase），如 UnitInfo。");
             rdoNameCamel.CheckedChanged += rdoNameCamel_CheckedChanged;
             // 
             // rdoNameSnake
@@ -239,6 +251,7 @@ namespace ConfigExcelEnhancer.UI
             rdoNameSnake.Size = new Size(103, 21);
             rdoNameSnake.TabIndex = 2;
             rdoNameSnake.Text = "全小写_下划线";
+            toolTip.SetToolTip(rdoNameSnake, "文件名转为全小写下划线（snake_case），如 unit_info。");
             rdoNameSnake.CheckedChanged += rdoNameSnake_CheckedChanged;
             // 
             // lblFileName
@@ -249,6 +262,7 @@ namespace ConfigExcelEnhancer.UI
             lblFileName.Size = new Size(56, 17);
             lblFileName.TabIndex = 2;
             lblFileName.Text = "文件名：";
+            toolTip.SetToolTip(lblFileName, "最终文件名 = 前缀 + 数据类名（按命名规则转换）+ 后缀。");
             // 
             // txtPrefix
             // 
@@ -257,6 +271,7 @@ namespace ConfigExcelEnhancer.UI
             txtPrefix.PlaceholderText = "前缀（可空）";
             txtPrefix.Size = new Size(100, 23);
             txtPrefix.TabIndex = 3;
+            toolTip.SetToolTip(txtPrefix, "添加在数据类名之前的文件名前缀（可空）。");
             txtPrefix.TextChanged += txtPrefix_TextChanged;
             // 
             // lblClassName
@@ -267,6 +282,7 @@ namespace ConfigExcelEnhancer.UI
             lblClassName.Size = new Size(56, 17);
             lblClassName.TabIndex = 4;
             lblClassName.Text = "数据类名";
+            toolTip.SetToolTip(lblClassName, "文件名中部为数据类名（按上方命名规则转换），其前为前缀、其后为后缀。");
             // 
             // txtSuffix
             // 
@@ -275,6 +291,7 @@ namespace ConfigExcelEnhancer.UI
             txtSuffix.PlaceholderText = "后缀（可空）";
             txtSuffix.Size = new Size(100, 23);
             txtSuffix.TabIndex = 5;
+            toolTip.SetToolTip(txtSuffix, "添加在数据类名之后的文件名后缀（可空）。");
             txtSuffix.TextChanged += txtSuffix_TextChanged;
             // 
             // tabMode
@@ -300,6 +317,7 @@ namespace ConfigExcelEnhancer.UI
             tabPageList.Size = new Size(756, 154);
             tabPageList.TabIndex = 0;
             tabPageList.Text = "按列表";
+            tabPageList.ToolTipText = "逐项勾选要导出的数据类，并可为每项单独指定目标 Excel 路径。";
             // 
             // dgvClasses
             // 
@@ -324,6 +342,7 @@ namespace ConfigExcelEnhancer.UI
             colEnabled.HeaderText = "启用";
             colEnabled.Name = "colEnabled";
             colEnabled.Resizable = DataGridViewTriState.False;
+            colEnabled.ToolTipText = "勾选后该数据类才会被导出。";
             colEnabled.Width = 40;
             // 
             // colClassName
@@ -331,6 +350,7 @@ namespace ConfigExcelEnhancer.UI
             colClassName.HeaderText = "数据类名";
             colClassName.Name = "colClassName";
             colClassName.ReadOnly = true;
+            colClassName.ToolTipText = "从 XML 定义中识别出的数据类名。";
             colClassName.Width = 160;
             // 
             // colSourceFile
@@ -338,6 +358,7 @@ namespace ConfigExcelEnhancer.UI
             colSourceFile.HeaderText = "来源文件";
             colSourceFile.Name = "colSourceFile";
             colSourceFile.ReadOnly = true;
+            colSourceFile.ToolTipText = "定义该数据类的 .xml 来源文件。";
             colSourceFile.Width = 150;
             // 
             // colTargetPath
@@ -345,6 +366,7 @@ namespace ConfigExcelEnhancer.UI
             colTargetPath.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             colTargetPath.HeaderText = "目标 Excel 路径";
             colTargetPath.Name = "colTargetPath";
+            colTargetPath.ToolTipText = "该数据类导出 Excel 的目标路径；留空则使用上方“通用导出文件夹”。";
             // 
             // colBrowse
             // 
@@ -373,6 +395,7 @@ namespace ConfigExcelEnhancer.UI
             btnRefresh.Size = new Size(80, 26);
             btnRefresh.TabIndex = 0;
             btnRefresh.Text = "刷新列表";
+            toolTip.SetToolTip(btnRefresh, "重新扫描 XML 来源文件夹，刷新可导出的数据类列表。");
             btnRefresh.Click += btnRefresh_Click;
             // 
             // btnSelectAll
@@ -413,6 +436,7 @@ namespace ConfigExcelEnhancer.UI
             lblListTargetFolder.Size = new Size(104, 17);
             lblListTargetFolder.TabIndex = 0;
             lblListTargetFolder.Text = "通用导出文件夹：";
+            toolTip.SetToolTip(lblListTargetFolder, "未单独指定目标路径的数据类，统一导出到此文件夹。");
             // 
             // txtListTargetFolder
             // 
@@ -453,6 +477,7 @@ namespace ConfigExcelEnhancer.UI
             tabPageBatch.Size = new Size(756, 154);
             tabPageBatch.TabIndex = 1;
             tabPageBatch.Text = "批量导出";
+            tabPageBatch.ToolTipText = "将所有数据类一次性导出到同一个目标文件夹。";
             // 
             // pnlBatchTarget
             // 
@@ -474,6 +499,7 @@ namespace ConfigExcelEnhancer.UI
             lblTargetFolder.Size = new Size(80, 17);
             lblTargetFolder.TabIndex = 0;
             lblTargetFolder.Text = "导出文件夹：";
+            toolTip.SetToolTip(lblTargetFolder, "批量导出模式下，所有数据类 Excel 统一输出到此文件夹。");
             // 
             // txtTargetFolder
             // 
@@ -523,6 +549,7 @@ namespace ConfigExcelEnhancer.UI
             btnExport.Size = new Size(110, 32);
             btnExport.TabIndex = 0;
             btnExport.Text = "▶ 导出";
+            toolTip.SetToolTip(btnExport, "根据当前模式与设置，将数据类导出为 Excel 文件。");
             btnExport.Click += btnExport_Click;
             // 
             // btnCancel
@@ -562,6 +589,7 @@ namespace ConfigExcelEnhancer.UI
             lblExportSettings.Size = new Size(68, 17);
             lblExportSettings.TabIndex = 0;
             lblExportSettings.Text = "导出设置：";
+            toolTip.SetToolTip(lblExportSettings, "导出过程中的附加处理选项。");
             //
             // chkRunEnumValidation
             //
@@ -573,6 +601,7 @@ namespace ConfigExcelEnhancer.UI
             chkRunEnumValidation.Size = new Size(126, 21);
             chkRunEnumValidation.TabIndex = 1;
             chkRunEnumValidation.Text = "执行 Enum 验证";
+            toolTip.SetToolTip(chkRunEnumValidation, "导出 Excel 后，自动将 .xml 中定义的 enum 和 bool 设为数据验证下拉。");
             chkRunEnumValidation.UseVisualStyleBackColor = true;
             chkRunEnumValidation.CheckedChanged += chkRunEnumValidation_CheckedChanged;
             //
@@ -646,6 +675,7 @@ namespace ConfigExcelEnhancer.UI
         }
 
         // ── 字段声明 ──────────────────────────────────────────────────────
+        private ToolTip     toolTip               = null!;
         private Panel       pnlSettings           = null!;
         private Label       lblXmlFolder          = null!;
         private TextBox     txtXmlFolder          = null!;

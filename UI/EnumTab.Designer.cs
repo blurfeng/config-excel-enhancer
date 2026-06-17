@@ -14,6 +14,7 @@ namespace ConfigExcelEnhancer.UI
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            toolTip = new ToolTip(components);
             pnlConfig = new Panel();
             lblXmlDir = new Label();
             txtXmlDir = new TextBox();
@@ -36,6 +37,12 @@ namespace ConfigExcelEnhancer.UI
             grpOptions.SuspendLayout();
             ctxLog.SuspendLayout();
             SuspendLayout();
+            //
+            // toolTip
+            //
+            toolTip.AutoPopDelay = 8000;
+            toolTip.InitialDelay = 400;
+            toolTip.ReshowDelay = 200;
             // 
             // pnlConfig
             // 
@@ -62,6 +69,7 @@ namespace ConfigExcelEnhancer.UI
             lblXmlDir.Size = new Size(126, 17);
             lblXmlDir.TabIndex = 1;
             lblXmlDir.Text = "数据定义 XML 目录：";
+            toolTip.SetToolTip(lblXmlDir, "Luban 的 .xml 数据定义（schema）所在目录，工具会从中扫描 enum 枚举与 bool 定义。");
             // 
             // txtXmlDir
             // 
@@ -123,6 +131,7 @@ namespace ConfigExcelEnhancer.UI
             chkHideEnumDataSheet.Size = new Size(111, 21);
             chkHideEnumDataSheet.TabIndex = 7;
             chkHideEnumDataSheet.Text = "隐藏枚举数据表";
+            toolTip.SetToolTip(chkHideEnumDataSheet, "将写入 Excel 的隐藏数据表 __enum_data 设为隐藏，避免干扰正常编辑（验证下拉仍可用）。");
             chkHideEnumDataSheet.CheckedChanged += chkHideEnumDataSheet_CheckedChanged;
             // 
             // chkForceRewrite
@@ -133,6 +142,7 @@ namespace ConfigExcelEnhancer.UI
             chkForceRewrite.Size = new Size(123, 21);
             chkForceRewrite.TabIndex = 12;
             chkForceRewrite.Text = "强制更新验证规则";
+            toolTip.SetToolTip(chkForceRewrite, "忽略 schema 哈希比对，强制重写所有 Excel。默认仅在 enum 定义变化时才写入，以减少不必要的文件改动（git 噪音）。");
             chkForceRewrite.CheckedChanged += chkForceRewrite_CheckedChanged;
             // 
             // chkBoolValidation
@@ -145,6 +155,7 @@ namespace ConfigExcelEnhancer.UI
             chkBoolValidation.Size = new Size(111, 21);
             chkBoolValidation.TabIndex = 14;
             chkBoolValidation.Text = "布尔值数据验证";
+            toolTip.SetToolTip(chkBoolValidation, "为 bool 类型的列额外添加 TRUE/FALSE 下拉数据验证。");
             chkBoolValidation.CheckedChanged += chkBoolValidation_CheckedChanged;
             // 
             // btnUpdate
@@ -154,6 +165,7 @@ namespace ConfigExcelEnhancer.UI
             btnUpdate.Size = new Size(140, 32);
             btnUpdate.TabIndex = 8;
             btnUpdate.Text = "▶ 更新 Enum 验证";
+            toolTip.SetToolTip(btnUpdate, "扫描 XML 定义，并向所选 Excel 中匹配的列注入 enum/bool 数据验证下拉。");
             btnUpdate.Click += btnUpdate_Click;
             // 
             // btnCancel
@@ -226,6 +238,7 @@ namespace ConfigExcelEnhancer.UI
             ResumeLayout(false);
         }
 
+        private ToolTip toolTip = null!;
         private Panel pnlConfig = null!;
         private Label lblXmlDir = null!;
         private TextBox txtXmlDir = null!;
