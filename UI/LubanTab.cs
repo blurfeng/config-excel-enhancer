@@ -67,7 +67,7 @@ namespace ConfigExcelEnhancer.UI
             }
             catch (Exception ex)
             {
-                Log($"读取 gen.bat 失败：{ex.Message}", LogLevel.Error);
+                Log($"读取 gen.bat 失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
             }
         }
 
@@ -392,7 +392,7 @@ namespace ConfigExcelEnhancer.UI
             }
             catch (Exception ex)
             {
-                Log($"保存失败：{ex.Message}", LogLevel.Error);
+                Log($"保存失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
                 return false;
             }
         }
@@ -504,7 +504,7 @@ namespace ConfigExcelEnhancer.UI
         {
             if (string.IsNullOrEmpty(Settings.GenBatPath) || !File.Exists(Settings.GenBatPath))
             {
-                Log("请先选择有效的 gen.bat 路径。", LogLevel.Error);
+                Log($"请先选择有效的 gen.bat 路径，当前路径无效或不存在：{(string.IsNullOrEmpty(Settings.GenBatPath) ? "(未配置)" : Settings.GenBatPath)}", LogLevel.Error);
                 return Task.FromResult(false);
             }
 
@@ -540,7 +540,7 @@ namespace ConfigExcelEnhancer.UI
             {
                 bool isError = msg.Contains("|ERROR|");
                 if (isError) _hasError = true;
-                LogLibrary.WriteRaw(txtLog, msg, isError ? LogLibrary.ClrError : LogLibrary.ClrOk);
+                LogRaw(msg, isError ? LogLibrary.ClrError : LogLibrary.ClrOk, isError ? LogLevel.Error : LogLevel.Ok);
                 _lineCount++;
                 int v = totalEstLines > 0 ? 10 + (int)(_lineCount * 80.0 / totalEstLines) : 90;
                 v = Math.Min(v, 90);
@@ -571,7 +571,7 @@ namespace ConfigExcelEnhancer.UI
             }
             catch (Exception ex)
             {
-                Log($"启动失败：{ex.Message}", LogLevel.Error);
+                Log($"启动失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
                 SetUILocked(false);
                 RaiseExecutionState(false);
                 btnRun.Enabled = true;

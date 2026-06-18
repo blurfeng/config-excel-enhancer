@@ -30,10 +30,29 @@ namespace ConfigExcelEnhancer.UI
         /// <summary>派生类重写以提供日志输出控件；返回 null 表示该 Tab 无日志输出。</summary>
         protected virtual RichTextBox? LogBox => null;
 
+        /// <summary>
+        /// 可选的日志镜像回调：非 null 时，本 Tab 的每条日志在写入自身 <see cref="LogBox"/> 的同时
+        /// 也转发给该回调。供一键导出等外部编排者收集子 Tab 的详细输出。
+        /// </summary>
+        private Action<string, LogLevel>? _logSink;
+
+        /// <summary>设置（或清除，传 null）日志镜像回调。</summary>
+        public void SetLogSink(Action<string, LogLevel>? sink) => _logSink = sink;
+
         /// <summary>向日志控件写入一行带级别标签的日志（<see cref="LogBox"/> 为 null 时忽略）。</summary>
         protected void Log(string message, LogLevel level = LogLevel.Ok)
         {
             if (LogBox is { } box) LogLibrary.Write(box, message, level);
+            _logSink?.Invoke(message, level);
+        }
+
+        /// <summary>
+        /// 写入一行不带时间戳/级别标签的原始日志（用于子进程输出），并按需镜像到 <see cref="_logSink"/>。
+        /// </summary>
+        protected void LogRaw(string message, Color color, LogLevel sinkLevel)
+        {
+            if (LogBox is { } box) LogLibrary.WriteRaw(box, message, color);
+            _logSink?.Invoke(message, sinkLevel);
         }
 
         /// <summary>向日志控件追加一条分隔线（<see cref="LogBox"/> 为 null 时忽略）。</summary>

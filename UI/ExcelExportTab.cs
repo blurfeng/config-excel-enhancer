@@ -276,7 +276,7 @@ namespace ConfigExcelEnhancer.UI
                 }
                 catch (Exception ex)
                 {
-                    Log($"扫描 XML 失败：{ex.Message}", LogLevel.Error);
+                    Log($"扫描 XML 失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
                     return;
                 }
             }
@@ -331,7 +331,7 @@ namespace ConfigExcelEnhancer.UI
             }
             catch (Exception ex)
             {
-                Log($"扫描 XML 失败：{ex.Message}", LogLevel.Error);
+                Log($"扫描 XML 失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
                 return;
             }
 
@@ -557,7 +557,7 @@ namespace ConfigExcelEnhancer.UI
             }
             catch (Exception ex)
             {
-                Log($"扫描 XML 失败：{ex.Message}", LogLevel.Error);
+                Log($"扫描 XML 失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
                 return;
             }
 
@@ -642,7 +642,7 @@ namespace ConfigExcelEnhancer.UI
             }
             catch (Exception ex)
             {
-                Log($"未预期的错误：{ex.Message}", LogLevel.Error);
+                Log($"未预期的错误：{LogLibrary.FormatException(ex, includeStackTrace: true)}", LogLevel.Error);
             }
             finally
             {

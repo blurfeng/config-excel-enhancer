@@ -70,7 +70,7 @@ namespace ConfigExcelEnhancer.Core
                 }
                 catch (Exception ex)
                 {
-                    log($"处理失败 {fileName}：{ex.Message}", LogLevel.Error);
+                    log($"处理失败 {fileName}：{LogLibrary.FormatException(ex)}", LogLevel.Error);
                 }
             }
 

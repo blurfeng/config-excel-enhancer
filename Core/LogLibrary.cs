@@ -137,6 +137,30 @@ namespace ConfigExcelEnhancer.Core
                 DoUpdate();
         }
 
+        /// <summary>
+        /// 将异常格式化为便于定位 bug 的多行文本：异常类型 + 消息 + 内层异常链
+        /// （最多 5 层），可选附加堆栈。供各处 catch 统一使用，避免只打印 ex.Message
+        /// 丢失类型/内层/堆栈信息。
+        /// </summary>
+        public static string FormatException(Exception ex, bool includeStackTrace = false)
+        {
+            string text = $"{ex.GetType().Name}: {ex.Message}";
+
+            var inner = ex.InnerException;
+            int depth = 0;
+            while (inner != null && depth < 5)
+            {
+                text += $"{Environment.NewLine}  ↳ 内层 [{inner.GetType().Name}]: {inner.Message}";
+                inner = inner.InnerException;
+                depth++;
+            }
+
+            if (includeStackTrace && !string.IsNullOrEmpty(ex.StackTrace))
+                text += $"{Environment.NewLine}堆栈:{Environment.NewLine}{ex.StackTrace}";
+
+            return text;
+        }
+
         /// <summary>返回指定日志级别对应的显示颜色。</summary>
         public static Color LevelToColor(LogLevel level) => LevelMeta[level].color;
     }

@@ -93,7 +93,7 @@ namespace ConfigExcelEnhancer.UI
 
             if (!Directory.Exists(xmlDir))
             {
-                Log("数据定义 XML 目录不存在。", LogLevel.Error);
+                Log($"数据定义 XML 目录不存在：{(string.IsNullOrEmpty(xmlDir) ? "(未配置)" : xmlDir)}", LogLevel.Error);
                 return false;
             }
 
@@ -115,7 +115,7 @@ namespace ConfigExcelEnhancer.UI
             {
                 if (!Directory.Exists(excelDir))
                 {
-                    Log("配置 Excel 目录不存在。", LogLevel.Error);
+                    Log($"配置的目标 Excel 目录不存在：{(string.IsNullOrEmpty(excelDir) ? "(未配置)" : excelDir)}", LogLevel.Error);
                     return false;
                 }
             }
@@ -241,7 +241,7 @@ namespace ConfigExcelEnhancer.UI
             }
             catch (Exception ex)
             {
-                Log($"未预期的错误：{ex.Message}", LogLevel.Error);
+                Log($"未预期的错误：{LogLibrary.FormatException(ex, includeStackTrace: true)}", LogLevel.Error);
             }
             finally
             {

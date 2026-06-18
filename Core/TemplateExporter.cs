@@ -73,7 +73,7 @@ namespace ConfigExcelEnhancer.Core
             try { doc = JsonDocument.Parse(jsonText); }
             catch (Exception ex)
             {
-                log($"JSON 解析失败：{ex.Message}", LogLevel.Error);
+                log($"JSON 解析失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
                 return null;
             }
 

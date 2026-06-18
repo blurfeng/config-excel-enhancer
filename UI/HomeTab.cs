@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using ConfigExcelEnhancer.Core;
 using ConfigExcelEnhancer.Models;
 using ConfigExcelEnhancer.Utils;
@@ -384,6 +385,25 @@ namespace ConfigExcelEnhancer.UI
                 SetOverallProgress(currentStep, totalSteps);
             }
 
+            // 缓冲当前步骤的详细输出：成功时丢弃（主页仅显示步骤进度），失败时转写出来。
+            // 部分子 Tab 的日志回调可能在后台线程触发，故用线程安全队列。
+            var buffer = new ConcurrentQueue<(string msg, LogLevel level)>();
+
+            async Task<bool> RunStep(TabBase tab, Func<Task<bool>> run)
+            {
+                while (buffer.TryDequeue(out _)) { }     // 清空上一步残留
+                tab.SetLogSink((m, l) => buffer.Enqueue((m, l)));
+                try { return await run(); }
+                finally { tab.SetLogSink(null); }
+            }
+
+            void FlushFailureDetail()
+            {
+                Log("── 失败详情 ──", LogLevel.Section);
+                while (buffer.TryDequeue(out var item))
+                    Log(item.msg, item.level);
+            }
+
             SetOverallProgress(0, totalSteps);
 
             try
@@ -392,24 +412,24 @@ namespace ConfigExcelEnhancer.UI
                 if (chkIncludeEnum.Checked)
                 {
                     BeginStep("执行 Enum 验证...");
-                    bool enumSuccess = await _enumTab.RunAsync();
+                    bool enumSuccess = await RunStep(_enumTab, () => _enumTab.RunAsync());
                     EndStep(enumSuccess, "Enum 验证完成。", "Enum 验证失败，已终止后续步骤。");
-                    if (!enumSuccess) return;
+                    if (!enumSuccess) { FlushFailureDetail(); return; }
                     LogDivider();
                 }
 
                 // 步骤：Luban 导表
                 BeginStep("执行 Luban 导表...");
-                bool lubanSuccess = await _lubanTab.RunAsync();
+                bool lubanSuccess = await RunStep(_lubanTab, () => _lubanTab.RunAsync());
                 EndStep(lubanSuccess, "Luban 导表完成。", "Luban 导表失败，已终止后续步骤。");
-                if (!lubanSuccess) return;
+                if (!lubanSuccess) { FlushFailureDetail(); return; }
                 LogDivider();
 
                 // 步骤：导出模板类
                 BeginStep("导出模板类...");
-                bool templateSuccess = await _templateTab.RunAllAsync();
+                bool templateSuccess = await RunStep(_templateTab, () => _templateTab.RunAllAsync());
                 EndStep(templateSuccess, "导出模板类完成。", "导出模板类失败。");
-                if (!templateSuccess) return;
+                if (!templateSuccess) { FlushFailureDetail(); return; }
                 LogDivider();
 
                 // 全部成功：更新导出时间

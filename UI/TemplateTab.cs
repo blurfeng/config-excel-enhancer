@@ -444,7 +444,7 @@ namespace ConfigExcelEnhancer.UI
             }
             catch (Exception ex)
             {
-                Log($"Tables.cs 解析失败：{ex.Message}", LogLevel.Error);
+                Log($"Tables.cs 解析失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
                 return anySuccess;
             }
 
@@ -495,11 +495,11 @@ namespace ConfigExcelEnhancer.UI
                     var options = new TemplateExportOptions(job, tableMappings,
                         cache?.LastExportedOwnedGroups ?? new List<string>());
                     idsResult = await TemplateExporter.ExportAsync(options, progress,
-                        (msg, lvl) => LogLibrary.Write(txtLog, msg, lvl), token);
+                        (msg, lvl) => Log(msg, lvl), token);
                     anySuccess = true;
                 }
                 catch (OperationCanceledException) { Log("操作已停止。", LogLevel.Warn); return anySuccess; }
-                catch (Exception ex) { Log($"未预期的错误：{ex.Message}", LogLevel.Error); }
+                catch (Exception ex) { Log($"未预期的错误：{LogLibrary.FormatException(ex, includeStackTrace: true)}", LogLevel.Error); }
 
                 // 累积 Ids 数据
                 if (idsResult is not null)
@@ -541,7 +541,7 @@ namespace ConfigExcelEnhancer.UI
                             result.OwnedGroups,
                             result.TemplateNamespace);
                         TemplateExporter.GenerateIds(genOptions,
-                            (msg, lvl) => LogLibrary.Write(txtLog, msg, lvl));
+                            (msg, lvl) => Log(msg, lvl));
 
                         // 更新缓存：遍历所有任务，标记成功导出的 Ids 类名、目录和 owned groups
                         // 缓存写入机器本地状态（LocalState.TemplateExportCaches），按 job.Id 键控
@@ -564,7 +564,7 @@ namespace ConfigExcelEnhancer.UI
                     }
                     catch (Exception ex)
                     {
-                        Log($"Ids 文件生成失败（{result.IdsClassName}）：{ex.Message}", LogLevel.Error);
+                        Log($"Ids 文件生成失败（{result.IdsClassName}）：{LogLibrary.FormatException(ex)}", LogLevel.Error);
                     }
                 }
 

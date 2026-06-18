@@ -125,7 +125,7 @@ namespace ConfigExcelEnhancer.UI
             string sourcePath = txtSourceExcel.Text.Trim();
             if (string.IsNullOrEmpty(sourcePath) || !File.Exists(sourcePath))
             {
-                Log("请选择有效的模板 Excel 文件。", LogLevel.Error);
+                Log($"请选择有效的模板 Excel 文件，当前路径无效或不存在：{(string.IsNullOrEmpty(sourcePath) ? "(未配置)" : sourcePath)}", LogLevel.Error);
                 return;
             }
 
@@ -183,7 +183,7 @@ namespace ConfigExcelEnhancer.UI
             }
             catch (Exception ex)
             {
-                Log($"未预期的错误：{ex.Message}", LogLevel.Error);
+                Log($"未预期的错误：{LogLibrary.FormatException(ex, includeStackTrace: true)}", LogLevel.Error);
             }
             finally
             {

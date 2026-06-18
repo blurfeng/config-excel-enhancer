@@ -71,7 +71,7 @@ namespace ConfigExcelEnhancer.Core
                 catch (Exception ex)
                 {
                     result.HasError = true;
-                    result.ErrorMessage = ex.Message;
+                    result.ErrorMessage = LogLibrary.FormatException(ex);
                 }
 
                 results.Add(result);
