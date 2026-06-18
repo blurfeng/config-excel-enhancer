@@ -26,6 +26,13 @@ namespace ConfigExcelEnhancer.Utils
             BaseDir, GetExeDirHash(), "local_state.json");
 
         /// <summary>
+        /// 当前 .exe 位置实际写入用的 local_state.json 绝对路径（供「打开所在文件夹」与诊断信息展示）。
+        /// 注意：<see cref="Load"/> 在该文件缺失时可能回退读取 <see cref="LegacyStatePath"/>，
+        /// 但写入与清除始终针对此路径，故诊断展示以此为准。
+        /// </summary>
+        public static string FilePath => StatePath;
+
+        /// <summary>
         /// 基于 .exe 所在目录（<see cref="AppContext.BaseDirectory"/>）派生一个稳定的子目录名，
         /// 保证「不同 .exe 位置 → 不同子目录」。路径先归一化（去尾部分隔符 + 转小写，因 Windows
         /// 路径大小写不敏感），再取 SHA256 的前 16 个十六进制字符。
@@ -57,5 +64,20 @@ namespace ConfigExcelEnhancer.Utils
         /// </summary>
         public static void Save(LocalState state)
             => JsonFileHelper.Save(StatePath, state);
+
+        /// <summary>
+        /// 删除当前 .exe 位置对应的 local_state.json，使本机状态恢复默认。
+        /// 注意：调用方还需重置内存中持有的 <see cref="LocalState"/> 实例，
+        /// 否则程序关闭时会被内存值重新写回磁盘。
+        /// </summary>
+        public static void Clear()
+        {
+            try
+            {
+                if (File.Exists(StatePath))
+                    File.Delete(StatePath);
+            }
+            catch { }
+        }
     }
 }

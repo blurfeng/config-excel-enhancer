@@ -23,6 +23,12 @@ namespace ConfigExcelEnhancer
         {
             InitializeComponent();
             settingsTab.SettingsCleared += (_, _) => LoadSettings();
+            // 清空 local_state.json 后，必须重置内存中持有的实例，否则关闭时会被重新写回磁盘
+            settingsTab.LocalStateCleared += (_, _) =>
+            {
+                _localState = new LocalState();
+                LoadSettings();
+            };
             enumTab.ExecutionStateChanged += OnTabExecutionStateChanged;
             lubanTab.ExecutionStateChanged += OnTabExecutionStateChanged;
             tableDesignTab.ExecutionStateChanged += OnTabExecutionStateChanged;

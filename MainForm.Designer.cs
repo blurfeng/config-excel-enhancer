@@ -99,7 +99,7 @@ namespace ConfigExcelEnhancer
             excelExportTab.Dock = DockStyle.Fill;
 
             // tabSettings
-            tabSettings.Text = "设置";
+            tabSettings.Text = "其他";
             tabSettings.Padding = new Padding(4);
             tabSettings.Controls.Add(settingsTab);
 

@@ -18,6 +18,9 @@ namespace ConfigExcelEnhancer.Utils
         private static readonly string SettingsPath = Path.Combine(
             AppContext.BaseDirectory, "settings.json");
 
+        /// <summary>settings.json 的绝对路径（供「打开所在文件夹」与诊断信息展示）。</summary>
+        public static string FilePath => SettingsPath;
+
         #region 加载 / 保存 / 清除
 
         /// <summary>
