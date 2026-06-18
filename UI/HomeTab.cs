@@ -33,6 +33,8 @@ namespace ConfigExcelEnhancer.UI
 
         protected override RichTextBox? LogBox => txtLog;
 
+        protected override string? GreetingMessage => "主页已就绪 — 可一键执行 Enum 验证 + Luban 导表 + 导出模板类。";
+
         public HomeTab()
         {
             InitializeComponent();

@@ -31,6 +31,20 @@ namespace ConfigExcelEnhancer.UI
         protected virtual RichTextBox? LogBox => null;
 
         /// <summary>
+        /// 派生类重写以提供启动问候/就绪提示；返回 null 表示不显示。
+        /// <see cref="OnLoad"/> 在控件首次加载时将其以 <see cref="LogLevel.Info"/> 写入 <see cref="LogBox"/>。
+        /// </summary>
+        protected virtual string? GreetingMessage => null;
+
+        /// <summary>控件加载时输出启动问候（若 <see cref="GreetingMessage"/> 非空）。</summary>
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            if (GreetingMessage is { } greeting)
+                Log(greeting, LogLevel.Info);
+        }
+
+        /// <summary>
         /// 可选的日志镜像回调：非 null 时，本 Tab 的每条日志在写入自身 <see cref="LogBox"/> 的同时
         /// 也转发给该回调。供一键导出等外部编排者收集子 Tab 的详细输出。
         /// </summary>

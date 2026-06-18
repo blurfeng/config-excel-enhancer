@@ -16,15 +16,11 @@ namespace ConfigExcelEnhancer.UI
 
         protected override RichTextBox? LogBox => txtLog;
 
+        protected override string? GreetingMessage => "枚举验证已就绪 — 将 Luban 枚举注入 Excel 数据验证。";
+
         public EnumTab()
         {
             InitializeComponent();
-        }
-
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-            Log("Hello! Config Excel Enhancer 已就绪。", LogLevel.Info);
         }
 
         // ── 目录选择 ──────────────────────────────────────────

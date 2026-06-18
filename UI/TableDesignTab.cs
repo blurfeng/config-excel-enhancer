@@ -21,6 +21,8 @@ namespace ConfigExcelEnhancer.UI
 
         protected override RichTextBox? LogBox => txtLog;
 
+        protected override string? GreetingMessage => "表格设计已就绪 — 将模板 Excel 的样式应用到目标文件。";
+
         /// <summary>将 AppSettings 的值同步到界面控件。</summary>
         public void LoadFromSettings()
         {

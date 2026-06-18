@@ -24,6 +24,8 @@ namespace ConfigExcelEnhancer.UI
 
         protected override RichTextBox? LogBox => txtLog;
 
+        protected override string? GreetingMessage => "导出 Excel 已就绪 — 按 XML 定义创建/更新 Excel 文件。";
+
         /// <summary>本次导出中走了通用文件夹的条目及其计算出的目标路径，导出成功后回写以建立关联。</summary>
         private readonly List<(ExcelExportClassConfig cfg, string computedPath)> _pendingAssociations = new();
 

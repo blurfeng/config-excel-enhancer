@@ -12,6 +12,8 @@ namespace ConfigExcelEnhancer.UI
 
         protected override RichTextBox? LogBox => txtLog;
 
+        protected override string? GreetingMessage => "Luban 导表已就绪 — 配置并执行 Luban 导出脚本。";
+
         private LubanConfig? _config;
         private LubanRunner? _runner;
 

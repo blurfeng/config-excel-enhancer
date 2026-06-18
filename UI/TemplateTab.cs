@@ -28,6 +28,8 @@ namespace ConfigExcelEnhancer.UI
 
         protected override RichTextBox? LogBox => txtLog;
 
+        protected override string? GreetingMessage => "导出模板类已就绪 — 由 JSON 配置生成 C# 模板类。";
+
         // ── 设置同步 ──────────────────────────────────────────────────────
 
         public void LoadFromSettings()
