@@ -37,5 +37,17 @@ namespace ConfigExcelEnhancer.Models
         /// 由导出过程自动写入，仅用于下次导出的差异检测，故不入版本控制。
         /// </summary>
         public Dictionary<string, TemplateExportCache> TemplateExportCaches { get; set; } = new();
+
+        /// <summary>
+        /// 单独导出模式：单个 XML 来源文件（覆盖通用 XML 文件夹）；空 = 回退通用文件夹。
+        /// 属一对一临时操作的当前选择，机器私有，故存于本地而非共享 settings.json。
+        /// </summary>
+        public string ExcelExportSingleXmlFile { get; set; } = string.Empty;
+
+        /// <summary>单独导出模式：选中的数据类名。属临时操作的当前选择，机器私有。</summary>
+        public string ExcelExportSingleClassName { get; set; } = string.Empty;
+
+        /// <summary>单独导出模式：统一的导出 Excel 目标路径（文件，存在则更新、不存在则新建）。属临时操作的当前选择，机器私有。</summary>
+        public string ExcelExportSingleTargetPath { get; set; } = string.Empty;
     }
 }

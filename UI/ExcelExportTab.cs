@@ -37,10 +37,12 @@ namespace ConfigExcelEnhancer.UI
             chkListCommonFolder.Checked = Settings.ExcelExportListCommonFolderEnabled;
             UpdateListCommonFolderEnabled(Settings.ExcelExportListCommonFolderEnabled);
             txtTargetFolder.Text       = Settings.ExcelExportTargetFolder;
+            txtSingleXmlFile.Text      = LocalState.ExcelExportSingleXmlFile;
+            txtSingleTargetPath.Text   = LocalState.ExcelExportSingleTargetPath;
             txtPrefix.Text             = Settings.ExcelExportNamePrefix;
             txtSuffix.Text             = Settings.ExcelExportNameSuffix;
 
-            tabMode.SelectedIndex = Settings.ExcelExportMode == 1 ? 1 : 0;
+            tabMode.SelectedIndex = Settings.ExcelExportMode switch { 1 => 1, 2 => 2, _ => 0 };
 
             rdoNameAsIs.Checked  = Settings.ExcelExportNameConvention == 0;
             rdoNameCamel.Checked = Settings.ExcelExportNameConvention == 1;
@@ -49,7 +51,10 @@ namespace ConfigExcelEnhancer.UI
             chkRunEnumValidation.Checked = Settings.ExcelExportRunEnumValidation;
 
             if (!string.IsNullOrEmpty(Settings.ExcelExportXmlFolder))
+            {
                 RefreshClassList(rescanXml: false);
+                RefreshSingleClassList(rescanXml: true);
+            }
         }
 
         // ── 设置同步 ──────────────────────────────────────────────────────
@@ -79,6 +84,12 @@ namespace ConfigExcelEnhancer.UI
 
         private void txtTargetFolder_TextChanged(object sender, EventArgs e)
             => Settings.ExcelExportTargetFolder = txtTargetFolder.Text;
+
+        private void txtSingleXmlFile_TextChanged(object sender, EventArgs e)
+            => LocalState.ExcelExportSingleXmlFile = txtSingleXmlFile.Text;
+
+        private void txtSingleTargetPath_TextChanged(object sender, EventArgs e)
+            => LocalState.ExcelExportSingleTargetPath = txtSingleTargetPath.Text;
 
         private void txtPrefix_TextChanged(object sender, EventArgs e)
             => Settings.ExcelExportNamePrefix = txtPrefix.Text;
@@ -155,6 +166,55 @@ namespace ConfigExcelEnhancer.UI
             if (path != null)
                 txtTargetFolder.Text = path;
         }
+
+        // ── 单独导出模式：来源/目标按钮 ────────────────────────────────────
+
+        private void btnOpenSingleXml_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtSingleXmlFile.Text);
+
+        private void btnOpenSingleTarget_Click(object sender, EventArgs e)
+            => ExplorerHelper.RevealInExplorer(txtSingleTargetPath.Text);
+
+        private void btnBrowseSingleXml_Click(object sender, EventArgs e)
+        {
+            var files = DialogHelper.BrowseFiles("选择 XML 来源文件", "XML 文件 (*.xml)|*.xml",
+                txtSingleXmlFile.Text);
+            if (files.Length > 0)
+            {
+                txtSingleXmlFile.Text = files[0];
+                RefreshSingleClassList(rescanXml: true);
+            }
+        }
+
+        private void btnClearSingleXml_Click(object sender, EventArgs e)
+        {
+            txtSingleXmlFile.Text = string.Empty;
+            RefreshSingleClassList(rescanXml: true);
+        }
+
+        private void btnBrowseSingleTarget_Click(object sender, EventArgs e)
+        {
+            string className   = LocalState.ExcelExportSingleClassName?.Trim() ?? string.Empty;
+            string defaultName  = string.IsNullOrEmpty(className)
+                ? "export.xlsx"
+                : FunctionLibrary.ApplyNameConvention(className, Settings.ExcelExportNameConvention) + ".xlsx";
+
+            string? initial = !string.IsNullOrEmpty(txtSingleTargetPath.Text)
+                ? txtSingleTargetPath.Text
+                : Settings.ExcelExportListTargetFolder;
+
+            var path = DialogHelper.BrowseSaveFile(
+                "选择导出 Excel 目标文件",
+                "Excel 文件 (*.xlsx)|*.xlsx",
+                initial,
+                defaultName);
+
+            if (path != null)
+                txtSingleTargetPath.Text = path;
+        }
+
+        private void btnClearSingleTarget_Click(object sender, EventArgs e)
+            => txtSingleTargetPath.Text = string.Empty;
 
         // ── 列表模式：刷新列表 ────────────────────────────────────────────
 
@@ -234,6 +294,151 @@ namespace ConfigExcelEnhancer.UI
             }
 
             Log($"找到 {Settings.ExcelExportClassConfigs.Count} 个可导出数据类。", LogLevel.Info);
+        }
+
+        // ── 单独导出模式：刷新列表 ────────────────────────────────────────
+
+        /// <summary>填充列表时为 true，避免 SelectionChanged 把临时选中行误写入设置。</summary>
+        private bool _loadingSingleList;
+
+        /// <summary>正在同步单选状态时为 true，避免 ApplySingleSelection 与 SelectionChanged 互相递归。</summary>
+        private bool _syncingSingleSelection;
+
+        private void btnRefreshSingle_Click(object sender, EventArgs e)
+            => RefreshSingleClassList(rescanXml: true);
+
+        /// <summary>
+        /// 刷新单独导出模式的数据类列表。
+        /// 始终解析整个通用 XML 文件夹以保证跨文件继承上下文；
+        /// 若指定了单个 XML 来源文件，则仅显示该文件中定义的叶子类，否则显示全部。
+        /// </summary>
+        private void RefreshSingleClassList(bool rescanXml)
+        {
+            string folder     = txtXmlFolder.Text.Trim();
+            string singleFile = txtSingleXmlFile.Text.Trim();
+
+            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+            {
+                dgvSingleClasses.Rows.Clear();
+                return;
+            }
+
+            List<BeanInfo> leafBeans;
+            try
+            {
+                var allBeans = BeanParser.ParseFolder(folder);
+                leafBeans = BeanParser.GetLeafBeans(allBeans);
+            }
+            catch (Exception ex)
+            {
+                Log($"扫描 XML 失败：{ex.Message}", LogLevel.Error);
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(singleFile) && File.Exists(singleFile))
+            {
+                leafBeans = leafBeans
+                    .Where(b => PathEquals(b.SourceFile, singleFile))
+                    .ToList();
+            }
+
+            _loadingSingleList = true;
+            try
+            {
+                dgvSingleClasses.ClearSelection();
+                dgvSingleClasses.Rows.Clear();
+                foreach (var bean in leafBeans)
+                {
+                    int rowIdx = dgvSingleClasses.Rows.Add(false, bean.Name, Path.GetFileName(bean.SourceFile));
+                    dgvSingleClasses.Rows[rowIdx].Tag = bean.Name;
+                }
+            }
+            finally
+            {
+                _loadingSingleList = false;
+            }
+
+            // 还原上次选中的数据类（若仍在列表中），否则清空选中。
+            string saved = LocalState.ExcelExportSingleClassName?.Trim() ?? string.Empty;
+            bool exists = !string.IsNullOrEmpty(saved) &&
+                dgvSingleClasses.Rows.Cast<DataGridViewRow>()
+                    .Any(r => r.Tag is string n && n == saved);
+            ApplySingleSelection(exists ? saved : null);
+
+            if (rescanXml)
+                Log($"单独导出：找到 {dgvSingleClasses.Rows.Count} 个可选数据类。", LogLevel.Info);
+        }
+
+        private void dgvSingleClasses_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            if (dgvSingleClasses.Rows[e.RowIndex].Tag is not string name) return;
+
+            bool isChecked = dgvSingleClasses.Rows[e.RowIndex].Cells[colSingleSelected.Index].Value is true;
+
+            // 点击“选中”列且该行已勾选 → 取消选中；其余情况（点击该列未勾选行，或点击行其他单元格）→ 选中该行。
+            if (e.ColumnIndex == colSingleSelected.Index && isChecked)
+                ApplySingleSelection(null);
+            else
+                ApplySingleSelection(name);
+        }
+
+        private void dgvSingleClasses_SelectionChanged(object sender, EventArgs e)
+        {
+            if (_loadingSingleList || _syncingSingleSelection) return;
+            if (dgvSingleClasses.SelectedRows.Count > 0 &&
+                dgvSingleClasses.SelectedRows[0].Tag is string name)
+                ApplySingleSelection(name);
+        }
+
+        /// <summary>
+        /// 应用单选：同步“选中”勾选列（仅目标行勾选）、行选中状态与设置中的选中类名。
+        /// <paramref name="className"/> 为 null 表示清空选中。
+        /// </summary>
+        private void ApplySingleSelection(string? className)
+        {
+            if (_syncingSingleSelection) return;
+            _syncingSingleSelection = true;
+            try
+            {
+                DataGridViewRow? target = null;
+                foreach (DataGridViewRow row in dgvSingleClasses.Rows)
+                {
+                    bool match = row.Tag is string n && n == className;
+                    row.Cells[colSingleSelected.Index].Value = match;
+                    if (match) target = row;
+                }
+
+                if (target != null)
+                {
+                    target.Selected = true;
+                    dgvSingleClasses.CurrentCell = target.Cells[colSingleClassName.Index];
+                    LocalState.ExcelExportSingleClassName = className!;
+                }
+                else
+                {
+                    dgvSingleClasses.ClearSelection();
+                    LocalState.ExcelExportSingleClassName = string.Empty;
+                }
+            }
+            finally
+            {
+                _syncingSingleSelection = false;
+            }
+        }
+
+        /// <summary>规范化后比较两个路径是否指向同一文件（忽略大小写）。</summary>
+        private static bool PathEquals(string a, string b)
+        {
+            try
+            {
+                return string.Equals(Path.GetFullPath(a), Path.GetFullPath(b),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+            }
         }
 
         // ── DataGridView 交互 ─────────────────────────────────────────────
@@ -326,6 +531,14 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseTemplate.Enabled  = !locked;
             tabMode.Enabled            = !locked;
             chkRunEnumValidation.Enabled = !locked;
+            txtSingleXmlFile.Enabled       = !locked;
+            btnBrowseSingleXml.Enabled     = !locked;
+            btnClearSingleXml.Enabled      = !locked;
+            btnRefreshSingle.Enabled       = !locked;
+            dgvSingleClasses.Enabled       = !locked;
+            txtSingleTargetPath.Enabled    = !locked;
+            btnBrowseSingleTarget.Enabled  = !locked;
+            btnClearSingleTarget.Enabled   = !locked;
         }
 
         private async void btnExport_Click(object sender, EventArgs e)
@@ -581,6 +794,38 @@ namespace ConfigExcelEnhancer.UI
                     if (isAssociation)
                         _pendingAssociations.Add((cfg, targetPath));
                 }
+            }
+            else if (tabMode.SelectedIndex == 2)
+            {
+                // 单独导出模式：
+                //  - 来源 = 单文件（若设）否则整个文件夹；继承上下文始终来自整个文件夹的 beanMap
+                //  - 取选中类（LocalState.ExcelExportSingleClassName），目标 = 统一目标路径
+                //  - 目标存在 → 更新，不存在 → 新建（ExportAll/CreateExcel 自动处理）
+                string className  = LocalState.ExcelExportSingleClassName?.Trim() ?? string.Empty;
+                string targetPath = txtSingleTargetPath.Text.Trim();
+                if (string.IsNullOrEmpty(className))
+                {
+                    Log("请在列表中选择一个数据类。", LogLevel.Warn);
+                    return tasks;
+                }
+                if (string.IsNullOrEmpty(targetPath))
+                {
+                    Log("请设置导出 Excel 目标路径。", LogLevel.Warn);
+                    return tasks;
+                }
+
+                var bean = leafBeans.FirstOrDefault(b => b.Name == className);
+                string singleFile = txtSingleXmlFile.Text.Trim();
+                if (bean == null ||
+                    (!string.IsNullOrEmpty(singleFile) && File.Exists(singleFile) &&
+                     !PathEquals(bean.SourceFile, singleFile)))
+                {
+                    Log($"选中的数据类 [{className}] 不在当前 XML 来源中，请刷新列表后重选。", LogLevel.Warn);
+                    return tasks;
+                }
+
+                var allFields = BeanParser.GetAllFields(bean, beanMap);
+                tasks.Add(new ExcelExportTask(bean, allFields, targetPath));
             }
             else
             {

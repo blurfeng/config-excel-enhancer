@@ -62,6 +62,25 @@ namespace ConfigExcelEnhancer.UI
             txtTargetFolder = new TextBox();
             btnBrowseTargetFolder = new Button();
             btnOpenTargetFolder = new Button();
+            tabPageSingle = new TabPage();
+            dgvSingleClasses = new DataGridView();
+            colSingleSelected = new DataGridViewCheckBoxColumn();
+            colSingleClassName = new DataGridViewTextBoxColumn();
+            colSingleSourceFile = new DataGridViewTextBoxColumn();
+            pnlSingleSource = new Panel();
+            lblSingleXmlFile = new Label();
+            txtSingleXmlFile = new TextBox();
+            btnBrowseSingleXml = new Button();
+            btnOpenSingleXml = new Button();
+            btnClearSingleXml = new Button();
+            pnlSingleBar = new Panel();
+            btnRefreshSingle = new Button();
+            pnlSingleTarget = new Panel();
+            lblSingleTarget = new Label();
+            txtSingleTargetPath = new TextBox();
+            btnBrowseSingleTarget = new Button();
+            btnOpenSingleTarget = new Button();
+            btnClearSingleTarget = new Button();
             pnlAction = new Panel();
             btnCancel = new Button();
             pbExport = new ProgressBar();
@@ -80,6 +99,11 @@ namespace ConfigExcelEnhancer.UI
             pnlListCommon.SuspendLayout();
             tabPageBatch.SuspendLayout();
             pnlBatchTarget.SuspendLayout();
+            tabPageSingle.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvSingleClasses).BeginInit();
+            pnlSingleSource.SuspendLayout();
+            pnlSingleBar.SuspendLayout();
+            pnlSingleTarget.SuspendLayout();
             pnlAction.SuspendLayout();
             pnlExportSettings.SuspendLayout();
             ctxLog.SuspendLayout();
@@ -377,6 +401,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             tabMode.Controls.Add(tabPageList);
             tabMode.Controls.Add(tabPageBatch);
+            tabMode.Controls.Add(tabPageSingle);
             tabMode.Dock = DockStyle.Fill;
             tabMode.Location = new Point(0, 150);
             tabMode.Name = "tabMode";
@@ -591,9 +616,215 @@ namespace ConfigExcelEnhancer.UI
             btnOpenTargetFolder.TabIndex = 3;
             btnOpenTargetFolder.Text = "📂";
             btnOpenTargetFolder.Click += btnOpenTargetFolder_Click;
-            // 
+            //
+            // tabPageSingle
+            //
+            tabPageSingle.Controls.Add(dgvSingleClasses);
+            tabPageSingle.Controls.Add(pnlSingleBar);
+            tabPageSingle.Controls.Add(pnlSingleTarget);
+            tabPageSingle.Controls.Add(pnlSingleSource);
+            tabPageSingle.Location = new Point(4, 26);
+            tabPageSingle.Name = "tabPageSingle";
+            tabPageSingle.Padding = new Padding(3);
+            tabPageSingle.Size = new Size(756, 120);
+            tabPageSingle.TabIndex = 2;
+            tabPageSingle.Text = "单独导出";
+            tabPageSingle.ToolTipText = "一对一导出/更新：可选指定单个 XML 来源文件，从列表中选一个数据类，导出到指定的目标 Excel 文件。";
+            //
+            // dgvSingleClasses
+            //
+            dgvSingleClasses.AllowUserToAddRows = false;
+            dgvSingleClasses.AllowUserToDeleteRows = false;
+            dgvSingleClasses.AllowUserToResizeRows = false;
+            dgvSingleClasses.BackgroundColor = SystemColors.Window;
+            dgvSingleClasses.Columns.AddRange(new DataGridViewColumn[] { colSingleSelected, colSingleClassName, colSingleSourceFile });
+            dgvSingleClasses.Dock = DockStyle.Fill;
+            dgvSingleClasses.Location = new Point(3, 75);
+            dgvSingleClasses.MultiSelect = false;
+            dgvSingleClasses.Name = "dgvSingleClasses";
+            dgvSingleClasses.ReadOnly = true;
+            dgvSingleClasses.RowHeadersVisible = false;
+            dgvSingleClasses.ScrollBars = ScrollBars.Vertical;
+            dgvSingleClasses.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvSingleClasses.Size = new Size(750, 42);
+            dgvSingleClasses.TabIndex = 2;
+            dgvSingleClasses.CellClick += dgvSingleClasses_CellClick;
+            dgvSingleClasses.SelectionChanged += dgvSingleClasses_SelectionChanged;
+            //
+            // colSingleSelected
+            //
+            colSingleSelected.HeaderText = "选中";
+            colSingleSelected.Name = "colSingleSelected";
+            colSingleSelected.ReadOnly = true;
+            colSingleSelected.Resizable = DataGridViewTriState.False;
+            colSingleSelected.ToolTipText = "勾选要导出的数据类（单选）。点击此列或整行均可选中，再次点击勾选可取消。";
+            colSingleSelected.Width = 50;
+            //
+            // colSingleClassName
+            //
+            colSingleClassName.HeaderText = "数据类名";
+            colSingleClassName.Name = "colSingleClassName";
+            colSingleClassName.ReadOnly = true;
+            colSingleClassName.ToolTipText = "从 XML 定义中识别出的数据类名。";
+            colSingleClassName.Width = 220;
+            //
+            // colSingleSourceFile
+            //
+            colSingleSourceFile.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            colSingleSourceFile.HeaderText = "来源文件";
+            colSingleSourceFile.Name = "colSingleSourceFile";
+            colSingleSourceFile.ReadOnly = true;
+            colSingleSourceFile.ToolTipText = "定义该数据类的 .xml 来源文件。";
+            //
+            // pnlSingleSource
+            //
+            pnlSingleSource.Controls.Add(lblSingleXmlFile);
+            pnlSingleSource.Controls.Add(txtSingleXmlFile);
+            pnlSingleSource.Controls.Add(btnBrowseSingleXml);
+            pnlSingleSource.Controls.Add(btnOpenSingleXml);
+            pnlSingleSource.Controls.Add(btnClearSingleXml);
+            pnlSingleSource.Dock = DockStyle.Top;
+            pnlSingleSource.Location = new Point(3, 3);
+            pnlSingleSource.Name = "pnlSingleSource";
+            pnlSingleSource.Size = new Size(750, 36);
+            pnlSingleSource.TabIndex = 0;
+            //
+            // lblSingleXmlFile
+            //
+            lblSingleXmlFile.AutoSize = true;
+            lblSingleXmlFile.Location = new Point(7, 9);
+            lblSingleXmlFile.Name = "lblSingleXmlFile";
+            lblSingleXmlFile.Size = new Size(140, 17);
+            lblSingleXmlFile.TabIndex = 0;
+            lblSingleXmlFile.Text = "XML 来源文件（可空）：";
+            toolTip.SetToolTip(lblSingleXmlFile, "可选：指定单个 .xml 来源文件，列表仅显示该文件中的数据类；留空则使用上方通用“XML 来源文件夹”。");
+            //
+            // txtSingleXmlFile
+            //
+            txtSingleXmlFile.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtSingleXmlFile.Location = new Point(153, 5);
+            txtSingleXmlFile.Name = "txtSingleXmlFile";
+            txtSingleXmlFile.Size = new Size(421, 23);
+            txtSingleXmlFile.TabIndex = 1;
+            txtSingleXmlFile.TextChanged += txtSingleXmlFile_TextChanged;
+            //
+            // btnBrowseSingleXml
+            //
+            btnBrowseSingleXml.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBrowseSingleXml.Location = new Point(608, 3);
+            btnBrowseSingleXml.Name = "btnBrowseSingleXml";
+            btnBrowseSingleXml.Size = new Size(75, 28);
+            btnBrowseSingleXml.TabIndex = 3;
+            btnBrowseSingleXml.Text = "浏览...";
+            btnBrowseSingleXml.Click += btnBrowseSingleXml_Click;
+            //
+            // btnOpenSingleXml
+            //
+            btnOpenSingleXml.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenSingleXml.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenSingleXml.Location = new Point(578, 3);
+            btnOpenSingleXml.Name = "btnOpenSingleXml";
+            btnOpenSingleXml.Size = new Size(28, 28);
+            btnOpenSingleXml.TabIndex = 2;
+            btnOpenSingleXml.Text = "📂";
+            btnOpenSingleXml.Click += btnOpenSingleXml_Click;
+            //
+            // btnClearSingleXml
+            //
+            btnClearSingleXml.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnClearSingleXml.Location = new Point(685, 3);
+            btnClearSingleXml.Name = "btnClearSingleXml";
+            btnClearSingleXml.Size = new Size(60, 28);
+            btnClearSingleXml.TabIndex = 4;
+            btnClearSingleXml.Text = "清空";
+            toolTip.SetToolTip(btnClearSingleXml, "清空 XML 来源文件，列表回退为显示通用“XML 来源文件夹”中的全部数据类。");
+            btnClearSingleXml.Click += btnClearSingleXml_Click;
+            //
+            // pnlSingleBar
+            //
+            pnlSingleBar.Controls.Add(btnRefreshSingle);
+            pnlSingleBar.Dock = DockStyle.Top;
+            pnlSingleBar.Location = new Point(3, 75);
+            pnlSingleBar.Name = "pnlSingleBar";
+            pnlSingleBar.Size = new Size(750, 36);
+            pnlSingleBar.TabIndex = 1;
+            //
+            // btnRefreshSingle
+            //
+            btnRefreshSingle.Location = new Point(6, 4);
+            btnRefreshSingle.Name = "btnRefreshSingle";
+            btnRefreshSingle.Size = new Size(80, 26);
+            btnRefreshSingle.TabIndex = 0;
+            btnRefreshSingle.Text = "刷新列表";
+            toolTip.SetToolTip(btnRefreshSingle, "重新扫描 XML 来源，刷新可选的数据类列表。");
+            btnRefreshSingle.Click += btnRefreshSingle_Click;
+            //
+            // pnlSingleTarget
+            //
+            pnlSingleTarget.Controls.Add(lblSingleTarget);
+            pnlSingleTarget.Controls.Add(txtSingleTargetPath);
+            pnlSingleTarget.Controls.Add(btnBrowseSingleTarget);
+            pnlSingleTarget.Controls.Add(btnOpenSingleTarget);
+            pnlSingleTarget.Controls.Add(btnClearSingleTarget);
+            pnlSingleTarget.Dock = DockStyle.Top;
+            pnlSingleTarget.Location = new Point(3, 39);
+            pnlSingleTarget.Name = "pnlSingleTarget";
+            pnlSingleTarget.Size = new Size(750, 36);
+            pnlSingleTarget.TabIndex = 3;
+            //
+            // lblSingleTarget
+            //
+            lblSingleTarget.AutoSize = true;
+            lblSingleTarget.Location = new Point(7, 9);
+            lblSingleTarget.Name = "lblSingleTarget";
+            lblSingleTarget.Size = new Size(128, 17);
+            lblSingleTarget.TabIndex = 0;
+            lblSingleTarget.Text = "导出 Excel 目标路径：";
+            toolTip.SetToolTip(lblSingleTarget, "选中数据类导出的目标 Excel 文件路径；文件存在则更新、不存在则新建（父目录自动创建）。");
+            //
+            // txtSingleTargetPath
+            //
+            txtSingleTargetPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtSingleTargetPath.Location = new Point(141, 5);
+            txtSingleTargetPath.Name = "txtSingleTargetPath";
+            txtSingleTargetPath.Size = new Size(433, 23);
+            txtSingleTargetPath.TabIndex = 1;
+            txtSingleTargetPath.TextChanged += txtSingleTargetPath_TextChanged;
+            //
+            // btnBrowseSingleTarget
+            //
+            btnBrowseSingleTarget.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBrowseSingleTarget.Location = new Point(608, 3);
+            btnBrowseSingleTarget.Name = "btnBrowseSingleTarget";
+            btnBrowseSingleTarget.Size = new Size(75, 28);
+            btnBrowseSingleTarget.TabIndex = 3;
+            btnBrowseSingleTarget.Text = "浏览...";
+            btnBrowseSingleTarget.Click += btnBrowseSingleTarget_Click;
+            //
+            // btnOpenSingleTarget
+            //
+            btnOpenSingleTarget.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenSingleTarget.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenSingleTarget.Location = new Point(578, 3);
+            btnOpenSingleTarget.Name = "btnOpenSingleTarget";
+            btnOpenSingleTarget.Size = new Size(28, 28);
+            btnOpenSingleTarget.TabIndex = 2;
+            btnOpenSingleTarget.Text = "📂";
+            btnOpenSingleTarget.Click += btnOpenSingleTarget_Click;
+            //
+            // btnClearSingleTarget
+            //
+            btnClearSingleTarget.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnClearSingleTarget.Location = new Point(685, 3);
+            btnClearSingleTarget.Name = "btnClearSingleTarget";
+            btnClearSingleTarget.Size = new Size(60, 28);
+            btnClearSingleTarget.TabIndex = 4;
+            btnClearSingleTarget.Text = "清空";
+            toolTip.SetToolTip(btnClearSingleTarget, "清空导出 Excel 目标路径。");
+            btnClearSingleTarget.Click += btnClearSingleTarget_Click;
+            //
             // pnlAction
-            // 
+            //
             pnlAction.Controls.Add(btnExport);
             pnlAction.Controls.Add(btnCancel);
             pnlAction.Controls.Add(pbExport);
@@ -694,6 +925,13 @@ namespace ConfigExcelEnhancer.UI
             tabPageBatch.ResumeLayout(false);
             pnlBatchTarget.ResumeLayout(false);
             pnlBatchTarget.PerformLayout();
+            tabPageSingle.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvSingleClasses).EndInit();
+            pnlSingleSource.ResumeLayout(false);
+            pnlSingleSource.PerformLayout();
+            pnlSingleBar.ResumeLayout(false);
+            pnlSingleTarget.ResumeLayout(false);
+            pnlSingleTarget.PerformLayout();
             pnlAction.ResumeLayout(false);
             pnlExportSettings.ResumeLayout(false);
             pnlExportSettings.PerformLayout();
@@ -750,6 +988,26 @@ namespace ConfigExcelEnhancer.UI
         private TextBox     txtTargetFolder       = null!;
         private Button      btnBrowseTargetFolder = null!;
         private Button      btnOpenTargetFolder   = null!;
+
+        private TabPage     tabPageSingle         = null!;
+        private Panel       pnlSingleSource       = null!;
+        private Label       lblSingleXmlFile      = null!;
+        private TextBox     txtSingleXmlFile      = null!;
+        private Button      btnBrowseSingleXml    = null!;
+        private Button      btnOpenSingleXml      = null!;
+        private Button      btnClearSingleXml     = null!;
+        private Panel       pnlSingleBar          = null!;
+        private Button      btnRefreshSingle      = null!;
+        private DataGridView               dgvSingleClasses    = null!;
+        private DataGridViewCheckBoxColumn colSingleSelected   = null!;
+        private DataGridViewTextBoxColumn  colSingleClassName  = null!;
+        private DataGridViewTextBoxColumn  colSingleSourceFile = null!;
+        private Panel       pnlSingleTarget       = null!;
+        private Label       lblSingleTarget       = null!;
+        private TextBox     txtSingleTargetPath   = null!;
+        private Button      btnBrowseSingleTarget = null!;
+        private Button      btnOpenSingleTarget   = null!;
+        private Button      btnClearSingleTarget  = null!;
 
         private Panel       pnlAction             = null!;
         private Button      btnExport             = null!;

@@ -52,9 +52,18 @@ Utils/        — SettingsManager, LocalStateManager, ProgressBarHelper
 
 ## Persistence
 
-- `settings.json` — `AppSettings` persisted by `SettingsManager`. **Paths stored as relative** to `LocalState.ProjectRoot` for portability across machines. See `memory/project_relative_paths.md`.
-- `local_state.json` — machine-local state (absolute root path, etc.) managed by `LocalStateManager`
-- `LocalState` (in-memory) — runtime session state, not persisted
+Two persisted stores. When adding a new config field, decide which one it belongs to using the rule below.
+
+- `settings.json` — `AppSettings`, persisted by `SettingsManager`. **Committed to version control / shared across the team.** **Paths stored as relative** to `LocalState.ProjectRoot` for portability across machines (register any new path field in `SettingsManager.TransformPaths`). See `memory/project_relative_paths.md`.
+- `local_state.json` — `LocalState`, persisted by `LocalStateManager` to `LocalApplicationData` (per-exe-location). **Machine-private, NOT version-controlled.** Stores **absolute** paths (no relativization).
+
+### AppSettings vs. LocalState — where to put a new config field
+
+Put it in **`AppSettings`** when it's **stable, project-level config the whole team should share** — e.g. XML/Excel directories, the class→Excel associations of list mode (`ExcelExportClassConfigs`), naming rules, batch target folder. These are the durable agreements about how the project exports.
+
+Put it in **`LocalState`** when it's **machine-private, transient, or an "current operation / scratch selection"** that would be meaningless (or noisy) to share — e.g. `EnumForceRewrite`, window size, run-state caches, and the single-export mode's current selection (`ExcelExportSingleXmlFile` / `ExcelExportSingleClassName` / `ExcelExportSingleTargetPath`). Rule of thumb: if storing it in `settings.json` would create git diff noise every time a developer does a routine personal action, it belongs in `LocalState`.
+
+> Path fields in `AppSettings` must be registered in `SettingsManager.TransformPaths` (relative ↔ absolute). Path fields in `LocalState` are stored absolute and need no transform.
 
 ## Important Conventions
 
