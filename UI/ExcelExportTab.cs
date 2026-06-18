@@ -21,6 +21,9 @@ namespace ConfigExcelEnhancer.UI
 
         protected override RichTextBox? LogBox => txtLog;
 
+        /// <summary>本次导出中走了通用文件夹的条目及其计算出的目标路径，导出成功后回写以建立关联。</summary>
+        private readonly List<(ExcelExportClassConfig cfg, string computedPath)> _pendingAssociations = new();
+
         // ── 设置加载 ──────────────────────────────────────────────────────
 
         public void LoadFromSettings()
@@ -28,6 +31,8 @@ namespace ConfigExcelEnhancer.UI
             txtXmlFolder.Text          = Settings.ExcelExportXmlFolder;
             txtDesignTemplate.Text     = Settings.ExcelExportDesignTemplate;
             txtListTargetFolder.Text   = Settings.ExcelExportListTargetFolder;
+            chkListCommonFolder.Checked = Settings.ExcelExportListCommonFolderEnabled;
+            UpdateListCommonFolderEnabled(Settings.ExcelExportListCommonFolderEnabled);
             txtTargetFolder.Text       = Settings.ExcelExportTargetFolder;
             txtPrefix.Text             = Settings.ExcelExportNamePrefix;
             txtSuffix.Text             = Settings.ExcelExportNameSuffix;
@@ -54,6 +59,20 @@ namespace ConfigExcelEnhancer.UI
 
         private void txtListTargetFolder_TextChanged(object sender, EventArgs e)
             => Settings.ExcelExportListTargetFolder = txtListTargetFolder.Text;
+
+        private void chkListCommonFolder_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.ExcelExportListCommonFolderEnabled = chkListCommonFolder.Checked;
+            UpdateListCommonFolderEnabled(chkListCommonFolder.Checked);
+        }
+
+        /// <summary>统一控制“通用导出文件夹”一组控件的启用状态。</summary>
+        private void UpdateListCommonFolderEnabled(bool enabled)
+        {
+            txtListTargetFolder.Enabled = enabled;
+            btnBrowseListFolder.Enabled = enabled;
+            btnOpenListFolder.Enabled   = enabled;
+        }
 
         private void txtTargetFolder_TextChanged(object sender, EventArgs e)
             => Settings.ExcelExportTargetFolder = txtTargetFolder.Text;
@@ -208,6 +227,7 @@ namespace ConfigExcelEnhancer.UI
                     Path.GetFileName(cfg.SourceXmlFile),
                     cfg.TargetExcelPath);
                 dgvClasses.Rows[rowIdx].Tag = cfg;
+                RefreshTargetPathWarning(dgvClasses.Rows[rowIdx]);
             }
 
             Log($"找到 {Settings.ExcelExportClassConfigs.Count} 个可导出数据类。", LogLevel.Info);
@@ -224,7 +244,32 @@ namespace ConfigExcelEnhancer.UI
             if (e.ColumnIndex == colEnabled.Index)
                 cfg.Enabled = (bool)(row.Cells[colEnabled.Index].Value ?? false);
             else if (e.ColumnIndex == colTargetPath.Index)
+            {
                 cfg.TargetExcelPath = (string)(row.Cells[colTargetPath.Index].Value ?? string.Empty);
+                RefreshTargetPathWarning(row);
+            }
+        }
+
+        /// <summary>
+        /// 重新评估所有行的“目标 Excel 路径”警示底色。
+        /// 供窗口重新获得焦点时调用，以反映用户在程序外删除/移动目标文件后的最新状态。
+        /// </summary>
+        public void RefreshTargetPathWarnings()
+        {
+            foreach (DataGridViewRow row in dgvClasses.Rows)
+                RefreshTargetPathWarning(row);
+        }
+
+        /// <summary>
+        /// 刷新某行“目标 Excel 路径”单元格的警示底色：
+        /// 当路径已设置但对应文件不存在时标记警示色，否则恢复默认。
+        /// </summary>
+        private void RefreshTargetPathWarning(DataGridViewRow row)
+        {
+            if (row.Tag is not ExcelExportClassConfig cfg) return;
+
+            bool invalid = !string.IsNullOrEmpty(cfg.TargetExcelPath) && !File.Exists(cfg.TargetExcelPath);
+            row.Cells[colTargetPath.Index].Style.BackColor = invalid ? UITheme.CellWarnBack : SystemColors.Window;
         }
 
         private void dgvClasses_CurrentCellDirtyStateChanged(object sender, EventArgs e)
@@ -254,7 +299,17 @@ namespace ConfigExcelEnhancer.UI
                 {
                     cfg.TargetExcelPath = path;
                     row.Cells[colTargetPath.Index].Value = path;
+                    RefreshTargetPathWarning(row);
                 }
+            }
+            else if (e.ColumnIndex == colClearPath.Index)
+            {
+                var row = dgvClasses.Rows[e.RowIndex];
+                if (row.Tag is not ExcelExportClassConfig cfg) return;
+
+                cfg.TargetExcelPath = string.Empty;
+                row.Cells[colTargetPath.Index].Value = string.Empty;
+                RefreshTargetPathWarning(row);
             }
         }
 
@@ -356,6 +411,9 @@ namespace ConfigExcelEnhancer.UI
 
                 Log($"导出完成。共处理 {tasks.Count} 个数据类。", LogLevel.Ok);
 
+                // 将走了通用文件夹的条目回写目标路径，建立固定关联。
+                WriteBackAssociations();
+
                 // 导出后可选地对导出的 Excel 执行 Enum 数据验证（复用枚举验证功能）。
                 if (chkRunEnumValidation.Checked)
                     await RunEnumValidationOnExportAsync(xmlFolder, tasks, token);
@@ -432,6 +490,25 @@ namespace ConfigExcelEnhancer.UI
             }, token);
         }
 
+        /// <summary>导出成功后，把走了通用文件夹的条目计算路径回写到配置与列表，建立固定关联。</summary>
+        private void WriteBackAssociations()
+        {
+            if (_pendingAssociations.Count == 0) return;
+
+            foreach (var (cfg, computedPath) in _pendingAssociations)
+            {
+                cfg.TargetExcelPath = computedPath;
+                foreach (DataGridViewRow row in dgvClasses.Rows)
+                {
+                    if (!ReferenceEquals(row.Tag, cfg)) continue;
+                    row.Cells[colTargetPath.Index].Value = computedPath;
+                    RefreshTargetPathWarning(row);
+                    break;
+                }
+            }
+            _pendingAssociations.Clear();
+        }
+
         private void btnCancel_Click(object sender, EventArgs e) => _cts?.Cancel();
 
         private void btnClearLog_Click(object sender, EventArgs e) => txtLog.Clear();
@@ -455,30 +532,51 @@ namespace ConfigExcelEnhancer.UI
             string suffix     = txtSuffix.Text;
             int    convention = Settings.ExcelExportNameConvention;
 
+            _pendingAssociations.Clear();
+
             if (tabMode.SelectedIndex == 0)
             {
-                // 列表模式：优先使用各自配置的路径，未配置时回退到通用目标文件夹
-                string commonFolder = txtListTargetFolder.Text.Trim();
+                // 列表模式：
+                //  - 已设路径且文件存在 → 更新该文件
+                //  - 已设路径但文件不存在 → 跳过并警示（非破坏性，不新建、不回退）
+                //  - 未设路径 → 启用通用文件夹时导出到通用文件夹并记录回写关联，否则跳过
+                bool   commonEnabled = Settings.ExcelExportListCommonFolderEnabled;
+                string commonFolder  = txtListTargetFolder.Text.Trim();
 
                 foreach (var cfg in Settings.ExcelExportClassConfigs)
                 {
                     if (!cfg.Enabled) continue;
 
-                    string targetPath = cfg.TargetExcelPath;
-                    if (string.IsNullOrEmpty(targetPath))
+                    var bean = leafBeans.FirstOrDefault(b => b.Name == cfg.ClassName);
+                    if (bean == null) continue;
+
+                    string targetPath;
+                    bool   isAssociation = false;
+
+                    if (!string.IsNullOrEmpty(cfg.TargetExcelPath))
                     {
-                        if (string.IsNullOrEmpty(commonFolder))
+                        if (!File.Exists(cfg.TargetExcelPath))
+                        {
+                            Log($"跳过 [{cfg.ClassName}]：目标 Excel 路径不存在 —— {cfg.TargetExcelPath}", LogLevel.Warn);
+                            continue;
+                        }
+                        targetPath = cfg.TargetExcelPath;
+                    }
+                    else
+                    {
+                        if (!commonEnabled || string.IsNullOrEmpty(commonFolder))
                             continue;
 
                         string baseName = FunctionLibrary.ApplyNameConvention(cfg.ClassName, convention);
                         targetPath = Path.Combine(commonFolder, $"{prefix}{baseName}{suffix}.xlsx");
+                        isAssociation = true;
                     }
-
-                    var bean = leafBeans.FirstOrDefault(b => b.Name == cfg.ClassName);
-                    if (bean == null) continue;
 
                     var allFields = BeanParser.GetAllFields(bean, beanMap);
                     tasks.Add(new ExcelExportTask(bean, allFields, targetPath));
+
+                    if (isAssociation)
+                        _pendingAssociations.Add((cfg, targetPath));
                 }
             }
             else

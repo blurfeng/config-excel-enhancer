@@ -15,18 +15,9 @@ namespace ConfigExcelEnhancer.UI
         {
             components = new System.ComponentModel.Container();
             toolTip = new ToolTip(components);
-            pnlSettings = new Panel();
             lblXmlFolder = new Label();
-            txtXmlFolder = new TextBox();
-            btnBrowseXmlFolder = new Button();
-            btnOpenXmlFolder = new Button();
             lblTemplate = new Label();
-            txtDesignTemplate = new TextBox();
-            btnBrowseTemplate = new Button();
-            btnOpenTemplate = new Button();
-            pnlNaming = new Panel();
             lblNaming = new Label();
-            pnlNamingGroup = new Panel();
             rdoNameAsIs = new RadioButton();
             rdoNameCamel = new RadioButton();
             rdoNameSnake = new RadioButton();
@@ -34,6 +25,22 @@ namespace ConfigExcelEnhancer.UI
             txtPrefix = new TextBox();
             lblClassName = new Label();
             txtSuffix = new TextBox();
+            btnRefresh = new Button();
+            chkListCommonFolder = new CheckBox();
+            lblListTargetFolder = new Label();
+            lblTargetFolder = new Label();
+            btnExport = new Button();
+            lblExportSettings = new Label();
+            chkRunEnumValidation = new CheckBox();
+            pnlSettings = new Panel();
+            txtXmlFolder = new TextBox();
+            btnBrowseXmlFolder = new Button();
+            btnOpenXmlFolder = new Button();
+            txtDesignTemplate = new TextBox();
+            btnBrowseTemplate = new Button();
+            btnOpenTemplate = new Button();
+            pnlNaming = new Panel();
+            pnlNamingGroup = new Panel();
             tabMode = new TabControl();
             tabPageList = new TabPage();
             dgvClasses = new DataGridView();
@@ -42,28 +49,23 @@ namespace ConfigExcelEnhancer.UI
             colSourceFile = new DataGridViewTextBoxColumn();
             colTargetPath = new DataGridViewTextBoxColumn();
             colBrowse = new DataGridViewButtonColumn();
+            colClearPath = new DataGridViewButtonColumn();
             pnlListBar = new Panel();
-            btnRefresh = new Button();
             btnSelectAll = new Button();
             btnDeselectAll = new Button();
             pnlListCommon = new Panel();
-            lblListTargetFolder = new Label();
             txtListTargetFolder = new TextBox();
             btnBrowseListFolder = new Button();
             btnOpenListFolder = new Button();
             tabPageBatch = new TabPage();
             pnlBatchTarget = new Panel();
-            lblTargetFolder = new Label();
             txtTargetFolder = new TextBox();
             btnBrowseTargetFolder = new Button();
             btnOpenTargetFolder = new Button();
             pnlAction = new Panel();
-            btnExport = new Button();
             btnCancel = new Button();
             pbExport = new ProgressBar();
             pnlExportSettings = new Panel();
-            lblExportSettings = new Label();
-            chkRunEnumValidation = new CheckBox();
             ctxLog = new ContextMenuStrip(components);
             ctxMenuItemClearLog = new ToolStripMenuItem();
             ctxMenuItemCopyLog = new ToolStripMenuItem();
@@ -82,28 +84,12 @@ namespace ConfigExcelEnhancer.UI
             pnlExportSettings.SuspendLayout();
             ctxLog.SuspendLayout();
             SuspendLayout();
-            //
+            // 
             // toolTip
-            //
+            // 
             toolTip.AutoPopDelay = 8000;
             toolTip.InitialDelay = 400;
             toolTip.ReshowDelay = 200;
-            //
-            // pnlSettings
-            //
-            pnlSettings.Controls.Add(lblXmlFolder);
-            pnlSettings.Controls.Add(txtXmlFolder);
-            pnlSettings.Controls.Add(btnBrowseXmlFolder);
-            pnlSettings.Controls.Add(btnOpenXmlFolder);
-            pnlSettings.Controls.Add(lblTemplate);
-            pnlSettings.Controls.Add(txtDesignTemplate);
-            pnlSettings.Controls.Add(btnBrowseTemplate);
-            pnlSettings.Controls.Add(btnOpenTemplate);
-            pnlSettings.Dock = DockStyle.Top;
-            pnlSettings.Location = new Point(0, 0);
-            pnlSettings.Name = "pnlSettings";
-            pnlSettings.Size = new Size(764, 80);
-            pnlSettings.TabIndex = 0;
             // 
             // lblXmlFolder
             // 
@@ -115,36 +101,6 @@ namespace ConfigExcelEnhancer.UI
             lblXmlFolder.Text = "XML 来源文件夹：";
             toolTip.SetToolTip(lblXmlFolder, "存放 Luban .xml 数据定义的文件夹，工具据此识别需要导出为 Excel 的数据类。");
             // 
-            // txtXmlFolder
-            // 
-            txtXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtXmlFolder.Location = new Point(125, 9);
-            txtXmlFolder.Name = "txtXmlFolder";
-            txtXmlFolder.Size = new Size(518, 23);
-            txtXmlFolder.TabIndex = 1;
-            txtXmlFolder.TextChanged += txtXmlFolder_TextChanged;
-            // 
-            // btnBrowseXmlFolder
-            // 
-            btnBrowseXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseXmlFolder.Location = new Point(677, 6);
-            btnBrowseXmlFolder.Name = "btnBrowseXmlFolder";
-            btnBrowseXmlFolder.Size = new Size(75, 28);
-            btnBrowseXmlFolder.TabIndex = 2;
-            btnBrowseXmlFolder.Text = "浏览...";
-            btnBrowseXmlFolder.Click += btnBrowseXmlFolder_Click;
-            //
-            // btnOpenXmlFolder
-            //
-            btnOpenXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnOpenXmlFolder.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenXmlFolder.Location = new Point(647, 6);
-            btnOpenXmlFolder.Name = "btnOpenXmlFolder";
-            btnOpenXmlFolder.Size = new Size(28, 28);
-            btnOpenXmlFolder.TabIndex = 6;
-            btnOpenXmlFolder.Text = "📂";
-            btnOpenXmlFolder.Click += btnOpenXmlFolder_Click;
-            // 
             // lblTemplate
             // 
             lblTemplate.AutoSize = true;
@@ -155,50 +111,6 @@ namespace ConfigExcelEnhancer.UI
             lblTemplate.Text = "Excel 设计模板：";
             toolTip.SetToolTip(lblTemplate, "导出的 Excel 所使用的样式/格式模板文件（可空，留空则导出无格式的基础表）。");
             // 
-            // txtDesignTemplate
-            // 
-            txtDesignTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtDesignTemplate.Location = new Point(125, 45);
-            txtDesignTemplate.Name = "txtDesignTemplate";
-            txtDesignTemplate.Size = new Size(518, 23);
-            txtDesignTemplate.TabIndex = 4;
-            txtDesignTemplate.TextChanged += txtDesignTemplate_TextChanged;
-            // 
-            // btnBrowseTemplate
-            // 
-            btnBrowseTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseTemplate.Location = new Point(677, 44);
-            btnBrowseTemplate.Name = "btnBrowseTemplate";
-            btnBrowseTemplate.Size = new Size(75, 28);
-            btnBrowseTemplate.TabIndex = 5;
-            btnBrowseTemplate.Text = "浏览...";
-            btnBrowseTemplate.Click += btnBrowseTemplate_Click;
-            //
-            // btnOpenTemplate
-            //
-            btnOpenTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnOpenTemplate.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenTemplate.Location = new Point(647, 44);
-            btnOpenTemplate.Name = "btnOpenTemplate";
-            btnOpenTemplate.Size = new Size(28, 28);
-            btnOpenTemplate.TabIndex = 7;
-            btnOpenTemplate.Text = "📂";
-            btnOpenTemplate.Click += btnOpenTemplate_Click;
-            // 
-            // pnlNaming
-            // 
-            pnlNaming.Controls.Add(lblNaming);
-            pnlNaming.Controls.Add(pnlNamingGroup);
-            pnlNaming.Controls.Add(lblFileName);
-            pnlNaming.Controls.Add(txtPrefix);
-            pnlNaming.Controls.Add(lblClassName);
-            pnlNaming.Controls.Add(txtSuffix);
-            pnlNaming.Dock = DockStyle.Top;
-            pnlNaming.Location = new Point(0, 80);
-            pnlNaming.Name = "pnlNaming";
-            pnlNaming.Size = new Size(764, 70);
-            pnlNaming.TabIndex = 1;
-            // 
             // lblNaming
             // 
             lblNaming.AutoSize = true;
@@ -208,16 +120,6 @@ namespace ConfigExcelEnhancer.UI
             lblNaming.TabIndex = 0;
             lblNaming.Text = "文件命名：";
             toolTip.SetToolTip(lblNaming, "导出 Excel 文件名的命名规则，基于数据类名转换。");
-            // 
-            // pnlNamingGroup
-            // 
-            pnlNamingGroup.Controls.Add(rdoNameAsIs);
-            pnlNamingGroup.Controls.Add(rdoNameCamel);
-            pnlNamingGroup.Controls.Add(rdoNameSnake);
-            pnlNamingGroup.Location = new Point(76, 5);
-            pnlNamingGroup.Name = "pnlNamingGroup";
-            pnlNamingGroup.Size = new Size(339, 26);
-            pnlNamingGroup.TabIndex = 1;
             // 
             // rdoNameAsIs
             // 
@@ -294,6 +196,183 @@ namespace ConfigExcelEnhancer.UI
             toolTip.SetToolTip(txtSuffix, "添加在数据类名之后的文件名后缀（可空）。");
             txtSuffix.TextChanged += txtSuffix_TextChanged;
             // 
+            // btnRefresh
+            // 
+            btnRefresh.Location = new Point(6, 4);
+            btnRefresh.Name = "btnRefresh";
+            btnRefresh.Size = new Size(80, 26);
+            btnRefresh.TabIndex = 0;
+            btnRefresh.Text = "刷新列表";
+            toolTip.SetToolTip(btnRefresh, "重新扫描 XML 来源文件夹，刷新可导出的数据类列表。");
+            btnRefresh.Click += btnRefresh_Click;
+            // 
+            // chkListCommonFolder
+            // 
+            chkListCommonFolder.AutoSize = true;
+            chkListCommonFolder.Checked = true;
+            chkListCommonFolder.CheckState = CheckState.Checked;
+            chkListCommonFolder.Location = new Point(7, 11);
+            chkListCommonFolder.Name = "chkListCommonFolder";
+            chkListCommonFolder.Size = new Size(15, 14);
+            chkListCommonFolder.TabIndex = 0;
+            toolTip.SetToolTip(chkListCommonFolder, "启用“通用导出文件夹”回退：勾选时未单独指定路径的数据类导出到通用文件夹；取消勾选则禁用此回退，未指定路径的数据类不会被导出。");
+            chkListCommonFolder.UseVisualStyleBackColor = true;
+            chkListCommonFolder.CheckedChanged += chkListCommonFolder_CheckedChanged;
+            // 
+            // lblListTargetFolder
+            // 
+            lblListTargetFolder.AutoSize = true;
+            lblListTargetFolder.Location = new Point(26, 9);
+            lblListTargetFolder.Name = "lblListTargetFolder";
+            lblListTargetFolder.Size = new Size(104, 17);
+            lblListTargetFolder.TabIndex = 1;
+            lblListTargetFolder.Text = "通用导出文件夹：";
+            toolTip.SetToolTip(lblListTargetFolder, "未单独指定目标路径的数据类，统一导出到此文件夹。");
+            // 
+            // lblTargetFolder
+            // 
+            lblTargetFolder.AutoSize = true;
+            lblTargetFolder.Location = new Point(6, 9);
+            lblTargetFolder.Name = "lblTargetFolder";
+            lblTargetFolder.Size = new Size(80, 17);
+            lblTargetFolder.TabIndex = 0;
+            lblTargetFolder.Text = "导出文件夹：";
+            toolTip.SetToolTip(lblTargetFolder, "批量导出模式下，所有数据类 Excel 统一输出到此文件夹。");
+            // 
+            // btnExport
+            // 
+            btnExport.Location = new Point(12, 7);
+            btnExport.Name = "btnExport";
+            btnExport.Size = new Size(110, 32);
+            btnExport.TabIndex = 0;
+            btnExport.Text = "▶ 导出";
+            toolTip.SetToolTip(btnExport, "根据当前模式与设置，将数据类导出为 Excel 文件。");
+            btnExport.Click += btnExport_Click;
+            // 
+            // lblExportSettings
+            // 
+            lblExportSettings.AutoSize = true;
+            lblExportSettings.Location = new Point(12, 9);
+            lblExportSettings.Name = "lblExportSettings";
+            lblExportSettings.Size = new Size(68, 17);
+            lblExportSettings.TabIndex = 0;
+            lblExportSettings.Text = "导出设置：";
+            toolTip.SetToolTip(lblExportSettings, "导出过程中的附加处理选项。");
+            // 
+            // chkRunEnumValidation
+            // 
+            chkRunEnumValidation.AutoSize = true;
+            chkRunEnumValidation.Checked = true;
+            chkRunEnumValidation.CheckState = CheckState.Checked;
+            chkRunEnumValidation.Location = new Point(86, 8);
+            chkRunEnumValidation.Name = "chkRunEnumValidation";
+            chkRunEnumValidation.Size = new Size(115, 21);
+            chkRunEnumValidation.TabIndex = 1;
+            chkRunEnumValidation.Text = "执行 Enum 验证";
+            toolTip.SetToolTip(chkRunEnumValidation, "导出 Excel 后，自动将 .xml 中定义的 enum 和 bool 设为数据验证下拉。");
+            chkRunEnumValidation.UseVisualStyleBackColor = true;
+            chkRunEnumValidation.CheckedChanged += chkRunEnumValidation_CheckedChanged;
+            // 
+            // pnlSettings
+            // 
+            pnlSettings.Controls.Add(lblXmlFolder);
+            pnlSettings.Controls.Add(txtXmlFolder);
+            pnlSettings.Controls.Add(btnBrowseXmlFolder);
+            pnlSettings.Controls.Add(btnOpenXmlFolder);
+            pnlSettings.Controls.Add(lblTemplate);
+            pnlSettings.Controls.Add(txtDesignTemplate);
+            pnlSettings.Controls.Add(btnBrowseTemplate);
+            pnlSettings.Controls.Add(btnOpenTemplate);
+            pnlSettings.Dock = DockStyle.Top;
+            pnlSettings.Location = new Point(0, 0);
+            pnlSettings.Name = "pnlSettings";
+            pnlSettings.Size = new Size(764, 80);
+            pnlSettings.TabIndex = 0;
+            // 
+            // txtXmlFolder
+            // 
+            txtXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtXmlFolder.Location = new Point(125, 9);
+            txtXmlFolder.Name = "txtXmlFolder";
+            txtXmlFolder.Size = new Size(518, 23);
+            txtXmlFolder.TabIndex = 1;
+            txtXmlFolder.TextChanged += txtXmlFolder_TextChanged;
+            // 
+            // btnBrowseXmlFolder
+            // 
+            btnBrowseXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBrowseXmlFolder.Location = new Point(677, 6);
+            btnBrowseXmlFolder.Name = "btnBrowseXmlFolder";
+            btnBrowseXmlFolder.Size = new Size(75, 28);
+            btnBrowseXmlFolder.TabIndex = 2;
+            btnBrowseXmlFolder.Text = "浏览...";
+            btnBrowseXmlFolder.Click += btnBrowseXmlFolder_Click;
+            // 
+            // btnOpenXmlFolder
+            // 
+            btnOpenXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenXmlFolder.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenXmlFolder.Location = new Point(647, 6);
+            btnOpenXmlFolder.Name = "btnOpenXmlFolder";
+            btnOpenXmlFolder.Size = new Size(28, 28);
+            btnOpenXmlFolder.TabIndex = 6;
+            btnOpenXmlFolder.Text = "📂";
+            btnOpenXmlFolder.Click += btnOpenXmlFolder_Click;
+            // 
+            // txtDesignTemplate
+            // 
+            txtDesignTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtDesignTemplate.Location = new Point(125, 45);
+            txtDesignTemplate.Name = "txtDesignTemplate";
+            txtDesignTemplate.Size = new Size(518, 23);
+            txtDesignTemplate.TabIndex = 4;
+            txtDesignTemplate.TextChanged += txtDesignTemplate_TextChanged;
+            // 
+            // btnBrowseTemplate
+            // 
+            btnBrowseTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBrowseTemplate.Location = new Point(677, 44);
+            btnBrowseTemplate.Name = "btnBrowseTemplate";
+            btnBrowseTemplate.Size = new Size(75, 28);
+            btnBrowseTemplate.TabIndex = 5;
+            btnBrowseTemplate.Text = "浏览...";
+            btnBrowseTemplate.Click += btnBrowseTemplate_Click;
+            // 
+            // btnOpenTemplate
+            // 
+            btnOpenTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnOpenTemplate.Font = new Font("Segoe UI Emoji", 9F);
+            btnOpenTemplate.Location = new Point(647, 44);
+            btnOpenTemplate.Name = "btnOpenTemplate";
+            btnOpenTemplate.Size = new Size(28, 28);
+            btnOpenTemplate.TabIndex = 7;
+            btnOpenTemplate.Text = "📂";
+            btnOpenTemplate.Click += btnOpenTemplate_Click;
+            // 
+            // pnlNaming
+            // 
+            pnlNaming.Controls.Add(lblNaming);
+            pnlNaming.Controls.Add(pnlNamingGroup);
+            pnlNaming.Controls.Add(lblFileName);
+            pnlNaming.Controls.Add(txtPrefix);
+            pnlNaming.Controls.Add(lblClassName);
+            pnlNaming.Controls.Add(txtSuffix);
+            pnlNaming.Dock = DockStyle.Top;
+            pnlNaming.Location = new Point(0, 80);
+            pnlNaming.Name = "pnlNaming";
+            pnlNaming.Size = new Size(764, 70);
+            pnlNaming.TabIndex = 1;
+            // 
+            // pnlNamingGroup
+            // 
+            pnlNamingGroup.Controls.Add(rdoNameAsIs);
+            pnlNamingGroup.Controls.Add(rdoNameCamel);
+            pnlNamingGroup.Controls.Add(rdoNameSnake);
+            pnlNamingGroup.Location = new Point(76, 5);
+            pnlNamingGroup.Name = "pnlNamingGroup";
+            pnlNamingGroup.Size = new Size(339, 26);
+            pnlNamingGroup.TabIndex = 1;
+            // 
             // tabMode
             // 
             tabMode.Controls.Add(tabPageList);
@@ -302,7 +381,7 @@ namespace ConfigExcelEnhancer.UI
             tabMode.Location = new Point(0, 150);
             tabMode.Name = "tabMode";
             tabMode.SelectedIndex = 0;
-            tabMode.Size = new Size(764, 184);
+            tabMode.Size = new Size(764, 150);
             tabMode.TabIndex = 2;
             tabMode.SelectedIndexChanged += tabMode_SelectedIndexChanged;
             // 
@@ -314,7 +393,7 @@ namespace ConfigExcelEnhancer.UI
             tabPageList.Location = new Point(4, 26);
             tabPageList.Name = "tabPageList";
             tabPageList.Padding = new Padding(3);
-            tabPageList.Size = new Size(756, 154);
+            tabPageList.Size = new Size(756, 120);
             tabPageList.TabIndex = 0;
             tabPageList.Text = "按列表";
             tabPageList.ToolTipText = "逐项勾选要导出的数据类，并可为每项单独指定目标 Excel 路径。";
@@ -323,15 +402,16 @@ namespace ConfigExcelEnhancer.UI
             // 
             dgvClasses.AllowUserToAddRows = false;
             dgvClasses.AllowUserToDeleteRows = false;
+            dgvClasses.AllowUserToResizeRows = false;
             dgvClasses.BackgroundColor = SystemColors.Window;
-            dgvClasses.Columns.AddRange(new DataGridViewColumn[] { colEnabled, colClassName, colSourceFile, colTargetPath, colBrowse });
+            dgvClasses.Columns.AddRange(new DataGridViewColumn[] { colEnabled, colClassName, colSourceFile, colTargetPath, colBrowse, colClearPath });
             dgvClasses.Dock = DockStyle.Fill;
             dgvClasses.Location = new Point(3, 75);
             dgvClasses.Name = "dgvClasses";
             dgvClasses.RowHeadersVisible = false;
             dgvClasses.ScrollBars = ScrollBars.Vertical;
             dgvClasses.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvClasses.Size = new Size(750, 76);
+            dgvClasses.Size = new Size(750, 42);
             dgvClasses.TabIndex = 2;
             dgvClasses.CellContentClick += dgvClasses_CellContentClick;
             dgvClasses.CellValueChanged += dgvClasses_CellValueChanged;
@@ -377,6 +457,16 @@ namespace ConfigExcelEnhancer.UI
             colBrowse.UseColumnTextForButtonValue = true;
             colBrowse.Width = 32;
             // 
+            // colClearPath
+            // 
+            colClearPath.HeaderText = "清空";
+            colClearPath.Name = "colClearPath";
+            colClearPath.Resizable = DataGridViewTriState.False;
+            colClearPath.Text = "清空";
+            colClearPath.ToolTipText = "清空该数据类的“目标 Excel 路径”，使其下次导出时改走通用导出文件夹。";
+            colClearPath.UseColumnTextForButtonValue = true;
+            colClearPath.Width = 60;
+            // 
             // pnlListBar
             // 
             pnlListBar.Controls.Add(btnRefresh);
@@ -387,16 +477,6 @@ namespace ConfigExcelEnhancer.UI
             pnlListBar.Name = "pnlListBar";
             pnlListBar.Size = new Size(750, 36);
             pnlListBar.TabIndex = 1;
-            // 
-            // btnRefresh
-            // 
-            btnRefresh.Location = new Point(6, 4);
-            btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new Size(80, 26);
-            btnRefresh.TabIndex = 0;
-            btnRefresh.Text = "刷新列表";
-            toolTip.SetToolTip(btnRefresh, "重新扫描 XML 来源文件夹，刷新可导出的数据类列表。");
-            btnRefresh.Click += btnRefresh_Click;
             // 
             // btnSelectAll
             // 
@@ -418,6 +498,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // pnlListCommon
             // 
+            pnlListCommon.Controls.Add(chkListCommonFolder);
             pnlListCommon.Controls.Add(lblListTargetFolder);
             pnlListCommon.Controls.Add(txtListTargetFolder);
             pnlListCommon.Controls.Add(btnBrowseListFolder);
@@ -428,23 +509,13 @@ namespace ConfigExcelEnhancer.UI
             pnlListCommon.Size = new Size(750, 36);
             pnlListCommon.TabIndex = 0;
             // 
-            // lblListTargetFolder
-            // 
-            lblListTargetFolder.AutoSize = true;
-            lblListTargetFolder.Location = new Point(6, 9);
-            lblListTargetFolder.Name = "lblListTargetFolder";
-            lblListTargetFolder.Size = new Size(104, 17);
-            lblListTargetFolder.TabIndex = 0;
-            lblListTargetFolder.Text = "通用导出文件夹：";
-            toolTip.SetToolTip(lblListTargetFolder, "未单独指定目标路径的数据类，统一导出到此文件夹。");
-            // 
             // txtListTargetFolder
             // 
             txtListTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtListTargetFolder.Location = new Point(118, 5);
+            txtListTargetFolder.Location = new Point(138, 5);
             txtListTargetFolder.Name = "txtListTargetFolder";
-            txtListTargetFolder.Size = new Size(518, 23);
-            txtListTargetFolder.TabIndex = 1;
+            txtListTargetFolder.Size = new Size(498, 23);
+            txtListTargetFolder.TabIndex = 2;
             txtListTargetFolder.TextChanged += txtListTargetFolder_TextChanged;
             // 
             // btnBrowseListFolder
@@ -456,9 +527,9 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseListFolder.TabIndex = 2;
             btnBrowseListFolder.Text = "浏览...";
             btnBrowseListFolder.Click += btnBrowseListFolder_Click;
-            //
+            // 
             // btnOpenListFolder
-            //
+            // 
             btnOpenListFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenListFolder.Font = new Font("Segoe UI Emoji", 9F);
             btnOpenListFolder.Location = new Point(640, 3);
@@ -491,16 +562,6 @@ namespace ConfigExcelEnhancer.UI
             pnlBatchTarget.Size = new Size(750, 36);
             pnlBatchTarget.TabIndex = 0;
             // 
-            // lblTargetFolder
-            // 
-            lblTargetFolder.AutoSize = true;
-            lblTargetFolder.Location = new Point(6, 9);
-            lblTargetFolder.Name = "lblTargetFolder";
-            lblTargetFolder.Size = new Size(80, 17);
-            lblTargetFolder.TabIndex = 0;
-            lblTargetFolder.Text = "导出文件夹：";
-            toolTip.SetToolTip(lblTargetFolder, "批量导出模式下，所有数据类 Excel 统一输出到此文件夹。");
-            // 
             // txtTargetFolder
             // 
             txtTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
@@ -519,9 +580,9 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseTargetFolder.TabIndex = 2;
             btnBrowseTargetFolder.Text = "浏览...";
             btnBrowseTargetFolder.Click += btnBrowseTargetFolder_Click;
-            //
+            // 
             // btnOpenTargetFolder
-            //
+            // 
             btnOpenTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenTargetFolder.Font = new Font("Segoe UI Emoji", 9F);
             btnOpenTargetFolder.Location = new Point(640, 3);
@@ -542,16 +603,6 @@ namespace ConfigExcelEnhancer.UI
             pnlAction.Size = new Size(764, 46);
             pnlAction.TabIndex = 3;
             // 
-            // btnExport
-            // 
-            btnExport.Location = new Point(12, 7);
-            btnExport.Name = "btnExport";
-            btnExport.Size = new Size(110, 32);
-            btnExport.TabIndex = 0;
-            btnExport.Text = "▶ 导出";
-            toolTip.SetToolTip(btnExport, "根据当前模式与设置，将数据类导出为 Excel 文件。");
-            btnExport.Click += btnExport_Click;
-            // 
             // btnCancel
             // 
             btnCancel.Enabled = false;
@@ -570,9 +621,9 @@ namespace ConfigExcelEnhancer.UI
             pbExport.Size = new Size(534, 22);
             pbExport.TabIndex = 2;
             pbExport.Visible = false;
-            //
+            // 
             // pnlExportSettings
-            //
+            // 
             pnlExportSettings.Controls.Add(chkRunEnumValidation);
             pnlExportSettings.Controls.Add(lblExportSettings);
             pnlExportSettings.Dock = DockStyle.Bottom;
@@ -580,33 +631,9 @@ namespace ConfigExcelEnhancer.UI
             pnlExportSettings.Name = "pnlExportSettings";
             pnlExportSettings.Size = new Size(764, 34);
             pnlExportSettings.TabIndex = 5;
-            //
-            // lblExportSettings
-            //
-            lblExportSettings.AutoSize = true;
-            lblExportSettings.Location = new Point(12, 9);
-            lblExportSettings.Name = "lblExportSettings";
-            lblExportSettings.Size = new Size(68, 17);
-            lblExportSettings.TabIndex = 0;
-            lblExportSettings.Text = "导出设置：";
-            toolTip.SetToolTip(lblExportSettings, "导出过程中的附加处理选项。");
-            //
-            // chkRunEnumValidation
-            //
-            chkRunEnumValidation.AutoSize = true;
-            chkRunEnumValidation.Checked = true;
-            chkRunEnumValidation.CheckState = CheckState.Checked;
-            chkRunEnumValidation.Location = new Point(86, 8);
-            chkRunEnumValidation.Name = "chkRunEnumValidation";
-            chkRunEnumValidation.Size = new Size(126, 21);
-            chkRunEnumValidation.TabIndex = 1;
-            chkRunEnumValidation.Text = "执行 Enum 验证";
-            toolTip.SetToolTip(chkRunEnumValidation, "导出 Excel 后，自动将 .xml 中定义的 enum 和 bool 设为数据验证下拉。");
-            chkRunEnumValidation.UseVisualStyleBackColor = true;
-            chkRunEnumValidation.CheckedChanged += chkRunEnumValidation_CheckedChanged;
-            //
+            // 
             // ctxLog
-            //
+            // 
             ctxLog.Items.AddRange(new ToolStripItem[] { ctxMenuItemClearLog, ctxMenuItemCopyLog });
             ctxLog.Name = "ctxLog";
             ctxLog.Size = new Size(101, 48);
@@ -700,6 +727,7 @@ namespace ConfigExcelEnhancer.UI
         private TabControl  tabMode               = null!;
         private TabPage     tabPageList           = null!;
         private Panel       pnlListCommon         = null!;
+        private CheckBox    chkListCommonFolder   = null!;
         private Label       lblListTargetFolder   = null!;
         private TextBox     txtListTargetFolder   = null!;
         private Button      btnBrowseListFolder   = null!;
@@ -714,6 +742,7 @@ namespace ConfigExcelEnhancer.UI
         private DataGridViewTextBoxColumn  colSourceFile = null!;
         private DataGridViewTextBoxColumn  colTargetPath = null!;
         private DataGridViewButtonColumn   colBrowse     = null!;
+        private DataGridViewButtonColumn   colClearPath  = null!;
 
         private TabPage     tabPageBatch          = null!;
         private Panel       pnlBatchTarget        = null!;

@@ -99,7 +99,7 @@ namespace ConfigExcelEnhancer.UI
             bool rootValid = !string.IsNullOrEmpty(projectRoot) && Directory.Exists(projectRoot);
             if (!rootValid)
             {
-                lblProjectRootDot.ForeColor = Color.Red;
+                lblProjectRootDot.ForeColor = UITheme.StateInvalid;
                 lblProjectRoot.Text = "本地项目根目录：未配置";
                 toolTip.SetToolTip(lblProjectRoot, "本地项目根目录：未配置");
             }
@@ -110,13 +110,13 @@ namespace ConfigExcelEnhancer.UI
                     || string.Equals(localFolderName, _settings.ProjectName, StringComparison.OrdinalIgnoreCase);
                 if (nameMatches)
                 {
-                    lblProjectRootDot.ForeColor = Color.LightGreen;
+                    lblProjectRootDot.ForeColor = UITheme.StateValid;
                     lblProjectRoot.Text = $"本地项目根目录：{ShortenPath(projectRoot, 60)}";
                     toolTip.SetToolTip(lblProjectRoot, $"本地项目根目录：{projectRoot}");
                 }
                 else
                 {
-                    lblProjectRootDot.ForeColor = Color.Yellow;
+                    lblProjectRootDot.ForeColor = UITheme.StateWarning;
                     lblProjectRoot.Text = $"本地项目根目录：{ShortenPath(projectRoot, 45)}（本地名称与项目名称不一致，项目名称：{_settings.ProjectName}）";
                     toolTip.SetToolTip(lblProjectRoot, $"本地项目根目录：{projectRoot}\n（本地名称与项目名称不一致，项目名称：{_settings.ProjectName}）");
                 }
@@ -128,7 +128,7 @@ namespace ConfigExcelEnhancer.UI
             lblGenBat.Text = genBatValid
                 ? $"gen.bat：{ShortenPath(genBatPath, 60)}"
                 : "gen.bat：未配置";
-            lblGenBatDot.ForeColor = genBatValid ? Color.LightGreen : Color.Red;
+            lblGenBatDot.ForeColor = genBatValid ? UITheme.StateValid : UITheme.StateInvalid;
 
             // 模板任务数 & Tables.cs 状态
             int jobCount = _settings.TemplateExportJobs.Count;
@@ -144,17 +144,17 @@ namespace ConfigExcelEnhancer.UI
 
             // 圆点三态：未配置模板任务→黄色；任务已配置但Tables.cs未配置→红色；全部配置→绿色
             if (jobCount == 0)
-                lblTemplateJobsDot.ForeColor = Color.Yellow;
+                lblTemplateJobsDot.ForeColor = UITheme.StateWarning;
             else if (!tablesValid)
-                lblTemplateJobsDot.ForeColor = Color.Red;
+                lblTemplateJobsDot.ForeColor = UITheme.StateInvalid;
             else
-                lblTemplateJobsDot.ForeColor = Color.LightGreen;
+                lblTemplateJobsDot.ForeColor = UITheme.StateValid;
 
             // 上次导出时间（仅显示，不指示配置对错）
             if (_localState?.LastExportTime.HasValue == true)
             {
                 lblLastExport.Text = $"本地上次导出：{_localState.LastExportTime.Value:yyyy-MM-dd HH:mm}";
-                lblLastExportDot.ForeColor = Color.LightGreen;
+                lblLastExportDot.ForeColor = UITheme.StateValid;
             }
             else
             {
@@ -166,13 +166,13 @@ namespace ConfigExcelEnhancer.UI
             var (issues, _) = BuildConfigIssues();
             if (issues.Count == 0)
             {
-                lblCheckDot.ForeColor = Color.LightGreen;
+                lblCheckDot.ForeColor = UITheme.StateValid;
                 lblCheckSummary.Text = "配置检查通过";
                 lblCheckIssues.Visible = false;
             }
             else
             {
-                lblCheckDot.ForeColor = Color.Yellow;
+                lblCheckDot.ForeColor = UITheme.StateWarning;
                 lblCheckSummary.Text = $"发现 {issues.Count} 项配置问题：";
                 lblCheckIssues.Text = string.Join("\n", issues.Select(s => "• " + s));
                 lblCheckIssues.Visible = true;
@@ -181,7 +181,7 @@ namespace ConfigExcelEnhancer.UI
 
         /// <summary>设置状态圆点颜色；不修改主 Label 的字体颜色。</summary>
         private static void SetDot(Label dot, bool ok)
-            => dot.ForeColor = ok ? Color.LightGreen : Color.Yellow;
+            => dot.ForeColor = ok ? UITheme.StateValid : UITheme.StateWarning;
 
         private static string ShortenPath(string path, int maxLength)
         {

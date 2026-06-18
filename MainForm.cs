@@ -90,6 +90,16 @@ namespace ConfigExcelEnhancer
         }
 
         /// <summary>
+        /// 窗体重新获得焦点时：重新评估“导出 Excel”列表中目标路径的警示底色，
+        /// 以反映用户在程序外删除/移动目标 Excel 文件后的最新状态。
+        /// </summary>
+        protected override void OnActivated(EventArgs e)
+        {
+            base.OnActivated(e);
+            excelExportTab.RefreshTargetPathWarnings();
+        }
+
+        /// <summary>
         /// 窗体关闭前：取消所有正在运行的任务，保存设置。
         /// </summary>
         protected override void OnFormClosing(FormClosingEventArgs e)

@@ -111,6 +111,9 @@ namespace ConfigExcelEnhancer.Models
         /// <summary>列表模式：通用目标文件夹（配置项未指定路径时的回退目标）。</summary>
         public string ExcelExportListTargetFolder { get; set; } = string.Empty;
 
+        /// <summary>列表模式：是否启用“通用导出文件夹”回退（关闭时空路径条目不导出）。</summary>
+        public bool ExcelExportListCommonFolderEnabled { get; set; } = true;
+
         /// <summary>批量导出模式：导出 Excel 的目标文件夹。</summary>
         public string ExcelExportTargetFolder { get; set; } = string.Empty;
 

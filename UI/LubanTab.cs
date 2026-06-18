@@ -16,7 +16,6 @@ namespace ConfigExcelEnhancer.UI
         private LubanRunner? _runner;
 
         private const string BrowseMarker = "...";
-        private static readonly Color DirtyBackColor = Color.FromArgb(255, 255, 200);
 
         // 标记正在填充 grid，抑制 CellValueChanged 事件
         private bool _isPopulating;
@@ -253,9 +252,9 @@ namespace ConfigExcelEnhancer.UI
             if (row.Cells["colDirty"] is DataGridViewCheckBoxCell dirtyCell)
                 dirtyCell.Value = rowIsDirty;
 
-            row.DefaultCellStyle.BackColor = rowIsDirty ? DirtyBackColor : SystemColors.Window;
+            row.DefaultCellStyle.BackColor = rowIsDirty ? UITheme.RowDirty : SystemColors.Window;
             row.DefaultCellStyle.SelectionBackColor = rowIsDirty
-                ? Color.FromArgb(200, 195, 120)
+                ? UITheme.RowDirtySel
                 : SystemColors.Highlight;
         }
 
