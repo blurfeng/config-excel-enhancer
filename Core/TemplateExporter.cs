@@ -6,7 +6,9 @@ namespace ConfigExcelEnhancer.Core
 {
     public record TemplateExportOptions(
         TemplateExportJob Job,
-        Dictionary<string, TableMapping> TableMappings
+        Dictionary<string, TableMapping> TableMappings,
+        // 上次导出时本任务拥有的 group 列表（来自机器本地缓存，用于改名后清除旧 group）
+        IReadOnlyList<string> PreviousOwnedGroups
     );
 
     /// <summary>单个任务收集到的 Ids 数据，供 RunJobs 合并后统一写文件。</summary>
@@ -197,7 +199,7 @@ namespace ConfigExcelEnhancer.Core
             if (job.TypeTemplates.Count > 0)
             {
                 var combinedGroups = job.TypeTemplates.Keys.ToHashSet();
-                foreach (var g in job.LastExportedOwnedGroups)
+                foreach (var g in options.PreviousOwnedGroups)
                     combinedGroups.Add(g);
                 ownedGroups = combinedGroups;
             }

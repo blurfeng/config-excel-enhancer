@@ -11,6 +11,9 @@ namespace ConfigExcelEnhancer.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public LocalState LocalState { get; set; } = new();
+
         protected override RichTextBox? LogBox => txtLog;
 
         public EnumTab()
@@ -52,7 +55,7 @@ namespace ConfigExcelEnhancer.UI
             => Settings.HideEnumDataSheet = chkHideEnumDataSheet.Checked;
 
         private void chkForceRewrite_CheckedChanged(object sender, EventArgs e)
-            => Settings.EnumForceRewrite = chkForceRewrite.Checked;
+            => LocalState.EnumForceRewrite = chkForceRewrite.Checked;
 
         private void chkBoolValidation_CheckedChanged(object sender, EventArgs e)
             => Settings.BoolValidation = chkBoolValidation.Checked;
@@ -64,7 +67,7 @@ namespace ConfigExcelEnhancer.UI
             excelPicker.ExcelDirectory = Settings.ExcelDirectory;
             excelPicker.Files = Settings.EnumExcelFiles;
             chkHideEnumDataSheet.Checked = Settings.HideEnumDataSheet;
-            chkForceRewrite.Checked = Settings.EnumForceRewrite;
+            chkForceRewrite.Checked = LocalState.EnumForceRewrite;
             chkBoolValidation.Checked = Settings.BoolValidation;
         }
 

@@ -20,9 +20,6 @@ namespace ConfigExcelEnhancer.Models
         /// <summary>是否将 __enum_data 工作表设为极度隐藏（VeryHidden），防止用户误操作。</summary>
         public bool HideEnumDataSheet { get; set; } = true;
 
-        /// <summary>是否强制重写枚举验证规则（忽略 Schema 是否变化）。</summary>
-        public bool EnumForceRewrite { get; set; } = false;
-
         /// <summary>是否为 bool 类型列添加 TRUE/FALSE 数据验证下拉框。</summary>
         public bool BoolValidation { get; set; } = true;
 

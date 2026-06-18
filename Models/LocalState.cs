@@ -25,5 +25,17 @@ namespace ConfigExcelEnhancer.Models
         /// 上次关闭程序时的窗口高度（最大化时记录还原后的尺寸）。未保存过时为 null。
         /// </summary>
         public int? WindowHeight { get; set; }
+
+        /// <summary>
+        /// 是否强制重写枚举验证规则（忽略 Schema 是否变化）。
+        /// 属临时操作性开关，机器私有，故存于本地而非共享 settings.json。
+        /// </summary>
+        public bool EnumForceRewrite { get; set; } = false;
+
+        /// <summary>
+        /// 各导出任务的运行态缓存，键为 <see cref="TemplateExportJob.Id"/>。
+        /// 由导出过程自动写入，仅用于下次导出的差异检测，故不入版本控制。
+        /// </summary>
+        public Dictionary<string, TemplateExportCache> TemplateExportCaches { get; set; } = new();
     }
 }

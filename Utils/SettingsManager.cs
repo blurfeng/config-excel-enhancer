@@ -133,7 +133,6 @@ namespace ConfigExcelEnhancer.Utils
                 job.JsonFilePath                   = T(job.JsonFilePath);
                 job.OutputDirectory                = T(job.OutputDirectory);
                 job.IdsOutputDirectory             = T(job.IdsOutputDirectory);
-                job.LastExportedIdsOutputDirectory = T(job.LastExportedIdsOutputDirectory);
                 job.TypeTemplates = job.TypeTemplates.ToDictionary(kv => kv.Key, kv => T(kv.Value));
             }
         }
@@ -153,7 +152,6 @@ namespace ConfigExcelEnhancer.Utils
             ExcelDirectory                    = src.ExcelDirectory,
             GenBatPath                        = src.GenBatPath,
             HideEnumDataSheet                 = src.HideEnumDataSheet,
-            EnumForceRewrite                  = src.EnumForceRewrite,
             BoolValidation                    = src.BoolValidation,
             EnumExcelMode                     = src.EnumExcelMode,
             EnumExcelFiles                    = new List<string>(src.EnumExcelFiles),
@@ -171,6 +169,7 @@ namespace ConfigExcelEnhancer.Utils
             TablesClassPath                   = src.TablesClassPath,
             TemplateExportJobs                = src.TemplateExportJobs.Select(j => new TemplateExportJob
             {
+                Id                             = j.Id,
                 DisplayName                    = j.DisplayName,
                 JsonFilePath                   = j.JsonFilePath,
                 OutputDirectory                = j.OutputDirectory,
@@ -185,9 +184,6 @@ namespace ConfigExcelEnhancer.Utils
                 TypeTemplates                  = new Dictionary<string, string>(j.TypeTemplates),
                 NameField                      = j.NameField,
                 IdField                        = j.IdField,
-                LastExportedIdsClassName       = j.LastExportedIdsClassName,
-                LastExportedIdsOutputDirectory = j.LastExportedIdsOutputDirectory,
-                LastExportedOwnedGroups        = new List<string>(j.LastExportedOwnedGroups),
             }).ToList(),
             HomeIncludeEnum                   = src.HomeIncludeEnum,
             ExcelExportXmlFolder              = src.ExcelExportXmlFolder,

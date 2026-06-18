@@ -23,6 +23,9 @@ namespace ConfigExcelEnhancer.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public LocalState LocalState { get; set; } = new();
+
         protected override RichTextBox? LogBox => txtLog;
 
         // ── 设置同步 ──────────────────────────────────────────────────────
@@ -458,16 +461,18 @@ namespace ConfigExcelEnhancer.UI
                     continue;
                 }
 
-                // 检查 Ids 类名是否发生了重命名
+                // 检查 Ids 类名是否发生了重命名（运行态缓存来自本地状态，按 job.Id 键控）
+                var cache = LocalState.TemplateExportCaches.GetValueOrDefault(job.Id);
                 if (job.GenerateIds
-                    && !string.IsNullOrWhiteSpace(job.LastExportedIdsClassName)
-                    && job.LastExportedIdsClassName != job.IdsClassName)
+                    && cache is not null
+                    && !string.IsNullOrWhiteSpace(cache.LastExportedIdsClassName)
+                    && cache.LastExportedIdsClassName != job.IdsClassName)
                 {
                     string suffix = job.IdsUseGeneratedSuffix ? ".Generated" : "";
                     string oldFile = Path.Combine(
-                        job.LastExportedIdsOutputDirectory,
-                        $"{job.LastExportedIdsClassName}{suffix}.cs");
-                    Log($"任务「{job.DisplayName}」的 Ids 类名已从 \"{job.LastExportedIdsClassName}\" 改为 \"{job.IdsClassName}\"。" +
+                        cache.LastExportedIdsOutputDirectory,
+                        $"{cache.LastExportedIdsClassName}{suffix}.cs");
+                    Log($"任务「{job.DisplayName}」的 Ids 类名已从 \"{cache.LastExportedIdsClassName}\" 改为 \"{job.IdsClassName}\"。" +
                         $"请先手动删除旧文件（{oldFile}），再执行导出，否则会导致数据残留。", LogLevel.Error);
                     continue;
                 }
@@ -487,7 +492,8 @@ namespace ConfigExcelEnhancer.UI
                 IdsCollectionResult? idsResult = null;
                 try
                 {
-                    var options = new TemplateExportOptions(job, tableMappings);
+                    var options = new TemplateExportOptions(job, tableMappings,
+                        cache?.LastExportedOwnedGroups ?? new List<string>());
                     idsResult = await TemplateExporter.ExportAsync(options, progress,
                         (msg, lvl) => LogLibrary.Write(txtLog, msg, lvl), token);
                     anySuccess = true;
@@ -538,17 +544,21 @@ namespace ConfigExcelEnhancer.UI
                             (msg, lvl) => LogLibrary.Write(txtLog, msg, lvl));
 
                         // 更新缓存：遍历所有任务，标记成功导出的 Ids 类名、目录和 owned groups
+                        // 缓存写入机器本地状态（LocalState.TemplateExportCaches），按 job.Id 键控
                         foreach (var j in jobs)
                         {
                             if (!j.GenerateIds) continue;
                             var k = (j.IdsOutputDirectory, j.IdsClassName);
                             if (idsAccumulator.ContainsKey(k))
                             {
-                                j.LastExportedIdsClassName = j.IdsClassName;
-                                j.LastExportedIdsOutputDirectory = j.IdsOutputDirectory;
-                                j.LastExportedOwnedGroups = j.TypeTemplates.Count > 0
-                                    ? j.TypeTemplates.Keys.ToList()
-                                    : new List<string> { j.IdsClassName };
+                                LocalState.TemplateExportCaches[j.Id] = new TemplateExportCache
+                                {
+                                    LastExportedIdsClassName = j.IdsClassName,
+                                    LastExportedIdsOutputDirectory = j.IdsOutputDirectory,
+                                    LastExportedOwnedGroups = j.TypeTemplates.Count > 0
+                                        ? j.TypeTemplates.Keys.ToList()
+                                        : new List<string> { j.IdsClassName },
+                                };
                             }
                         }
                     }
@@ -558,14 +568,14 @@ namespace ConfigExcelEnhancer.UI
                     }
                 }
 
-                // 持久化设置，保存缓存字段
+                // 持久化导出缓存（现存于机器本地状态，不入 settings.json）
                 try
                 {
-                    SettingsManager.Save(Settings);
+                    LocalStateManager.Save(LocalState);
                 }
                 catch (Exception ex)
                 {
-                    Log($"保存设置失败：{ex.Message}", LogLevel.Warn);
+                    Log($"保存导出缓存失败：{ex.Message}", LogLevel.Warn);
                 }
             }
 

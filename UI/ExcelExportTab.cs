@@ -19,6 +19,9 @@ namespace ConfigExcelEnhancer.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public LocalState LocalState { get; set; } = new();
+
         protected override RichTextBox? LogBox => txtLog;
 
         /// <summary>本次导出中走了通用文件夹的条目及其计算出的目标路径，导出成功后回写以建立关联。</summary>
@@ -482,7 +485,7 @@ namespace ConfigExcelEnhancer.UI
                         : r.WasSkipped  ? $"  {r.FileName}  —  跳过（文件被占用）"
                         : $"  {r.FileName}  —  {r.EnumColumnsFound} 个枚举列",
                         r.HasError ? LogLevel.Error : r.WasSkipped ? LogLevel.Warn : LogLevel.Ok),
-                    forceRewrite: Settings.EnumForceRewrite,
+                    forceRewrite: LocalState.EnumForceRewrite,
                     beanFieldEnumMap: prepared.BeanFieldEnumMap);
 
                 int cols = results.Sum(r => r.EnumColumnsFound);

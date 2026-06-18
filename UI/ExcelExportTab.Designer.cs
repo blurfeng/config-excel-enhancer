@@ -545,7 +545,7 @@ namespace ConfigExcelEnhancer.UI
             tabPageBatch.Location = new Point(4, 26);
             tabPageBatch.Name = "tabPageBatch";
             tabPageBatch.Padding = new Padding(3);
-            tabPageBatch.Size = new Size(756, 154);
+            tabPageBatch.Size = new Size(756, 120);
             tabPageBatch.TabIndex = 1;
             tabPageBatch.Text = "批量导出";
             tabPageBatch.ToolTipText = "将所有数据类一次性导出到同一个目标文件夹。";

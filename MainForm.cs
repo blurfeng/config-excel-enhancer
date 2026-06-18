@@ -72,6 +72,10 @@ namespace ConfigExcelEnhancer
             tableDesignTab.Settings = settings;
             templateTab.Settings = settings;
             excelExportTab.Settings = settings;
+            // 分发同一机器本地状态实例（含 EnumForceRewrite、导出缓存等），随设置一并落盘于关闭时
+            enumTab.LocalState = _localState;
+            templateTab.LocalState = _localState;
+            excelExportTab.LocalState = _localState;
             enumTab.LoadFromSettings();
             lubanTab.LoadFromSettings();
             tableDesignTab.LoadFromSettings();

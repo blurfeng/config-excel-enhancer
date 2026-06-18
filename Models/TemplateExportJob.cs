@@ -2,6 +2,9 @@ namespace ConfigExcelEnhancer.Models
 {
     public class TemplateExportJob
     {
+        /// <summary>任务稳定标识（入 git 共享），作为机器本地导出缓存的键，改名不影响关联。</summary>
+        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+
         public string DisplayName { get; set; } = "";
 
         /// <summary>输入 JSON 文件绝对路径。</summary>
@@ -48,14 +51,6 @@ namespace ConfigExcelEnhancer.Models
         public string IdField { get; set; } = "id";
 
         // ── 导出缓存 ───────────────────────────────────────────────────
-
-        /// <summary>上次成功导出时使用的 Ids 类名（用于检测重命名）。</summary>
-        public string LastExportedIdsClassName { get; set; } = "";
-
-        /// <summary>上次成功导出时使用的 Ids 输出目录。</summary>
-        public string LastExportedIdsOutputDirectory { get; set; } = "";
-
-        /// <summary>上次成功导出时拥有的 group 名称列表（用于检测 $type 改名后清除旧 group）。</summary>
-        public List<string> LastExportedOwnedGroups { get; set; } = new();
+        // 运行态快照已迁至 LocalState.TemplateExportCaches（按 Id 键控，不入 git）。
     }
 }
