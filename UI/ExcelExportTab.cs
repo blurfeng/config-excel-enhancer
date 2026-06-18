@@ -227,6 +227,39 @@ namespace ConfigExcelEnhancer.UI
         private void btnDeselectAll_Click(object sender, EventArgs e)
             => SetAllEnabled(false);
 
+        /// <summary>清空所有“目标 Excel 路径”已设置但对应文件不存在的项（执行前弹窗确认）。</summary>
+        private void btnClearInvalidPaths_Click(object sender, EventArgs e)
+        {
+            var invalid = Settings.ExcelExportClassConfigs
+                .Where(c => !string.IsNullOrEmpty(c.TargetExcelPath) && !File.Exists(c.TargetExcelPath))
+                .ToList();
+
+            if (invalid.Count == 0)
+            {
+                Log("没有需要清空的无效目标 Excel 路径。", LogLevel.Info);
+                return;
+            }
+
+            if (MessageBox.Show(
+                    $"将清空 {invalid.Count} 个无效的“目标 Excel 路径”（对应文件不存在）。确认执行？",
+                    "清空无效目标 Excel 路径",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+
+            foreach (var cfg in invalid)
+                cfg.TargetExcelPath = string.Empty;
+
+            foreach (DataGridViewRow row in dgvClasses.Rows)
+            {
+                if (row.Tag is not ExcelExportClassConfig cfg) continue;
+                row.Cells[colTargetPath.Index].Value = cfg.TargetExcelPath;
+                RefreshTargetPathWarning(row);
+            }
+
+            SettingsManager.Save(Settings);
+            Log($"已清空 {invalid.Count} 个无效目标 Excel 路径。", LogLevel.Ok);
+        }
+
         private void SetAllEnabled(bool enabled)
         {
             foreach (var cfg in Settings.ExcelExportClassConfigs)
@@ -530,6 +563,7 @@ namespace ConfigExcelEnhancer.UI
             txtDesignTemplate.Enabled  = !locked;
             btnBrowseTemplate.Enabled  = !locked;
             tabMode.Enabled            = !locked;
+            btnRename.Enabled          = !locked;
             chkRunEnumValidation.Enabled = !locked;
             txtSingleXmlFile.Enabled       = !locked;
             btnBrowseSingleXml.Enabled     = !locked;
@@ -689,20 +723,36 @@ namespace ConfigExcelEnhancer.UI
                     return;
                 }
 
+                // 逐文件结果先静默收集；成功时只打印汇总，出现失败/跳过时再转写所有明细，保持 Log 专注。
                 var results = ValidationUpdater.UpdateFiles(
                     files,
                     prepared.EnumsForValidation,
                     Settings.HideEnumDataSheet,
-                    r => Log(
-                        r.HasError      ? $"  {r.FileName}  —  错误：{r.ErrorMessage}"
-                        : r.WasSkipped  ? $"  {r.FileName}  —  跳过（文件被占用）"
-                        : $"  {r.FileName}  —  {r.EnumColumnsFound} 个枚举列",
-                        r.HasError ? LogLevel.Error : r.WasSkipped ? LogLevel.Warn : LogLevel.Ok),
+                    _ => { },
                     forceRewrite: LocalState.EnumForceRewrite,
                     beanFieldEnumMap: prepared.BeanFieldEnumMap);
 
-                int cols = results.Sum(r => r.EnumColumnsFound);
-                Log($"Enum 验证完成。处理 {results.Count} 个文件，共 {cols} 个枚举列。", LogLevel.Ok);
+                int cols      = results.Sum(r => r.EnumColumnsFound);
+                int failCount = results.Count(r => r.HasError);
+                int skipCount = results.Count(r => r.WasSkipped);
+
+                if (failCount == 0 && skipCount == 0)
+                {
+                    Log($"Enum 验证完成。处理 {results.Count} 个文件，共 {cols} 个枚举列。", LogLevel.Ok);
+                }
+                else
+                {
+                    // 失败时转写全部明细，便于定位问题。
+                    foreach (var r in results)
+                        Log(
+                            r.HasError     ? $"  {r.FileName}  —  错误：{r.ErrorMessage}"
+                            : r.WasSkipped ? $"  {r.FileName}  —  跳过（文件被占用）"
+                            : $"  {r.FileName}  —  {r.EnumColumnsFound} 个枚举列",
+                            r.HasError ? LogLevel.Error : r.WasSkipped ? LogLevel.Warn : LogLevel.Ok);
+
+                    Log($"Enum 验证完成（失败 {failCount}、跳过 {skipCount}）。处理 {results.Count} 个文件，共 {cols} 个枚举列。",
+                        failCount > 0 ? LogLevel.Error : LogLevel.Warn);
+                }
             }, token);
         }
 
@@ -726,6 +776,213 @@ namespace ConfigExcelEnhancer.UI
         }
 
         private void btnCancel_Click(object sender, EventArgs e) => _cts?.Cancel();
+
+        // ── 重命名 Excel ──────────────────────────────────────────────────
+
+        private async void btnRename_Click(object sender, EventArgs e)
+        {
+            int    mode             = tabMode.SelectedIndex;
+            int    convention       = Settings.ExcelExportNameConvention;
+            string prefix           = txtPrefix.Text;
+            string suffix           = txtSuffix.Text;
+            string singleTargetPath = txtSingleTargetPath.Text.Trim();
+            string batchFolder      = txtTargetFolder.Text.Trim();
+
+            LogDivider();
+            Log("构建重命名计划...", LogLevel.Section);
+
+            // 候选构建（批量模式需读取文件内嵌类名）与计划生成放后台，避免阻塞 UI。
+            IReadOnlyList<RenamePlanItem> plan;
+            try
+            {
+                plan = await Task.Run(() =>
+                {
+                    var candidates = BuildRenameCandidates(mode, singleTargetPath, batchFolder);
+                    return ExcelRenamer.BuildPlan(candidates, convention, prefix, suffix);
+                });
+            }
+            catch (Exception ex)
+            {
+                Log($"构建重命名计划失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
+                return;
+            }
+
+            var toRename   = plan.Where(p => p.Status == RenameStatus.Rename).ToList();
+            int already    = plan.Count(p => p.Status == RenameStatus.AlreadyNamed);
+            var conflicts  = plan.Where(p => p.Status == RenameStatus.Conflict).ToList();
+            var unresolved = plan.Where(p => p.Status == RenameStatus.Unresolved).ToList();
+
+            // 冲突 / 无法识别项写入日志便于排查。
+            foreach (var c in conflicts)
+                Log($"冲突跳过：{Path.GetFileName(c.OldPath)} → {Path.GetFileName(c.NewPath)}（{c.Note}）", LogLevel.Warn);
+            foreach (var u in unresolved)
+                Log($"无法识别，跳过：{Path.GetFileName(u.OldPath)}（{u.Note}）", LogLevel.Warn);
+
+            if (toRename.Count == 0)
+            {
+                Log($"没有需要重命名的文件（已正确命名 {already}，冲突 {conflicts.Count}，无法识别 {unresolved.Count}）。", LogLevel.Warn);
+                return;
+            }
+
+            // 预览确认弹窗。
+            if (!ConfirmRename(toRename, already, conflicts.Count, unresolved.Count))
+            {
+                Log("已取消重命名。", LogLevel.Warn);
+                return;
+            }
+
+            SetUILocked(true);
+            RaiseExecutionState(true);
+            btnExport.Enabled = false;
+            ProgressBarHelper.SetProgressBegin(pbExport);
+            Log($"开始重命名 {toRename.Count} 个文件...", LogLevel.Section);
+
+            try
+            {
+                int done = 0;
+                var renamed = await Task.Run(() =>
+                    ExcelRenamer.Execute(plan, (msg, level) =>
+                    {
+                        LogLibrary.Write(txtLog, msg, level);
+                        if (level == LogLevel.Ok)
+                        {
+                            done++;
+                            ProgressBarHelper.SetProgress(pbExport, ScaledProgress(done, toRename.Count));
+                        }
+                    }));
+
+                // 回写关联路径（UI 线程）：列表配置、单独模式目标，凡指向旧路径者改为新路径。
+                ApplyRenamePathSync(renamed);
+
+                // 磁盘与配置均已变化，立即落盘。
+                SettingsManager.Save(Settings);
+                LocalStateManager.Save(LocalState);
+
+                ProgressBarHelper.SetProgress(pbExport, 100);
+                Log($"重命名完成。成功 {renamed.Count} 个，跳过 {toRename.Count - renamed.Count} 个。", LogLevel.Ok);
+            }
+            catch (Exception ex)
+            {
+                Log($"未预期的错误：{LogLibrary.FormatException(ex, includeStackTrace: true)}", LogLevel.Error);
+            }
+            finally
+            {
+                SetUILocked(false);
+                RaiseExecutionState(false);
+                btnExport.Enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 按当前模式构造重命名候选对（类名, 旧路径）。后台线程调用：仅访问数据对象与
+        /// 线程安全的 <see cref="TabBase.Log"/>，不触碰 UI 控件（控件文本已由调用方传入）。
+        /// </summary>
+        private List<(string ClassName, string OldPath)> BuildRenameCandidates(
+            int mode, string singleTargetPath, string batchFolder)
+        {
+            var result = new List<(string, string)>();
+
+            if (mode == 0)
+            {
+                // 列表模式：启用且已设路径、文件存在的项；类名已知，无需读 Excel。
+                foreach (var cfg in Settings.ExcelExportClassConfigs)
+                {
+                    if (!cfg.Enabled || string.IsNullOrEmpty(cfg.TargetExcelPath)) continue;
+                    if (!File.Exists(cfg.TargetExcelPath))
+                    {
+                        Log($"跳过 [{cfg.ClassName}]：目标 Excel 路径不存在 —— {cfg.TargetExcelPath}", LogLevel.Warn);
+                        continue;
+                    }
+                    result.Add((cfg.ClassName, cfg.TargetExcelPath));
+                }
+            }
+            else if (mode == 2)
+            {
+                // 单独模式：当前选中类 + 单独目标路径。
+                string className = LocalState.ExcelExportSingleClassName?.Trim() ?? string.Empty;
+                if (string.IsNullOrEmpty(singleTargetPath))
+                    Log("请设置导出 Excel 目标路径。", LogLevel.Warn);
+                else if (!File.Exists(singleTargetPath))
+                    Log($"目标 Excel 文件不存在：{singleTargetPath}", LogLevel.Warn);
+                else if (string.IsNullOrEmpty(className))
+                    Log("请在列表中选择一个数据类。", LogLevel.Warn);
+                else
+                    result.Add((className, singleTargetPath));
+            }
+            else
+            {
+                // 批量模式：枚举目标文件夹下 *.xlsx，先读内嵌类名，读不到则按列表中匹配路径的配置取类名。
+                if (string.IsNullOrEmpty(batchFolder) || !Directory.Exists(batchFolder))
+                {
+                    Log("请设置有效的导出文件夹。", LogLevel.Warn);
+                    return result;
+                }
+
+                foreach (var file in Directory.EnumerateFiles(batchFolder, "*.xlsx"))
+                {
+                    if (Path.GetFileName(file).StartsWith("~$")) continue; // 跳过 Excel 临时锁文件
+
+                    string className = ExcelRenamer.TryReadEmbeddedClassName(file) ?? string.Empty;
+                    if (string.IsNullOrEmpty(className))
+                    {
+                        var cfg = Settings.ExcelExportClassConfigs.FirstOrDefault(c =>
+                            !string.IsNullOrEmpty(c.TargetExcelPath) && PathEquals(c.TargetExcelPath, file));
+                        if (cfg != null) className = cfg.ClassName;
+                    }
+                    result.Add((className, file)); // 类名仍为空时由 BuildPlan 标记为 Unresolved
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>弹窗预览将要发生的重命名清单，返回用户是否确认执行。</summary>
+        private bool ConfirmRename(
+            List<RenamePlanItem> toRename, int already, int conflictCount, int unresolvedCount)
+        {
+            const int maxLines = 30;
+            var lines = toRename
+                .Take(maxLines)
+                .Select(p => $"{Path.GetFileName(p.OldPath)}  →  {Path.GetFileName(p.NewPath)}");
+
+            string list = string.Join(Environment.NewLine, lines);
+            if (toRename.Count > maxLines)
+                list += $"{Environment.NewLine}… 其余 {toRename.Count - maxLines} 项";
+
+            string summary =
+                $"将重命名 {toRename.Count} 个文件" +
+                $"（已正确命名 {already}，冲突跳过 {conflictCount}，无法识别 {unresolvedCount}）。" +
+                Environment.NewLine + Environment.NewLine + list +
+                Environment.NewLine + Environment.NewLine + "确认执行？";
+
+            return MessageBox.Show(summary, "重命名 Excel 预览",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+        }
+
+        /// <summary>把成功重命名的（旧→新）路径回写到列表配置与单独模式目标，刷新列表显示。</summary>
+        private void ApplyRenamePathSync(List<(string OldPath, string NewPath)> renamed)
+        {
+            foreach (var (oldPath, newPath) in renamed)
+            {
+                foreach (var cfg in Settings.ExcelExportClassConfigs)
+                    if (!string.IsNullOrEmpty(cfg.TargetExcelPath) && PathEquals(cfg.TargetExcelPath, oldPath))
+                        cfg.TargetExcelPath = newPath;
+
+                if (!string.IsNullOrEmpty(LocalState.ExcelExportSingleTargetPath) &&
+                    PathEquals(LocalState.ExcelExportSingleTargetPath, oldPath))
+                {
+                    LocalState.ExcelExportSingleTargetPath = newPath;
+                    txtSingleTargetPath.Text = newPath;
+                }
+            }
+
+            foreach (DataGridViewRow row in dgvClasses.Rows)
+            {
+                if (row.Tag is not ExcelExportClassConfig cfg) continue;
+                row.Cells[colTargetPath.Index].Value = cfg.TargetExcelPath;
+                RefreshTargetPathWarning(row);
+            }
+        }
 
         private void btnClearLog_Click(object sender, EventArgs e) => txtLog.Clear();
 
@@ -783,8 +1040,8 @@ namespace ConfigExcelEnhancer.UI
                         if (!commonEnabled || string.IsNullOrEmpty(commonFolder))
                             continue;
 
-                        string baseName = FunctionLibrary.ApplyNameConvention(cfg.ClassName, convention);
-                        targetPath = Path.Combine(commonFolder, $"{prefix}{baseName}{suffix}.xlsx");
+                        string fileName = FunctionLibrary.BuildExcelFileName(cfg.ClassName, convention, prefix, suffix);
+                        targetPath = Path.Combine(commonFolder, fileName);
                         isAssociation = true;
                     }
 
@@ -836,8 +1093,7 @@ namespace ConfigExcelEnhancer.UI
 
                 foreach (var bean in leafBeans)
                 {
-                    string baseName = FunctionLibrary.ApplyNameConvention(bean.Name, convention);
-                    string fileName = $"{prefix}{baseName}{suffix}.xlsx";
+                    string fileName = FunctionLibrary.BuildExcelFileName(bean.Name, convention, prefix, suffix);
                     string path     = Path.Combine(targetFolder, fileName);
                     var    allFields = BeanParser.GetAllFields(bean, beanMap);
                     tasks.Add(new ExcelExportTask(bean, allFields, path));

@@ -578,6 +578,13 @@ namespace ConfigExcelEnhancer.Core
             _ => name,
         };
 
+        /// <summary>
+        /// 按命名设置拼出数据类对应的 Excel 文件名：{前缀}{命名规范(类名)}{后缀}.xlsx。
+        /// 导出与重命名共用，保证两边算出的文件名一致。
+        /// </summary>
+        public static string BuildExcelFileName(string className, int convention, string prefix, string suffix)
+            => $"{prefix}{ApplyNameConvention(className, convention)}{suffix}.xlsx";
+
         private static string ToCamelCase(string name)
             => string.IsNullOrEmpty(name) ? name : char.ToUpper(name[0]) + name[1..];
 
