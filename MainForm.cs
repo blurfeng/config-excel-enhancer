@@ -90,6 +90,22 @@ namespace ConfigExcelEnhancer
         }
 
         /// <summary>
+        /// 窗体加载时：若本地缓存中存在有效窗口尺寸，则恢复为上次关闭时的大小。
+        /// 尺寸会被钳制到不小于 MinimumSize，避免缓存了过小的值导致窗口异常。
+        /// 无缓存（首次运行）时保持 Designer 默认尺寸。
+        /// </summary>
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            if (_localState.WindowWidth is int w && _localState.WindowHeight is int h)
+            {
+                Size = new Size(
+                    Math.Max(w, MinimumSize.Width),
+                    Math.Max(h, MinimumSize.Height));
+            }
+        }
+
+        /// <summary>
         /// 窗体重新获得焦点时：重新评估“导出 Excel”列表中目标路径的警示底色，
         /// 以反映用户在程序外删除/移动目标 Excel 文件后的最新状态。
         /// </summary>
@@ -111,7 +127,21 @@ namespace ConfigExcelEnhancer
             excelExportTab.CancelRunningTask();
             homeTab.CancelRunningTask();
             SaveSettings();
+            SaveWindowSize();
             base.OnFormClosing(e);
+        }
+
+        /// <summary>
+        /// 关闭前记录窗口尺寸并持久化到 LocalState。
+        /// 若窗口处于最大化/最小化状态，使用 RestoreBounds 记录还原后的正常尺寸，
+        /// 避免下次以全屏尺寸的普通窗口打开。
+        /// </summary>
+        private void SaveWindowSize()
+        {
+            var size = WindowState == FormWindowState.Normal ? Size : RestoreBounds.Size;
+            _localState.WindowWidth = size.Width;
+            _localState.WindowHeight = size.Height;
+            LocalStateManager.Save(_localState);
         }
     }
 }

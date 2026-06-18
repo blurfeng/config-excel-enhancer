@@ -15,5 +15,15 @@ namespace ConfigExcelEnhancer.Models
         /// settings.json 中的所有相对路径均以此为基准进行还原。
         /// </summary>
         public string ProjectRoot { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 上次关闭程序时的窗口宽度（最大化时记录还原后的尺寸）。未保存过时为 null。
+        /// </summary>
+        public int? WindowWidth { get; set; }
+
+        /// <summary>
+        /// 上次关闭程序时的窗口高度（最大化时记录还原后的尺寸）。未保存过时为 null。
+        /// </summary>
+        public int? WindowHeight { get; set; }
     }
 }
