@@ -346,10 +346,10 @@ namespace ConfigExcelEnhancer.UI
             lblSingleTarget.AutoSize = true;
             lblSingleTarget.Location = new Point(7, 9);
             lblSingleTarget.Name = "lblSingleTarget";
-            lblSingleTarget.Size = new Size(129, 17);
+            lblSingleTarget.Size = new Size(146, 17);
             lblSingleTarget.TabIndex = 0;
-            lblSingleTarget.Text = "导出 Excel 目标路径：";
-            toolTip.SetToolTip(lblSingleTarget, "选中数据类导出的目标 Excel 文件路径；文件存在则更新、不存在则新建（父目录自动创建）。");
+            lblSingleTarget.Text = "导出 Excel 目标文件夹：";
+            toolTip.SetToolTip(lblSingleTarget, "选中数据类导出到此文件夹；文件名按“文件命名/文件名”规则自动生成，文件存在则更新、不存在则新建（文件夹自动创建）。");
             // 
             // btnClearSingleTarget
             // 
@@ -359,7 +359,7 @@ namespace ConfigExcelEnhancer.UI
             btnClearSingleTarget.Size = new Size(60, 28);
             btnClearSingleTarget.TabIndex = 4;
             btnClearSingleTarget.Text = "清空";
-            toolTip.SetToolTip(btnClearSingleTarget, "清空导出 Excel 目标路径。");
+            toolTip.SetToolTip(btnClearSingleTarget, "清空导出 Excel 目标文件夹。");
             btnClearSingleTarget.Click += btnClearSingleTarget_Click;
             // 
             // btnRename
@@ -777,9 +777,9 @@ namespace ConfigExcelEnhancer.UI
             // txtSingleTargetPath
             // 
             txtSingleTargetPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtSingleTargetPath.Location = new Point(141, 5);
+            txtSingleTargetPath.Location = new Point(159, 5);
             txtSingleTargetPath.Name = "txtSingleTargetPath";
-            txtSingleTargetPath.Size = new Size(433, 23);
+            txtSingleTargetPath.Size = new Size(415, 23);
             txtSingleTargetPath.TabIndex = 1;
             txtSingleTargetPath.TextChanged += txtSingleTargetPath_TextChanged;
             // 

@@ -47,7 +47,19 @@ namespace ConfigExcelEnhancer.Models
         /// <summary>单独导出模式：选中的数据类名。属临时操作的当前选择，机器私有。</summary>
         public string ExcelExportSingleClassName { get; set; } = string.Empty;
 
-        /// <summary>单独导出模式：统一的导出 Excel 目标路径（文件，存在则更新、不存在则新建）。属临时操作的当前选择，机器私有。</summary>
-        public string ExcelExportSingleTargetPath { get; set; } = string.Empty;
+        /// <summary>单独导出模式：导出 Excel 目标文件夹（文件名按命名规则自动生成，存在则更新、不存在则新建）。属临时操作的当前选择，机器私有。</summary>
+        public string ExcelExportSingleTargetFolder { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 导出 Excel 文件的类名转换方式：0 = 类名不变，1 = 驼峰（首字母大写），2 = 全小写_下划线。
+        /// 属个人操作习惯的当前选择，机器私有，故存于本地而非共享 settings.json。
+        /// </summary>
+        public int ExcelExportNameConvention { get; set; } = 0;
+
+        /// <summary>导出文件名前缀（三种模式共用）。属个人操作习惯的当前选择，机器私有。</summary>
+        public string ExcelExportNamePrefix { get; set; } = string.Empty;
+
+        /// <summary>导出文件名后缀（三种模式共用）。属个人操作习惯的当前选择，机器私有。</summary>
+        public string ExcelExportNameSuffix { get; set; } = string.Empty;
     }
 }

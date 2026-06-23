@@ -40,15 +40,15 @@ namespace ConfigExcelEnhancer.UI
             UpdateListCommonFolderEnabled(Settings.ExcelExportListCommonFolderEnabled);
             txtTargetFolder.Text       = Settings.ExcelExportTargetFolder;
             txtSingleXmlFile.Text      = LocalState.ExcelExportSingleXmlFile;
-            txtSingleTargetPath.Text   = LocalState.ExcelExportSingleTargetPath;
-            txtPrefix.Text             = Settings.ExcelExportNamePrefix;
-            txtSuffix.Text             = Settings.ExcelExportNameSuffix;
+            txtSingleTargetPath.Text   = LocalState.ExcelExportSingleTargetFolder;
+            txtPrefix.Text             = LocalState.ExcelExportNamePrefix;
+            txtSuffix.Text             = LocalState.ExcelExportNameSuffix;
 
             tabMode.SelectedIndex = Settings.ExcelExportMode switch { 1 => 1, 2 => 2, _ => 0 };
 
-            rdoNameAsIs.Checked  = Settings.ExcelExportNameConvention == 0;
-            rdoNameCamel.Checked = Settings.ExcelExportNameConvention == 1;
-            rdoNameSnake.Checked = Settings.ExcelExportNameConvention == 2;
+            rdoNameAsIs.Checked  = LocalState.ExcelExportNameConvention == 0;
+            rdoNameCamel.Checked = LocalState.ExcelExportNameConvention == 1;
+            rdoNameSnake.Checked = LocalState.ExcelExportNameConvention == 2;
 
             chkRunEnumValidation.Checked = Settings.ExcelExportRunEnumValidation;
 
@@ -91,30 +91,30 @@ namespace ConfigExcelEnhancer.UI
             => LocalState.ExcelExportSingleXmlFile = txtSingleXmlFile.Text;
 
         private void txtSingleTargetPath_TextChanged(object sender, EventArgs e)
-            => LocalState.ExcelExportSingleTargetPath = txtSingleTargetPath.Text;
+            => LocalState.ExcelExportSingleTargetFolder = txtSingleTargetPath.Text;
 
         private void txtPrefix_TextChanged(object sender, EventArgs e)
-            => Settings.ExcelExportNamePrefix = txtPrefix.Text;
+            => LocalState.ExcelExportNamePrefix = txtPrefix.Text;
 
         private void txtSuffix_TextChanged(object sender, EventArgs e)
-            => Settings.ExcelExportNameSuffix = txtSuffix.Text;
+            => LocalState.ExcelExportNameSuffix = txtSuffix.Text;
 
         private void tabMode_SelectedIndexChanged(object sender, EventArgs e)
             => Settings.ExcelExportMode = tabMode.SelectedIndex;
 
         private void rdoNameAsIs_CheckedChanged(object sender, EventArgs e)
         {
-            if (rdoNameAsIs.Checked) Settings.ExcelExportNameConvention = 0;
+            if (rdoNameAsIs.Checked) LocalState.ExcelExportNameConvention = 0;
         }
 
         private void rdoNameCamel_CheckedChanged(object sender, EventArgs e)
         {
-            if (rdoNameCamel.Checked) Settings.ExcelExportNameConvention = 1;
+            if (rdoNameCamel.Checked) LocalState.ExcelExportNameConvention = 1;
         }
 
         private void rdoNameSnake_CheckedChanged(object sender, EventArgs e)
         {
-            if (rdoNameSnake.Checked) Settings.ExcelExportNameConvention = 2;
+            if (rdoNameSnake.Checked) LocalState.ExcelExportNameConvention = 2;
         }
 
         private void chkRunEnumValidation_CheckedChanged(object sender, EventArgs e)
@@ -196,21 +196,11 @@ namespace ConfigExcelEnhancer.UI
 
         private void btnBrowseSingleTarget_Click(object sender, EventArgs e)
         {
-            string className   = LocalState.ExcelExportSingleClassName?.Trim() ?? string.Empty;
-            string defaultName  = string.IsNullOrEmpty(className)
-                ? "export.xlsx"
-                : FunctionLibrary.ApplyNameConvention(className, Settings.ExcelExportNameConvention) + ".xlsx";
-
             string? initial = !string.IsNullOrEmpty(txtSingleTargetPath.Text)
                 ? txtSingleTargetPath.Text
                 : Settings.ExcelExportListTargetFolder;
 
-            var path = DialogHelper.BrowseSaveFile(
-                "选择导出 Excel 目标文件",
-                "Excel 文件 (*.xlsx)|*.xlsx",
-                initial,
-                defaultName);
-
+            var path = DialogHelper.BrowseFolder("选择导出 Excel 目标文件夹", initial);
             if (path != null)
                 txtSingleTargetPath.Text = path;
         }
@@ -531,7 +521,7 @@ namespace ConfigExcelEnhancer.UI
                 if (row.Tag is not ExcelExportClassConfig cfg) return;
 
                 string? existing    = string.IsNullOrEmpty(cfg.TargetExcelPath) ? null : cfg.TargetExcelPath;
-                string  defaultName = FunctionLibrary.ApplyNameConvention(cfg.ClassName, Settings.ExcelExportNameConvention) + ".xlsx";
+                string  defaultName = FunctionLibrary.ApplyNameConvention(cfg.ClassName, LocalState.ExcelExportNameConvention) + ".xlsx";
                 var path = DialogHelper.BrowseSaveFile(
                     $"选择 [{cfg.ClassName}] 的导出 Excel 文件",
                     "Excel 文件 (*.xlsx)|*.xlsx",
@@ -784,11 +774,17 @@ namespace ConfigExcelEnhancer.UI
         private async void btnRename_Click(object sender, EventArgs e)
         {
             int    mode             = tabMode.SelectedIndex;
-            int    convention       = Settings.ExcelExportNameConvention;
+            int    convention       = LocalState.ExcelExportNameConvention;
             string prefix           = txtPrefix.Text;
             string suffix           = txtSuffix.Text;
-            string singleTargetPath = txtSingleTargetPath.Text.Trim();
             string batchFolder      = txtTargetFolder.Text.Trim();
+
+            // 单独导出模式的文件名在导出时已按命名规则自动生成，无需重命名。
+            if (mode == 2)
+            {
+                Log("单独导出模式无需重命名：导出时已按“文件命名/文件名”规则自动生成文件名。", LogLevel.Warn);
+                return;
+            }
 
             LogDivider();
             Log("构建重命名计划...", LogLevel.Section);
@@ -799,7 +795,7 @@ namespace ConfigExcelEnhancer.UI
             {
                 plan = await Task.Run(() =>
                 {
-                    var candidates = BuildRenameCandidates(mode, singleTargetPath, batchFolder);
+                    var candidates = BuildRenameCandidates(mode, batchFolder);
                     return ExcelRenamer.BuildPlan(candidates, convention, prefix, suffix);
                 });
             }
@@ -880,7 +876,7 @@ namespace ConfigExcelEnhancer.UI
         /// 线程安全的 <see cref="TabBase.Log"/>，不触碰 UI 控件（控件文本已由调用方传入）。
         /// </summary>
         private List<(string ClassName, string OldPath)> BuildRenameCandidates(
-            int mode, string singleTargetPath, string batchFolder)
+            int mode, string batchFolder)
         {
             var result = new List<(string, string)>();
 
@@ -897,19 +893,6 @@ namespace ConfigExcelEnhancer.UI
                     }
                     result.Add((cfg.ClassName, cfg.TargetExcelPath));
                 }
-            }
-            else if (mode == 2)
-            {
-                // 单独模式：当前选中类 + 单独目标路径。
-                string className = LocalState.ExcelExportSingleClassName?.Trim() ?? string.Empty;
-                if (string.IsNullOrEmpty(singleTargetPath))
-                    Log("请设置导出 Excel 目标路径。", LogLevel.Warn);
-                else if (!File.Exists(singleTargetPath))
-                    Log($"目标 Excel 文件不存在：{singleTargetPath}", LogLevel.Warn);
-                else if (string.IsNullOrEmpty(className))
-                    Log("请在列表中选择一个数据类。", LogLevel.Warn);
-                else
-                    result.Add((className, singleTargetPath));
             }
             else
             {
@@ -961,7 +944,7 @@ namespace ConfigExcelEnhancer.UI
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
         }
 
-        /// <summary>把成功重命名的（旧→新）路径回写到列表配置与单独模式目标，刷新列表显示。</summary>
+        /// <summary>把成功重命名的（旧→新）路径回写到列表配置，刷新列表显示。</summary>
         private void ApplyRenamePathSync(List<(string OldPath, string NewPath)> renamed)
         {
             foreach (var (oldPath, newPath) in renamed)
@@ -969,13 +952,6 @@ namespace ConfigExcelEnhancer.UI
                 foreach (var cfg in Settings.ExcelExportClassConfigs)
                     if (!string.IsNullOrEmpty(cfg.TargetExcelPath) && PathEquals(cfg.TargetExcelPath, oldPath))
                         cfg.TargetExcelPath = newPath;
-
-                if (!string.IsNullOrEmpty(LocalState.ExcelExportSingleTargetPath) &&
-                    PathEquals(LocalState.ExcelExportSingleTargetPath, oldPath))
-                {
-                    LocalState.ExcelExportSingleTargetPath = newPath;
-                    txtSingleTargetPath.Text = newPath;
-                }
             }
 
             foreach (DataGridViewRow row in dgvClasses.Rows)
@@ -1005,7 +981,7 @@ namespace ConfigExcelEnhancer.UI
 
             string prefix     = txtPrefix.Text;
             string suffix     = txtSuffix.Text;
-            int    convention = Settings.ExcelExportNameConvention;
+            int    convention = LocalState.ExcelExportNameConvention;
 
             _pendingAssociations.Clear();
 
@@ -1058,18 +1034,18 @@ namespace ConfigExcelEnhancer.UI
             {
                 // 单独导出模式：
                 //  - 来源 = 单文件（若设）否则整个文件夹；继承上下文始终来自整个文件夹的 beanMap
-                //  - 取选中类（LocalState.ExcelExportSingleClassName），目标 = 统一目标路径
+                //  - 取选中类（LocalState.ExcelExportSingleClassName），目标 = 目标文件夹 + 按命名规则生成的文件名
                 //  - 目标存在 → 更新，不存在 → 新建（ExportAll/CreateExcel 自动处理）
-                string className  = LocalState.ExcelExportSingleClassName?.Trim() ?? string.Empty;
-                string targetPath = txtSingleTargetPath.Text.Trim();
+                string className    = LocalState.ExcelExportSingleClassName?.Trim() ?? string.Empty;
+                string targetFolder = txtSingleTargetPath.Text.Trim();
                 if (string.IsNullOrEmpty(className))
                 {
                     Log("请在列表中选择一个数据类。", LogLevel.Warn);
                     return tasks;
                 }
-                if (string.IsNullOrEmpty(targetPath))
+                if (string.IsNullOrEmpty(targetFolder))
                 {
-                    Log("请设置导出 Excel 目标路径。", LogLevel.Warn);
+                    Log("请设置导出 Excel 目标文件夹。", LogLevel.Warn);
                     return tasks;
                 }
 
@@ -1083,7 +1059,9 @@ namespace ConfigExcelEnhancer.UI
                     return tasks;
                 }
 
-                var allFields = BeanParser.GetAllFields(bean, beanMap);
+                string fileName  = FunctionLibrary.BuildExcelFileName(className, convention, prefix, suffix);
+                string targetPath = Path.Combine(targetFolder, fileName);
+                var    allFields  = BeanParser.GetAllFields(bean, beanMap);
                 tasks.Add(new ExcelExportTask(bean, allFields, targetPath));
             }
             else

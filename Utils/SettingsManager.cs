@@ -202,9 +202,6 @@ namespace ConfigExcelEnhancer.Utils
             ExcelExportListTargetFolder       = src.ExcelExportListTargetFolder,
             ExcelExportListCommonFolderEnabled = src.ExcelExportListCommonFolderEnabled,
             ExcelExportTargetFolder           = src.ExcelExportTargetFolder,
-            ExcelExportNamePrefix             = src.ExcelExportNamePrefix,
-            ExcelExportNameSuffix             = src.ExcelExportNameSuffix,
-            ExcelExportNameConvention         = src.ExcelExportNameConvention,
             ExcelExportRunEnumValidation      = src.ExcelExportRunEnumValidation,
         };
 

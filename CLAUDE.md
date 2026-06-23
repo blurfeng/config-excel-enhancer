@@ -59,9 +59,9 @@ Two persisted stores. When adding a new config field, decide which one it belong
 
 ### AppSettings vs. LocalState — where to put a new config field
 
-Put it in **`AppSettings`** when it's **stable, project-level config the whole team should share** — e.g. XML/Excel directories, the class→Excel associations of list mode (`ExcelExportClassConfigs`), naming rules, batch target folder. These are the durable agreements about how the project exports.
+Put it in **`AppSettings`** when it's **stable, project-level config the whole team should share** — e.g. XML/Excel directories, the class→Excel associations of list mode (`ExcelExportClassConfigs`), batch target folder. These are the durable agreements about how the project exports.
 
-Put it in **`LocalState`** when it's **machine-private, transient, or an "current operation / scratch selection"** that would be meaningless (or noisy) to share — e.g. `EnumForceRewrite`, window size, run-state caches, and the single-export mode's current selection (`ExcelExportSingleXmlFile` / `ExcelExportSingleClassName` / `ExcelExportSingleTargetPath`). Rule of thumb: if storing it in `settings.json` would create git diff noise every time a developer does a routine personal action, it belongs in `LocalState`.
+Put it in **`LocalState`** when it's **machine-private, transient, or an "current operation / scratch selection"** that would be meaningless (or noisy) to share — e.g. `EnumForceRewrite`, window size, run-state caches, the per-developer Excel naming preference (`ExcelExportNameConvention` / `ExcelExportNamePrefix` / `ExcelExportNameSuffix`), and the single-export mode's current selection (`ExcelExportSingleXmlFile` / `ExcelExportSingleClassName` / `ExcelExportSingleTargetFolder`). Rule of thumb: if storing it in `settings.json` would create git diff noise every time a developer does a routine personal action, it belongs in `LocalState`.
 
 > Path fields in `AppSettings` must be registered in `SettingsManager.TransformPaths` (relative ↔ absolute). Path fields in `LocalState` are stored absolute and need no transform.
 
