@@ -44,7 +44,7 @@ namespace ConfigExcelEnhancer.UI
             txtPrefix.Text             = LocalState.ExcelExportNamePrefix;
             txtSuffix.Text             = LocalState.ExcelExportNameSuffix;
 
-            tabMode.SelectedIndex = Settings.ExcelExportMode switch { 1 => 1, 2 => 2, _ => 0 };
+            tabMode.SelectedIndex = LocalState.ExcelExportMode switch { 1 => 1, 2 => 2, _ => 0 };
 
             rdoNameAsIs.Checked  = LocalState.ExcelExportNameConvention == 0;
             rdoNameCamel.Checked = LocalState.ExcelExportNameConvention == 1;
@@ -100,7 +100,7 @@ namespace ConfigExcelEnhancer.UI
             => LocalState.ExcelExportNameSuffix = txtSuffix.Text;
 
         private void tabMode_SelectedIndexChanged(object sender, EventArgs e)
-            => Settings.ExcelExportMode = tabMode.SelectedIndex;
+            => LocalState.ExcelExportMode = tabMode.SelectedIndex;
 
         private void rdoNameAsIs_CheckedChanged(object sender, EventArgs e)
         {

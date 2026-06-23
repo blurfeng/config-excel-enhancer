@@ -11,9 +11,6 @@ namespace ConfigExcelEnhancer.Models
         /// <summary>XML Schema 文件所在目录，用于扫描 &lt;enum&gt; 定义。</summary>
         public string XmlDirectory { get; set; } = string.Empty;
 
-        /// <summary>Excel 配置文件所在目录，用于批量更新枚举验证规则。</summary>
-        public string ExcelDirectory { get; set; } = string.Empty;
-
         /// <summary>Luban gen.bat 文件路径，用于解析和执行导表命令。</summary>
         public string GenBatPath { get; set; } = string.Empty;
 
@@ -23,25 +20,10 @@ namespace ConfigExcelEnhancer.Models
         /// <summary>是否为 bool 类型列添加 TRUE/FALSE 数据验证下拉框。</summary>
         public bool BoolValidation { get; set; } = true;
 
-        /// <summary>配置 Excel 文件选择模式：0 = 目录扫描，1 = 手动列表。</summary>
-        public int EnumExcelMode { get; set; } = 0;
-
-        /// <summary>配置 Excel 文件列表（列表模式下使用）。</summary>
-        public List<string> EnumExcelFiles { get; set; } = new();
-
         // ── 表设计 ────────────────────────────────────────
 
         /// <summary>表格设计模板 Excel 文件路径（样式来源）。</summary>
         public string TableDesignSourceExcel { get; set; } = string.Empty;
-
-        /// <summary>目标文件选择模式：0 = 目录扫描，1 = 手动列表。</summary>
-        public int TableDesignTargetMode { get; set; } = 0;
-
-        /// <summary>目标文件目录（目录模式下使用）。</summary>
-        public string TableDesignTargetDirectory { get; set; } = string.Empty;
-
-        /// <summary>目标文件列表（列表模式下使用）。</summary>
-        public List<string> TableDesignTargetFiles { get; set; } = new();
 
         /// <summary>是否跳过文件名以 __ 开头的 Excel 文件（通常为内部用途文件）。</summary>
         public bool TableDesignIgnoreUnderscoreFiles { get; set; } = true;
@@ -85,12 +67,6 @@ namespace ConfigExcelEnhancer.Models
         /// </summary>
         public string ProjectName { get; set; } = string.Empty;
 
-        /// <summary>自动查找根目录时是否启用模糊匹配（忽略大小写及连字符/下划线）。</summary>
-        public bool FuzzyFindProjectRoot { get; set; } = true;
-
-        /// <summary>主页"一键导出"是否包含 Enum 验证步骤。</summary>
-        public bool HomeIncludeEnum { get; set; } = true;
-
         // ── 导出 Excel ────────────────────────────────────────
 
         /// <summary>XML 定义文件夹（供两种模式共用，支持跨文件继承引用）。</summary>
@@ -98,9 +74,6 @@ namespace ConfigExcelEnhancer.Models
 
         /// <summary>Excel 设计模板路径；空 = 使用表设计分页的模板；两者均空则直接新建。</summary>
         public string ExcelExportDesignTemplate { get; set; } = string.Empty;
-
-        /// <summary>导出模式：0 = 按列表，1 = 批量导出。</summary>
-        public int ExcelExportMode { get; set; } = 0;
 
         /// <summary>列表模式：各数据类的导出配置（类名 → 目标 Excel 路径）。</summary>
         public List<ExcelExportClassConfig> ExcelExportClassConfigs { get; set; } = new();

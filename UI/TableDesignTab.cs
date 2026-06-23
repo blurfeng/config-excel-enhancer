@@ -19,6 +19,9 @@ namespace ConfigExcelEnhancer.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public LocalState LocalState { get; set; } = new();
+
         protected override RichTextBox? LogBox => txtLog;
 
         protected override string? GreetingMessage => "表格设计已就绪 — 将模板 Excel 的样式应用到目标文件。";
@@ -28,9 +31,9 @@ namespace ConfigExcelEnhancer.UI
         {
             txtSourceExcel.Text = Settings.TableDesignSourceExcel;
 
-            excelPicker.Mode = Settings.TableDesignTargetMode;
-            excelPicker.ExcelDirectory = Settings.TableDesignTargetDirectory;
-            excelPicker.Files = Settings.TableDesignTargetFiles;
+            excelPicker.Mode = LocalState.TableDesignTargetMode;
+            excelPicker.ExcelDirectory = LocalState.TableDesignTargetDirectory;
+            excelPicker.Files = LocalState.TableDesignTargetFiles;
 
             chkIgnoreUnderscoreFiles.Checked = Settings.TableDesignIgnoreUnderscoreFiles;
 
@@ -56,9 +59,9 @@ namespace ConfigExcelEnhancer.UI
 
         private void excelPicker_ValueChanged(object? sender, EventArgs e)
         {
-            Settings.TableDesignTargetMode = excelPicker.Mode;
-            Settings.TableDesignTargetDirectory = excelPicker.ExcelDirectory;
-            Settings.TableDesignTargetFiles = excelPicker.Files;
+            LocalState.TableDesignTargetMode = excelPicker.Mode;
+            LocalState.TableDesignTargetDirectory = excelPicker.ExcelDirectory;
+            LocalState.TableDesignTargetFiles = excelPicker.Files;
         }
 
         private void rdoScopeAll_CheckedChanged(object sender, EventArgs e)

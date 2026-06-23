@@ -64,9 +64,9 @@ namespace ConfigExcelEnhancer.UI
             _localState = localState;
 
             // 从设置加载勾选状态与项目名称（每次重载都刷新）
-            chkIncludeEnum.Checked = settings.HomeIncludeEnum;
+            chkIncludeEnum.Checked = localState.HomeIncludeEnum;
             txtProjectName.Text = settings.ProjectName;
-            chkFuzzyFindProjectRoot.Checked = settings.FuzzyFindProjectRoot;
+            chkFuzzyFindProjectRoot.Checked = localState.FuzzyFindProjectRoot;
 
             // 控件事件只订阅一次，避免重载时重复订阅
             if (!_initialized)
@@ -490,9 +490,9 @@ namespace ConfigExcelEnhancer.UI
 
         private void chkIncludeEnum_CheckedChanged(object? sender, EventArgs e)
         {
-            if (_settings == null) return;
-            _settings.HomeIncludeEnum = chkIncludeEnum.Checked;
-            SettingsManager.Save(_settings);
+            if (_localState == null) return;
+            _localState.HomeIncludeEnum = chkIncludeEnum.Checked;
+            LocalStateManager.Save(_localState);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -597,7 +597,7 @@ namespace ConfigExcelEnhancer.UI
 
             // 回退：按项目名称查找同名文件夹
             if (_settings != null && !string.IsNullOrEmpty(_settings.ProjectName))
-                return FunctionLibrary.TryFindProjectRoot(_settings.ProjectName, AppContext.BaseDirectory, _settings.FuzzyFindProjectRoot);
+                return FunctionLibrary.TryFindProjectRoot(_settings.ProjectName, AppContext.BaseDirectory, _localState?.FuzzyFindProjectRoot ?? true);
 
             return null;
         }
@@ -616,9 +616,9 @@ namespace ConfigExcelEnhancer.UI
 
         private void chkFuzzyFindProjectRoot_CheckedChanged(object? sender, EventArgs e)
         {
-            if (_settings == null) return;
-            _settings.FuzzyFindProjectRoot = chkFuzzyFindProjectRoot.Checked;
-            SettingsManager.Save(_settings);
+            if (_localState == null) return;
+            _localState.FuzzyFindProjectRoot = chkFuzzyFindProjectRoot.Checked;
+            LocalStateManager.Save(_localState);
             TryAutoDetectProjectRoot();
             RefreshStatus();
         }

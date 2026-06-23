@@ -61,5 +61,62 @@ namespace ConfigExcelEnhancer.Models
 
         /// <summary>导出文件名后缀（三种模式共用）。属个人操作习惯的当前选择，机器私有。</summary>
         public string ExcelExportNameSuffix { get; set; } = string.Empty;
+
+        // ── 主页 ──────────────────────────────────────────
+
+        /// <summary>
+        /// 自动查找根目录时是否启用模糊匹配（忽略大小写及连字符/下划线）。
+        /// 属个人操作习惯的当前选择，机器私有，故存于本地而非共享 settings.json。
+        /// </summary>
+        public bool FuzzyFindProjectRoot { get; set; } = true;
+
+        /// <summary>
+        /// 主页"一键导出"是否包含 Enum 验证步骤。
+        /// 属个人操作习惯的当前选择，机器私有，故存于本地而非共享 settings.json。
+        /// </summary>
+        public bool HomeIncludeEnum { get; set; } = true;
+
+        // ── 枚举验证 ──────────────────────────────────────
+
+        /// <summary>
+        /// 配置 Excel 文件选择模式：0 = 目录扫描，1 = 手动列表。
+        /// 属临时操作的当前选择，机器私有。
+        /// </summary>
+        public int EnumExcelMode { get; set; } = 0;
+
+        /// <summary>
+        /// 枚举验证"目标 Excel"目录模式下的目录（绝对路径）。
+        /// 属临时操作的当前选择，机器私有，故存于本地而非共享 settings.json。
+        /// </summary>
+        public string ExcelDirectory { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 枚举验证"目标 Excel"列表模式下的文件列表（绝对路径）。属临时操作的当前选择，机器私有。
+        /// </summary>
+        public List<string> EnumExcelFiles { get; set; } = new();
+
+        // ── 表设计 ────────────────────────────────────────
+
+        /// <summary>
+        /// 表设计目标文件选择模式：0 = 目录扫描，1 = 手动列表。属临时操作的当前选择，机器私有。
+        /// </summary>
+        public int TableDesignTargetMode { get; set; } = 0;
+
+        /// <summary>
+        /// 表设计目标文件目录（目录模式下使用，绝对路径）。属临时操作的当前选择，机器私有。
+        /// </summary>
+        public string TableDesignTargetDirectory { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 表设计目标文件列表（列表模式下使用，绝对路径）。属临时操作的当前选择，机器私有。
+        /// </summary>
+        public List<string> TableDesignTargetFiles { get; set; } = new();
+
+        // ── 导出 Excel ────────────────────────────────────────
+
+        /// <summary>
+        /// 导出模式：0 = 按列表，1 = 批量导出。属个人操作习惯的当前选择，机器私有。
+        /// </summary>
+        public int ExcelExportMode { get; set; } = 0;
     }
 }

@@ -42,9 +42,9 @@ namespace ConfigExcelEnhancer.UI
 
         private void excelPicker_ValueChanged(object? sender, EventArgs e)
         {
-            Settings.EnumExcelMode = excelPicker.Mode;
-            Settings.ExcelDirectory = excelPicker.ExcelDirectory;
-            Settings.EnumExcelFiles = excelPicker.Files;
+            LocalState.EnumExcelMode = excelPicker.Mode;
+            LocalState.ExcelDirectory = excelPicker.ExcelDirectory;
+            LocalState.EnumExcelFiles = excelPicker.Files;
         }
 
         private void chkHideEnumDataSheet_CheckedChanged(object sender, EventArgs e)
@@ -59,9 +59,9 @@ namespace ConfigExcelEnhancer.UI
         public void LoadFromSettings()
         {
             txtXmlDir.Text = Settings.XmlDirectory;
-            excelPicker.Mode = Settings.EnumExcelMode;
-            excelPicker.ExcelDirectory = Settings.ExcelDirectory;
-            excelPicker.Files = Settings.EnumExcelFiles;
+            excelPicker.Mode = LocalState.EnumExcelMode;
+            excelPicker.ExcelDirectory = LocalState.ExcelDirectory;
+            excelPicker.Files = LocalState.EnumExcelFiles;
             chkHideEnumDataSheet.Checked = Settings.HideEnumDataSheet;
             chkForceRewrite.Checked = LocalState.EnumForceRewrite;
             chkBoolValidation.Checked = Settings.BoolValidation;

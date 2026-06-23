@@ -115,13 +115,9 @@ namespace ConfigExcelEnhancer.Utils
             string T(string p) => transform(p, baseDir);
 
             s.XmlDirectory               = T(s.XmlDirectory);
-            s.ExcelDirectory             = T(s.ExcelDirectory);
             s.GenBatPath                 = T(s.GenBatPath);
             s.TableDesignSourceExcel     = T(s.TableDesignSourceExcel);
-            s.TableDesignTargetDirectory = T(s.TableDesignTargetDirectory);
             s.TablesClassPath            = T(s.TablesClassPath);
-            s.EnumExcelFiles             = s.EnumExcelFiles.Select(T).ToList();
-            s.TableDesignTargetFiles     = s.TableDesignTargetFiles.Select(T).ToList();
             s.ExcelExportXmlFolder        = T(s.ExcelExportXmlFolder);
             s.ExcelExportDesignTemplate   = T(s.ExcelExportDesignTemplate);
             s.ExcelExportListTargetFolder = T(s.ExcelExportListTargetFolder);
@@ -150,18 +146,11 @@ namespace ConfigExcelEnhancer.Utils
         private static AppSettings ShallowClone(AppSettings src) => new()
         {
             ProjectName                       = src.ProjectName,
-            FuzzyFindProjectRoot              = src.FuzzyFindProjectRoot,
             XmlDirectory                      = src.XmlDirectory,
-            ExcelDirectory                    = src.ExcelDirectory,
             GenBatPath                        = src.GenBatPath,
             HideEnumDataSheet                 = src.HideEnumDataSheet,
             BoolValidation                    = src.BoolValidation,
-            EnumExcelMode                     = src.EnumExcelMode,
-            EnumExcelFiles                    = new List<string>(src.EnumExcelFiles),
             TableDesignSourceExcel            = src.TableDesignSourceExcel,
-            TableDesignTargetMode             = src.TableDesignTargetMode,
-            TableDesignTargetDirectory        = src.TableDesignTargetDirectory,
-            TableDesignTargetFiles            = new List<string>(src.TableDesignTargetFiles),
             TableDesignIgnoreUnderscoreFiles  = src.TableDesignIgnoreUnderscoreFiles,
             TableDesignSheetScope             = src.TableDesignSheetScope,
             TableDesignIgnoreUnderscoreSheets = src.TableDesignIgnoreUnderscoreSheets,
@@ -188,10 +177,8 @@ namespace ConfigExcelEnhancer.Utils
                 NameField                      = j.NameField,
                 IdField                        = j.IdField,
             }).ToList(),
-            HomeIncludeEnum                   = src.HomeIncludeEnum,
             ExcelExportXmlFolder              = src.ExcelExportXmlFolder,
             ExcelExportDesignTemplate         = src.ExcelExportDesignTemplate,
-            ExcelExportMode                   = src.ExcelExportMode,
             ExcelExportClassConfigs           = src.ExcelExportClassConfigs.Select(c => new ExcelExportClassConfig
             {
                 Enabled         = c.Enabled,
