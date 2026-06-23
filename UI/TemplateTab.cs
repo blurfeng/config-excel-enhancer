@@ -494,8 +494,7 @@ namespace ConfigExcelEnhancer.UI
                 IdsCollectionResult? idsResult = null;
                 try
                 {
-                    var options = new TemplateExportOptions(job, tableMappings,
-                        cache?.LastExportedOwnedGroups ?? new List<string>());
+                    var options = new TemplateExportOptions(job, tableMappings);
                     idsResult = await TemplateExporter.ExportAsync(options, progress,
                         (msg, lvl) => Log(msg, lvl), token);
                     anySuccess = true;
@@ -514,7 +513,6 @@ namespace ConfigExcelEnhancer.UI
                         idsAccumulator[key] = existing with
                         {
                             Entries = existing.Entries.Concat(idsResult.Entries).ToList(),
-                            OwnedGroups = existing.OwnedGroups.Union(idsResult.OwnedGroups).ToHashSet(),
                             TemplateNamespace = existing.TemplateNamespace
                         };
                     }
@@ -540,7 +538,6 @@ namespace ConfigExcelEnhancer.UI
                             result.UsePartialClass,
                             result.UseGeneratedSuffix,
                             result.Entries,
-                            result.OwnedGroups,
                             result.TemplateNamespace);
                         TemplateExporter.GenerateIds(genOptions,
                             (msg, lvl) => Log(msg, lvl));
@@ -557,9 +554,6 @@ namespace ConfigExcelEnhancer.UI
                                 {
                                     LastExportedIdsClassName = j.IdsClassName,
                                     LastExportedIdsOutputDirectory = j.IdsOutputDirectory,
-                                    LastExportedOwnedGroups = j.TypeTemplates.Count > 0
-                                        ? j.TypeTemplates.Keys.ToList()
-                                        : new List<string> { j.IdsClassName },
                                 };
                             }
                         }

@@ -6,9 +6,7 @@ namespace ConfigExcelEnhancer.Core
 {
     public record TemplateExportOptions(
         TemplateExportJob Job,
-        Dictionary<string, TableMapping> TableMappings,
-        // 上次导出时本任务拥有的 group 列表（来自机器本地缓存，用于改名后清除旧 group）
-        IReadOnlyList<string> PreviousOwnedGroups
+        Dictionary<string, TableMapping> TableMappings
     );
 
     /// <summary>单个任务收集到的 Ids 数据，供 RunJobs 合并后统一写文件。</summary>
@@ -19,7 +17,6 @@ namespace ConfigExcelEnhancer.Core
         bool UsePartialClass,
         bool UseGeneratedSuffix,
         List<(string ClassName, long Id, string Group)> Entries,
-        IReadOnlySet<string> OwnedGroups,
         string TemplateNamespace
     );
 
@@ -31,7 +28,6 @@ namespace ConfigExcelEnhancer.Core
         bool UsePartialClass,
         bool UseGeneratedSuffix,
         List<(string ClassName, long Id, string Group)> Entries,
-        IReadOnlySet<string> OwnedGroups,
         string TemplateNamespace
     );
 
@@ -193,21 +189,6 @@ namespace ConfigExcelEnhancer.Core
                 string.IsNullOrWhiteSpace(job.IdsClassName))
                 return null;
 
-            // 推断本任务"拥有"的 group 名称集合（与 group 赋值逻辑保持一致）
-            // 合并当前配置的 key 与上次导出的历史 key，确保改名后旧 group 也能被清除
-            IReadOnlySet<string> ownedGroups;
-            if (job.TypeTemplates.Count > 0)
-            {
-                var combinedGroups = job.TypeTemplates.Keys.ToHashSet();
-                foreach (var g in options.PreviousOwnedGroups)
-                    combinedGroups.Add(g);
-                ownedGroups = combinedGroups;
-            }
-            else
-            {
-                ownedGroups = new HashSet<string> { job.IdsClassName };
-            }
-
             return new IdsCollectionResult(
                 job.IdsOutputDirectory,
                 job.IdsNamespace,
@@ -215,7 +196,6 @@ namespace ConfigExcelEnhancer.Core
                 job.IdsUsePartialClass,
                 job.IdsUseGeneratedSuffix,
                 idsEntries,
-                ownedGroups,
                 job.Namespace);
         }
 
@@ -230,50 +210,11 @@ namespace ConfigExcelEnhancer.Core
             string fileName = $"{options.IdsClassName}{suffix}.cs";
             string outputPath = Path.Combine(options.IdsOutputDirectory, fileName);
 
-            // ── 读取已有文件，保留不属于本次任务的 group 条目 ────────
-            var preservedEntries = new List<(string ClassName, long Id, string Group)>();
-            if (File.Exists(outputPath))
-            {
-                try
-                {
-                    var lines = File.ReadAllLines(outputPath, Encoding.UTF8);
-                    string? currentGroup = null;
-                    var constPattern = new System.Text.RegularExpressions.Regex(
-                        @"^\s*public\s+const\s+int\s+(\w+)\s*=\s*(-?\d+)\s*;");
-                    foreach (var line in lines)
-                    {
-                        var trimmed = line.Trim();
-                        if (trimmed.StartsWith("#region "))
-                        {
-                            currentGroup = trimmed["#region ".Length..].Trim();
-                            continue;
-                        }
-                        if (trimmed == "#endregion") continue;
-                        var m = constPattern.Match(line);
-                        if (m.Success && currentGroup is not null)
-                        {
-                            // 只保留不属于 OwnedGroups 的条目
-                            if (!options.OwnedGroups.Contains(currentGroup))
-                            {
-                                if (long.TryParse(m.Groups[2].Value, out long existingId))
-                                    preservedEntries.Add((m.Groups[1].Value, existingId, currentGroup));
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    log($"读取已有 Ids 文件失败，将完整覆盖：{ex.Message}", LogLevel.Warn);
-                    preservedEntries.Clear();
-                }
-            }
-
-            // 合并：已保留条目在前，本次新数据在后
-            var allEntries = preservedEntries.Concat(options.Entries).ToList();
-
+            // 总是用本次运行收集的数据完整重写：不读取/合并旧文件内容，
+            // 避免旧 Id 残留（如数据被删除、Id 变更、$type 改名等情况）。
             // 按 Group 分组
             var groups = new Dictionary<string, List<(string ClassName, long Id)>>(StringComparer.Ordinal);
-            foreach (var (className, id, group) in allEntries)
+            foreach (var (className, id, group) in options.Entries)
             {
                 if (!groups.ContainsKey(group)) groups[group] = new();
                 groups[group].Add((className, id));
@@ -304,11 +245,8 @@ namespace ConfigExcelEnhancer.Core
             sb.AppendLine("}");
 
             Directory.CreateDirectory(options.IdsOutputDirectory);
-            bool written = WriteFileIfChanged(outputPath, sb.ToString());
-            if (written)
-                log($"Ids 文件已生成：{fileName}（共 {allEntries.Count} 条，本次 {options.Entries.Count} 条）", LogLevel.Ok);
-            else
-                log($"Ids 文件内容未变，已跳过：{fileName}", LogLevel.Info);
+            WriteFile(outputPath, sb.ToString());
+            log($"Ids 文件已生成（覆盖）：{fileName}（共 {options.Entries.Count} 条）", LogLevel.Ok);
         }
 
         // ── 工具方法 ─────────────────────────────────────────────────
