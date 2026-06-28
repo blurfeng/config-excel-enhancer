@@ -540,7 +540,9 @@ namespace ConfigExcelEnhancer.UI
             _runner = new LubanRunner();
             _runner.OutputReceived += msg => BeginInvoke(() =>
             {
-                bool isError = msg.Contains("|ERROR|");
+                // Luban 结构化错误日志（含 |ERROR|），或任何写到 stderr 的输出
+                //（LubanRunner 已为 stderr 行加 "[ERR] " 前缀，如 cmd 的「无法执行，因为找不到指定的命令或文件」）都视为失败信号
+                bool isError = msg.Contains("|ERROR|") || msg.StartsWith("[ERR] ", StringComparison.Ordinal);
                 if (isError) _hasError = true;
                 LogRaw(msg, isError ? LogLibrary.ClrError : LogLibrary.ClrOk, isError ? LogLevel.Error : LogLevel.Ok);
                 _lineCount++;
