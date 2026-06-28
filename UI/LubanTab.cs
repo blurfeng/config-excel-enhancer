@@ -10,6 +10,9 @@ namespace ConfigExcelEnhancer.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AppSettings Settings { get; set; } = new();
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public LocalState LocalState { get; set; } = new();
+
         protected override RichTextBox? LogBox => txtLog;
 
         protected override string? GreetingMessage => "Luban 导表已就绪 — 配置并执行 Luban 导出脚本。";
@@ -18,18 +21,36 @@ namespace ConfigExcelEnhancer.UI
         private LubanRunner? _runner;
 
         private const string BrowseMarker = "...";
+        // 导出时生成的 gen.bat 临时副本文件名（套用本地覆盖后运行，跑完即删，与 gen.bat 同目录）
+        private const string LocalGenBatName = "__cee_local_gen.bat";
+
+        // 当前 gen.bat 的本地路径覆盖工作副本；键见 OverrideKeyForSet/OverrideKeyForXArg，值为注入用的原始路径。
+        // 任何改动都即时自动保存到 local_state.json（无需手动保存按钮）。
+        private Dictionary<string, string> _overrides = new();
+        // 本次导出生成的临时副本路径，结束后清理
+        private string? _tempBatPath;
 
         // 标记正在填充 grid，抑制 CellValueChanged 事件
         private bool _isPopulating;
-        // 是否有未保存的修改（一旦有改动就置 true，重置/保存后清除）
+        // 非路径参数是否有未写入 gen.bat 的修改（一旦有改动就置 true，重置/写入后清除）
         private bool _isDirty;
 
-        private bool _preLockSaveEnabled;
         private bool _preLockResetEnabled;
+        private bool _preLockWriteSharedEnabled;
+
+        // 路径行右键菜单：清除本地覆盖
+        private readonly ContextMenuStrip _rowMenu;
+        private DataGridView? _ctxGrid;
+        private int _ctxRowIndex = -1;
 
         public LubanTab()
         {
             InitializeComponent();
+
+            _rowMenu = new ContextMenuStrip();
+            var clearItem = new ToolStripMenuItem("清除本地覆盖（还原 gen.bat 值）");
+            clearItem.Click += OnClearOverrideClick;
+            _rowMenu.Items.Add(clearItem);
         }
 
         public void LoadFromSettings()
@@ -81,10 +102,10 @@ namespace ConfigExcelEnhancer.UI
 
             _isPopulating = true;
             tabsCommands.TabPages.Clear();
+            LoadOverridesForCurrentBat();
 
             var batDir = BatDir();
-            var workspaceRaw = _config.SetVariables.TryGetValue("WORKSPACE", out var ws) ? ws : "";
-            var workspace = ResolveToAbsPath(workspaceRaw, batDir);
+            var workspace = ResolveToAbsPath(EffectiveSetVar("WORKSPACE"), batDir);
 
             // 全局变量 tab
             var tabGlobal = new TabPage("全局变量");
@@ -92,11 +113,15 @@ namespace ConfigExcelEnhancer.UI
             gridGlobal.Tag = "global";
             foreach (var kv in _config.SetVariables)
             {
-                var displayVal = FormatSetVarForDisplay(kv.Key, kv.Value, batDir, workspace);
+                var ovKey = OverrideKeyForSet(kv.Key);
+                bool hasOv = _overrides.TryGetValue(ovKey, out var ovRaw);
+                bool pathLike = IsPathLike(kv.Key, kv.Value);
+                var displayVal = hasOv ? ovRaw! : FormatSetVarForDisplay(kv.Key, kv.Value, batDir, workspace);
                 var rowIdx = gridGlobal.Rows.Add(false, kv.Key, displayVal);
                 var valCell = gridGlobal.Rows[rowIdx].Cells["colValue"];
                 valCell.Tag = displayVal;
-                gridGlobal.Rows[rowIdx].Cells["colBrowse"].Value = IsPathLike(kv.Key, kv.Value) ? BrowseMarker : "";
+                gridGlobal.Rows[rowIdx].Cells["colBrowse"].Value = pathLike ? BrowseMarker : "";
+                if (pathLike) MarkOverrideRow(gridGlobal.Rows[rowIdx], hasOv);
             }
             SubscribeGridEvents(gridGlobal);
             tabGlobal.Controls.Add(gridGlobal);
@@ -125,14 +150,20 @@ namespace ConfigExcelEnhancer.UI
                 };
 
                 var grid = CreateGrid(allowEdit: true);
+                grid.Tag = ci; // 命令序号，供浏览/覆盖定位
                 foreach (var kv in cmd.XArgs)
                 {
-                    var rowIdx = grid.Rows.Add(false, kv.Key, kv.Value);
+                    var ovKey = OverrideKeyForXArg(ci, kv.Key);
+                    bool hasOv = _overrides.TryGetValue(ovKey, out var ovRaw);
+                    bool pathLike = IsPathLike(kv.Key, kv.Value);
+                    var displayVal = hasOv ? ovRaw! : kv.Value;
+                    var rowIdx = grid.Rows.Add(false, kv.Key, displayVal);
                     var keyCell = grid.Rows[rowIdx].Cells["colKey"];
                     var valCell = grid.Rows[rowIdx].Cells["colValue"];
                     keyCell.Tag = kv.Key;
-                    valCell.Tag = kv.Value;
-                    grid.Rows[rowIdx].Cells["colBrowse"].Value = IsPathLike(kv.Key, kv.Value) ? BrowseMarker : "";
+                    valCell.Tag = displayVal;
+                    grid.Rows[rowIdx].Cells["colBrowse"].Value = pathLike ? BrowseMarker : "";
+                    if (pathLike) MarkOverrideRow(grid.Rows[rowIdx], hasOv);
                 }
                 SubscribeGridEvents(grid);
                 grid.Dock = DockStyle.Fill;
@@ -145,6 +176,7 @@ namespace ConfigExcelEnhancer.UI
 
             _isPopulating = false;
             _isDirty = false;
+            ValidateAllPathCells();
             UpdateButtonStates();
         }
 
@@ -154,17 +186,57 @@ namespace ConfigExcelEnhancer.UI
             grid.CellValueChanged += OnGridCellValueChanged;
             grid.UserDeletedRow += OnGridUserDeletedRow;
             grid.UserAddedRow += OnGridUserAddedRow;
+            grid.MouseDown += OnGridMouseDown;
+        }
+
+        /// <summary>右键已覆盖的路径行 → 弹出「清除本地覆盖」菜单。</summary>
+        private void OnGridMouseDown(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right || sender is not DataGridView grid) return;
+            var hit = grid.HitTest(e.X, e.Y);
+            if (hit.RowIndex < 0 || grid.Rows[hit.RowIndex].IsNewRow) return;
+
+            var row = grid.Rows[hit.RowIndex];
+            var key = row.Cells["colKey"].Value?.ToString() ?? "";
+            bool isGlobal = grid.Tag?.ToString() == "global";
+            var (ovKey, _, _) = ResolveRowBaseline(grid, key, isGlobal);
+            if (!_overrides.ContainsKey(ovKey)) return; // 仅对存在覆盖的行显示
+
+            _ctxGrid = grid;
+            _ctxRowIndex = hit.RowIndex;
+            grid.ClearSelection();
+            row.Selected = true;
+            _rowMenu.Show(grid, e.Location);
+        }
+
+        private void OnClearOverrideClick(object? sender, EventArgs e)
+        {
+            if (_ctxGrid == null || _ctxRowIndex < 0 || _ctxRowIndex >= _ctxGrid.Rows.Count) return;
+            var grid = _ctxGrid;
+            var row = grid.Rows[_ctxRowIndex];
+            var key = row.Cells["colKey"].Value?.ToString() ?? "";
+            bool isGlobal = grid.Tag?.ToString() == "global";
+            var (ovKey, _, baselineDisplay) = ResolveRowBaseline(grid, key, isGlobal);
+
+            _overrides.Remove(ovKey);
+            _isPopulating = true; // 避免编程赋值触发 CellValueChanged
+            row.Cells["colValue"].Value = baselineDisplay;
+            _isPopulating = false;
+            MarkOverrideRow(row, false);
+            PersistOverrides();
+            ValidateAllPathCells();
+            UpdateButtonStates();
         }
 
         private static DataGridView CreateGrid(bool allowEdit)
         {
             var colDirty = new DataGridViewCheckBoxColumn
             {
-                HeaderText = "已修改",
+                HeaderText = "本地配置",
                 Name = "colDirty",
                 ReadOnly = true,
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
-                Width = 54,
+                Width = 64,
                 Resizable = DataGridViewTriState.False,
                 SortMode = DataGridViewColumnSortMode.NotSortable
             };
@@ -204,7 +276,147 @@ namespace ConfigExcelEnhancer.UI
             return grid;
         }
 
-        // ── Dirty 追踪 ────────────────────────────────────────
+        // ── 本地路径覆盖 ──────────────────────────────────────
+
+        private static string OverrideKeyForSet(string varName) => $"set:{varName}";
+        private static string OverrideKeyForXArg(int cmdIndex, string xKey) => $"x:{cmdIndex}:{xKey}";
+
+        /// <summary>从 LocalState 载入当前 gen.bat 的覆盖工作副本。</summary>
+        private void LoadOverridesForCurrentBat()
+        {
+            _overrides = LocalState.LubanBatOverrides.TryGetValue(Settings.GenBatPath, out var d)
+                ? new Dictionary<string, string>(d)
+                : new Dictionary<string, string>();
+        }
+
+        /// <summary>取 set 变量的有效原始值（有本地覆盖用覆盖，否则用 gen.bat 基线）。</summary>
+        private string EffectiveSetVar(string name)
+        {
+            if (_overrides.TryGetValue(OverrideKeyForSet(name), out var ov)) return ov;
+            return _config != null && _config.SetVariables.TryGetValue(name, out var v) ? v : "";
+        }
+
+        /// <summary>当前有效 WORKSPACE 的绝对路径（考虑本地覆盖），用于解析其它路径与校验。</summary>
+        private string EffectiveWorkspaceAbs() => ResolveToAbsPath(EffectiveSetVar("WORKSPACE"), BatDir());
+
+        /// <summary>
+        /// 判断解析后的路径在本机是否可用：文件按是否存在判定；目录存在、或其父目录存在（输出目录可由导出时创建）即视为可用。
+        /// </summary>
+        private static bool IsPathAvailable(string absPath)
+        {
+            if (string.IsNullOrWhiteSpace(absPath)) return false;
+            if (absPath.Contains('%')) return false; // 仍含未展开的变量引用 → 视为不可用
+            try
+            {
+                bool looksFile = !string.IsNullOrEmpty(Path.GetExtension(absPath));
+                if (looksFile) return File.Exists(absPath);
+                if (Directory.Exists(absPath)) return true;
+                var parent = Path.GetDirectoryName(absPath);
+                return !string.IsNullOrEmpty(parent) && Directory.Exists(parent);
+            }
+            catch { return false; }
+        }
+
+        /// <summary>按「值」列当前显示值解析路径，不可用时单元格底色标红。</summary>
+        private void ApplyPathCellValidation(DataGridViewRow row)
+        {
+            var valCell = row.Cells["colValue"];
+            var disp = valCell.Value?.ToString() ?? "";
+            var abs = ResolveRaw(disp, BatDir(), EffectiveWorkspaceAbs());
+            bool ok = IsPathAvailable(abs);
+            valCell.Style.BackColor = ok ? SystemColors.Window : UITheme.CellErrorBack;
+            valCell.Style.SelectionBackColor = ok ? SystemColors.Highlight : UITheme.CellErrorSel;
+        }
+
+        /// <summary>校验所有路径行（值变更可能影响 WORKSPACE，从而影响其它行，故整体重算）。</summary>
+        private void ValidateAllPathCells()
+        {
+            for (int t = 0; t < tabsCommands.TabPages.Count; t++)
+            {
+                var grid = FindGridInTab(t);
+                if (grid == null) continue;
+                foreach (DataGridViewRow row in grid.Rows)
+                {
+                    if (row.IsNewRow) continue;
+                    if (row.Cells["colBrowse"].Value?.ToString() == BrowseMarker)
+                        ApplyPathCellValidation(row);
+                }
+            }
+        }
+
+        /// <summary>解析某路径行的覆盖键、gen.bat 基线原始值与基线显示值。</summary>
+        private (string ovKey, string baselineRaw, string baselineDisplay) ResolveRowBaseline(
+            DataGridView grid, string key, bool isGlobal)
+        {
+            var batDir = BatDir();
+            var workspace = GetWorkspacePath();
+            if (isGlobal)
+            {
+                var raw = _config != null && _config.SetVariables.TryGetValue(key, out var b) ? b : "";
+                return (OverrideKeyForSet(key), raw, FormatSetVarForDisplay(key, raw, batDir, workspace));
+            }
+            int ci = Convert.ToInt32(grid.Tag);
+            var rawx = _config != null && ci >= 0 && ci < _config.Commands.Count
+                       && _config.Commands[ci].XArgs.TryGetValue(key, out var bx) ? bx : "";
+            return (OverrideKeyForXArg(ci, key), rawx, rawx);
+        }
+
+        /// <summary>标记路径行是否处于本地覆盖状态（仅勾选「本地配置」列，不改背景色）。</summary>
+        private static void MarkOverrideRow(DataGridViewRow row, bool hasOverride)
+        {
+            if (row.Cells["colDirty"] is DataGridViewCheckBoxCell c) c.Value = hasOverride;
+        }
+
+        /// <summary>将 %WORKSPACE% 展开并解析为绝对路径（用于和浏览所选路径比对是否等于基线）。</summary>
+        private static string ResolveRaw(string raw, string batDir, string workspace)
+        {
+            if (string.IsNullOrEmpty(raw)) return raw;
+            var v = string.IsNullOrEmpty(workspace)
+                ? raw
+                : raw.Replace("%WORKSPACE%", workspace, StringComparison.OrdinalIgnoreCase);
+            return ResolveToAbsPath(v, batDir);
+        }
+
+        /// <summary>深拷贝配置并套用覆盖（set 变量名 / 命令序号+键），用于生成导出临时副本。</summary>
+        private static LubanConfig CloneConfigWithOverrides(LubanConfig src, Dictionary<string, string> overrides)
+        {
+            var clone = new LubanConfig
+            {
+                BatFilePath = src.BatFilePath,
+                SetVariables = new Dictionary<string, string>(src.SetVariables),
+                Commands = src.Commands.Select(cmd => new LubanDotnetCommand
+                {
+                    Label = cmd.Label,
+                    Args = new Dictionary<string, string>(cmd.Args),
+                    XArgs = new Dictionary<string, string>(cmd.XArgs)
+                }).ToList()
+            };
+
+            foreach (var kv in overrides)
+            {
+                if (kv.Key.StartsWith("set:", StringComparison.Ordinal))
+                {
+                    var name = kv.Key[4..];
+                    if (clone.SetVariables.ContainsKey(name)) clone.SetVariables[name] = kv.Value;
+                }
+                else if (kv.Key.StartsWith("x:", StringComparison.Ordinal))
+                {
+                    // 格式 x:{序号}:{键}；键为 [\w.]，不含冒号
+                    var rest = kv.Key[2..];
+                    var sep = rest.IndexOf(':');
+                    if (sep > 0 && int.TryParse(rest[..sep], out var ci)
+                        && ci >= 0 && ci < clone.Commands.Count)
+                    {
+                        var xKey = rest[(sep + 1)..];
+                        if (clone.Commands[ci].XArgs.ContainsKey(xKey))
+                            clone.Commands[ci].XArgs[xKey] = kv.Value;
+                    }
+                }
+            }
+            return clone;
+        }
+
+        // ── 非路径参数改动追踪（写回共享 gen.bat 用）────────────
 
         private void OnGridCellValueChanged(object? sender, DataGridViewCellEventArgs e)
         {
@@ -212,8 +424,56 @@ namespace ConfigExcelEnhancer.UI
             var colName = grid.Columns[e.ColumnIndex].Name;
             if (colName != "colKey" && colName != "colValue") return;
 
-            RefreshRowDirtyVisual(grid.Rows[e.RowIndex]);
+            var row = grid.Rows[e.RowIndex];
+            bool isPathRow = row.Cells["colBrowse"].Value?.ToString() == BrowseMarker;
+            if (isPathRow && colName == "colValue")
+            {
+                // 路径行手动输入 → 作为本地覆盖处理（与「浏览」一致）
+                var key = row.Cells["colKey"].Value?.ToString() ?? "";
+                bool isGlobal = grid.Tag?.ToString() == "global";
+                var typed = row.Cells["colValue"].Value?.ToString() ?? "";
+                ApplyTypedPathOverride(grid, e.RowIndex, isGlobal, key, typed);
+                return;
+            }
+
+            // 非路径参数的改动不再做行高亮；是否有待写入共享的改动由「写入 gen.bat（共享）」按钮可用状态提示
             _isDirty = true;
+            UpdateButtonStates();
+        }
+
+        /// <summary>将路径行手动输入的值设为本地覆盖；为空或等于 gen.bat 基线则取消覆盖。</summary>
+        private void ApplyTypedPathOverride(DataGridView grid, int rowIndex, bool isGlobal, string key, string typed)
+        {
+            if (_config == null) return;
+            var row = grid.Rows[rowIndex];
+            var (ovKey, baselineRaw, baselineDisplay) = ResolveRowBaseline(grid, key, isGlobal);
+            var batDir = BatDir();
+            var workspace = EffectiveWorkspaceAbs();
+            var baselineAbs = ResolveRaw(baselineRaw, batDir, workspace);
+            var typedAbs = ResolveRaw(typed, batDir, workspace);
+
+            bool revert = string.IsNullOrWhiteSpace(typed)
+                || string.Equals(typed, baselineDisplay, StringComparison.OrdinalIgnoreCase)
+                || (!string.IsNullOrEmpty(baselineAbs) && PathEquals(typedAbs, baselineAbs));
+
+            bool hasOv;
+            if (revert)
+            {
+                _overrides.Remove(ovKey);
+                hasOv = false;
+                _isPopulating = true; // 还原显示为基线值
+                row.Cells["colValue"].Value = baselineDisplay;
+                _isPopulating = false;
+            }
+            else
+            {
+                _overrides[ovKey] = typed;
+                hasOv = true;
+            }
+
+            MarkOverrideRow(row, hasOv);
+            PersistOverrides();
+            ValidateAllPathCells();
             UpdateButtonStates();
         }
 
@@ -231,40 +491,14 @@ namespace ConfigExcelEnhancer.UI
             UpdateButtonStates();
         }
 
-        private static void RefreshRowDirtyVisual(DataGridViewRow row)
-        {
-            bool rowIsDirty = false;
-
-            foreach (DataGridViewCell cell in row.Cells)
-            {
-                var colName = cell.OwningColumn?.Name;
-                if (colName != "colKey" && colName != "colValue") continue;
-
-                var original = cell.Tag?.ToString();
-                var current = cell.Value?.ToString() ?? "";
-                bool cellIsDirty = original == null ? !string.IsNullOrEmpty(current) : current != original;
-
-                if (cellIsDirty)
-                {
-                    rowIsDirty = true;
-                    break;
-                }
-            }
-
-            if (row.Cells["colDirty"] is DataGridViewCheckBoxCell dirtyCell)
-                dirtyCell.Value = rowIsDirty;
-
-            row.DefaultCellStyle.BackColor = rowIsDirty ? UITheme.RowDirty : SystemColors.Window;
-            row.DefaultCellStyle.SelectionBackColor = rowIsDirty
-                ? UITheme.RowDirtySel
-                : SystemColors.Highlight;
-        }
+        /// <summary>本地配置是否与 gen.bat 共享配置存在差异（有路径覆盖或未写入的非路径改动）。</summary>
+        private bool HasLocalDifferences() => _overrides.Count > 0 || _isDirty;
 
         private void UpdateButtonStates()
         {
-            btnSave.Enabled = _isDirty;
-            btnReset.Enabled = _isDirty;
-            btnSave.Text = _isDirty ? "● 保存配置" : "保存配置";
+            bool diff = HasLocalDifferences();
+            btnReset.Enabled = diff;
+            btnWriteShared.Enabled = diff;
         }
 
         // ── 目录 / 文件浏览 ───────────────────────────────────
@@ -281,15 +515,10 @@ namespace ConfigExcelEnhancer.UI
             var currentVal = valCell.Value?.ToString() ?? "";
 
             bool isGlobal = grid.Tag?.ToString() == "global";
-            bool isWorkspaceRow = isGlobal && key.Equals("WORKSPACE", StringComparison.OrdinalIgnoreCase);
-            // 含 %WORKSPACE% 变量引用的行（LUBAN_DLL、CONF_ROOT 及 -x 参数）→ 校验后用 %WORKSPACE%\... 表示
-            bool useWorkspaceNotation = !isGlobal
-                || currentVal.StartsWith("%WORKSPACE%", StringComparison.OrdinalIgnoreCase);
-
             var workspace = GetWorkspacePath();
             var batDir = BatDir();
 
-            // 解析当前值为绝对路径
+            // 解析当前值为绝对路径，仅用作对话框初始位置
             var resolvedVal = currentVal;
             if (!string.IsNullOrEmpty(workspace))
                 resolvedVal = resolvedVal.Replace("%WORKSPACE%", workspace, StringComparison.OrdinalIgnoreCase);
@@ -310,9 +539,7 @@ namespace ConfigExcelEnhancer.UI
 
                 if (fileDlg.ShowDialog() != DialogResult.OK) return;
 
-                var selectedFile = Path.GetFullPath(fileDlg.FileName);
-                valCell.Value = ToWorkspaceRelative(selectedFile, workspace) ?? selectedFile;
-                ApplyCellChange(valCell);
+                SetOverrideFromBrowse(grid, e.RowIndex, isGlobal, key, Path.GetFullPath(fileDlg.FileName));
                 return;
             }
 
@@ -330,87 +557,131 @@ namespace ConfigExcelEnhancer.UI
 
             if (dlg.ShowDialog() != DialogResult.OK) return;
 
-            var selected = Path.GetFullPath(dlg.SelectedPath);
+            SetOverrideFromBrowse(grid, e.RowIndex, isGlobal, key, Path.GetFullPath(dlg.SelectedPath));
+        }
 
-            if (!useWorkspaceNotation)
+        /// <summary>
+        /// 将浏览所选的绝对路径设为该路径行的本地覆盖（接受 WORKSPACE 之外的任意路径——这正是要解决的场景）；
+        /// 若所选等于 gen.bat 基线值则取消覆盖。覆盖值存绝对路径，作为导出时注入的原始值。
+        /// </summary>
+        private void SetOverrideFromBrowse(DataGridView grid, int rowIndex, bool isGlobal, string key, string selectedAbs)
+        {
+            if (_config == null) return;
+            var batDir = BatDir();
+            var workspace = GetWorkspacePath();
+            var row = grid.Rows[rowIndex];
+
+            var (ovKey, baselineRaw, baselineDisplay) = ResolveRowBaseline(grid, key, isGlobal);
+            var baselineAbs = ResolveRaw(baselineRaw, batDir, workspace);
+            bool sameAsBaseline = !string.IsNullOrEmpty(baselineAbs) && PathEquals(selectedAbs, baselineAbs);
+
+            bool hasOv;
+            if (sameAsBaseline)
             {
-                // WORKSPACE 行：直接写绝对路径，保存时转回相对路径
-                valCell.Value = selected;
+                _overrides.Remove(ovKey);
+                hasOv = false;
             }
             else
             {
-                // 其余行：验证在 WORKSPACE 下，存为 %WORKSPACE%\... 格式
-                var wsPath = ToWorkspaceRelative(selected, workspace);
-                if (wsPath == null)
-                {
-                    Log($"所选目录不在 WORKSPACE（{workspace}）下，已取消。", LogLevel.Warn);
-                    return;
-                }
-                valCell.Value = wsPath;
+                _overrides[ovKey] = selectedAbs;
+                hasOv = true;
             }
 
-            ApplyCellChange(valCell);
-        }
+            _isPopulating = true; // 避免编程赋值触发 CellValueChanged 误置基线 dirty
+            row.Cells["colValue"].Value = hasOv ? selectedAbs : baselineDisplay;
+            _isPopulating = false;
 
-        /// <summary>将绝对路径转为 %WORKSPACE%\子路径；不在 workspace 下则返回 null。</summary>
-        private static string? ToWorkspaceRelative(string absPath, string workspace)
-        {
-            if (string.IsNullOrEmpty(workspace)) return null;
-            var wsFull = Path.GetFullPath(workspace).TrimEnd(Path.DirectorySeparatorChar);
-            if (absPath.TrimEnd(Path.DirectorySeparatorChar).Equals(wsFull, StringComparison.OrdinalIgnoreCase))
-                return "%WORKSPACE%";
-            if (absPath.StartsWith(wsFull + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-            {
-                var rel = Path.GetRelativePath(wsFull, absPath);
-                return $"%WORKSPACE%\\{rel}";
-            }
-            return null;
-        }
-
-        private void ApplyCellChange(DataGridViewCell cell)
-        {
-            RefreshRowDirtyVisual(cell.OwningRow);
-            _isDirty = true;
+            MarkOverrideRow(row, hasOv);
+            PersistOverrides();
+            ValidateAllPathCells();
             UpdateButtonStates();
         }
 
-        // ── 保存 / 重置 ───────────────────────────────────────
-
-        private bool SaveConfig()
+        private static bool PathEquals(string a, string b)
         {
-            if (_config == null)
-            {
-                Log("未加载 gen.bat。", LogLevel.Warn);
-                return false;
-            }
-
-            ReadFromGrids();
             try
             {
-                LubanBatParser.Save(_config);
-                PopulateTabs(); // 重置 dirty 状态
-                Log("配置已写回 gen.bat。", LogLevel.Ok);
-                return true;
+                return string.Equals(
+                    Path.GetFullPath(a).TrimEnd(Path.DirectorySeparatorChar),
+                    Path.GetFullPath(b).TrimEnd(Path.DirectorySeparatorChar),
+                    StringComparison.OrdinalIgnoreCase);
             }
-            catch (Exception ex)
+            catch
             {
-                Log($"保存失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
-                return false;
+                return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
             }
         }
 
-        private void btnSave_Click(object sender, EventArgs e)
+        // ── 自动保存 / 重置 / 写入共享 ─────────────────────────
+
+        /// <summary>把当前本地路径覆盖即时写入 local_state.json（值改动时自动调用，静默无日志）。</summary>
+        private void PersistOverrides()
         {
-            SaveConfig();
+            if (string.IsNullOrEmpty(Settings.GenBatPath)) return;
+            try
+            {
+                if (_overrides.Count > 0)
+                    LocalState.LubanBatOverrides[Settings.GenBatPath] = new Dictionary<string, string>(_overrides);
+                else
+                    LocalState.LubanBatOverrides.Remove(Settings.GenBatPath);
+                LocalStateManager.Save(LocalState);
+            }
+            catch (Exception ex)
+            {
+                Log($"自动保存本地路径失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
+            }
+        }
+
+        private void btnWriteShared_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show(
+                    "将把当前的本地配置（含路径覆盖）写入共享的 gen.bat。\n" +
+                    "gen.bat 进版本控制，此修改会影响团队其他成员，且本机的绝对路径可能在他人机器上失效。\n\n确定继续？",
+                    "写入 gen.bat（共享）", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)
+                != DialogResult.OK)
+                return;
+
+            if (_config == null)
+            {
+                Log("未加载 gen.bat。", LogLevel.Warn);
+                return;
+            }
+
+            ReadEffectiveFromGrids();
+            try
+            {
+                LubanBatParser.Save(_config);
+                // 当前有效值已固化为 gen.bat 基线，本机覆盖不再需要 → 清空并持久化
+                _overrides.Clear();
+                PersistOverrides();
+                PopulateTabs();
+                Log("本地配置已写入共享 gen.bat。", LogLevel.Ok);
+            }
+            catch (Exception ex)
+            {
+                Log($"写入 gen.bat 失败：{LogLibrary.FormatException(ex)}", LogLevel.Error);
+            }
         }
 
         private void btnReset_Click(object sender, EventArgs e)
         {
-            PopulateTabs();
-            Log("已重置所有修改。", LogLevel.Ok);
+            if (MessageBox.Show(
+                    "将清除本机的所有路径覆盖与未写入的改动，还原为 gen.bat 的共享配置。\n\n确定继续？",
+                    "重置", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)
+                != DialogResult.OK)
+                return;
+
+            _overrides.Clear();
+            PersistOverrides();
+            PopulateTabs(); // 重新载入（覆盖已空）→ 回到 gen.bat 基线
+            Log("已清除本地覆盖，还原为 gen.bat 共享配置。", LogLevel.Ok);
         }
 
-        private void ReadFromGrids()
+        /// <summary>
+        /// 从 grid 读回到 _config，用于写入共享 gen.bat。
+        /// 采用各行当前显示的有效值（含本机覆盖），即把本地配置固化为共享基线。
+        /// </summary>
+        private void ReadEffectiveFromGrids()
         {
             if (_config == null || tabsCommands.TabPages.Count == 0) return;
 
@@ -480,21 +751,21 @@ namespace ConfigExcelEnhancer.UI
         {
             if (locked)
             {
-                _preLockSaveEnabled = btnSave.Enabled;
                 _preLockResetEnabled = btnReset.Enabled;
+                _preLockWriteSharedEnabled = btnWriteShared.Enabled;
                 pnlTop.Enabled = false;
                 pnlConfigActions.Enabled = false;
                 tabsCommands.Enabled = false;
-                btnSave.Enabled = false;
                 btnReset.Enabled = false;
+                btnWriteShared.Enabled = false;
             }
             else
             {
                 pnlTop.Enabled = true;
                 pnlConfigActions.Enabled = true;
                 tabsCommands.Enabled = true;
-                btnSave.Enabled = _preLockSaveEnabled;
                 btnReset.Enabled = _preLockResetEnabled;
+                btnWriteShared.Enabled = _preLockWriteSharedEnabled;
             }
         }
 
@@ -510,16 +781,9 @@ namespace ConfigExcelEnhancer.UI
                 return Task.FromResult(false);
             }
 
-            // 如果有未保存的修改，先自动保存
+            // 本地路径覆盖已在改动时即时保存，此处无需再存
             if (_isDirty)
-            {
-                Log("检测到未保存的配置修改，正在自动保存...", LogLevel.Info);
-                if (!SaveConfig())
-                {
-                    Log("自动保存失败，已取消执行导表。", LogLevel.Error);
-                    return Task.FromResult(false);
-                }
-            }
+                Log("提示：有未写入的非路径参数改动（grid 中），本次按 gen.bat 现有内容执行；如需生效请点「写入 gen.bat（共享）」。", LogLevel.Warn);
 
             var tcs = new TaskCompletionSource<bool>();
 
@@ -564,6 +828,7 @@ namespace ConfigExcelEnhancer.UI
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
                 _runner = null;
+                CleanupTempBat();
                 Log("─ 结束 ─", LogLevel.Info);
                 LogDivider();
                 tcs.TrySetResult(success);
@@ -571,7 +836,7 @@ namespace ConfigExcelEnhancer.UI
 
             try
             {
-                _runner.Run(Settings.GenBatPath);
+                _runner.Run(BuildRunBatPath());
             }
             catch (Exception ex)
             {
@@ -581,10 +846,48 @@ namespace ConfigExcelEnhancer.UI
                 btnRun.Enabled = true;
                 btnCancel.Enabled = false;
                 ProgressBarHelper.SetProgress(pbRun, 100);
+                CleanupTempBat();
                 tcs.TrySetResult(false);
             }
 
             return tcs.Task;
+        }
+
+        /// <summary>
+        /// 确定本次实际运行的 bat 路径：有本地覆盖时，生成套用覆盖的临时副本（与 gen.bat 同目录，
+        /// 使 %~dp0 与相对路径仍正确解析），否则直接运行原 gen.bat。临时副本路径记于 _tempBatPath，结束后清理。
+        /// </summary>
+        private string BuildRunBatPath()
+        {
+            _tempBatPath = null;
+            if (_overrides.Count == 0 || _config == null)
+                return Settings.GenBatPath;
+
+            try
+            {
+                var eff = CloneConfigWithOverrides(_config, _overrides);
+                var tempPath = Path.Combine(BatDir(), LocalGenBatName);
+                if (File.Exists(tempPath)) File.Delete(tempPath);
+                LubanBatParser.Save(eff, tempPath);
+                _tempBatPath = tempPath;
+                Log($"已套用 {_overrides.Count} 项本地路径覆盖（临时副本运行，不改动 gen.bat）。", LogLevel.Info);
+                return tempPath;
+            }
+            catch (Exception ex)
+            {
+                Log($"生成本地副本失败，改用原 gen.bat 执行：{LogLibrary.FormatException(ex)}", LogLevel.Warn);
+                _tempBatPath = null;
+                return Settings.GenBatPath;
+            }
+        }
+
+        /// <summary>删除本次导出生成的 gen.bat 临时副本。</summary>
+        private void CleanupTempBat()
+        {
+            if (string.IsNullOrEmpty(_tempBatPath)) return;
+            try { if (File.Exists(_tempBatPath)) File.Delete(_tempBatPath); }
+            catch { /* 临时文件清理失败不影响主流程 */ }
+            _tempBatPath = null;
         }
 
         private async void btnRun_Click(object sender, EventArgs e)

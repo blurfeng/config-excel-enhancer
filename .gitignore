@@ -315,6 +315,9 @@ paket-files/
 .idea/
 *.sln.iml
 
+# ConfigExcelEnhancer：导出 Luban 时套用本地路径覆盖的 gen.bat 临时副本（正常跑完即删，此处兜底防崩溃残留）
+__cee_local_gen.bat
+
 # ClaudiaIDE extension
 .claudiaideconfig
 

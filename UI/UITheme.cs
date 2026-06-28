@@ -16,5 +16,7 @@ namespace ConfigExcelEnhancer.UI
         public static readonly Color RowDirty     = Color.FromArgb(255, 255, 200); // 未保存修改行底色
         public static readonly Color RowDirtySel  = Color.FromArgb(200, 195, 120); // 未保存修改行选中底色
         public static readonly Color CellWarnBack = Color.FromArgb(255, 224, 178); // 失效目标路径警示底色（淡橙，区别于脏行淡黄）
+        public static readonly Color CellErrorBack = Color.FromArgb(255, 205, 205); // 路径不可用（解析后找不到）单元格底色（淡红）
+        public static readonly Color CellErrorSel  = Color.FromArgb(229, 150, 150); // 上者选中态
     }
 }

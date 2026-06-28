@@ -15,8 +15,8 @@ namespace ConfigExcelEnhancer.Core
         [GeneratedRegex(@"^(\s*set\s+)(\w+)(=)(.*)$", RegexOptions.IgnoreCase)]
         private static partial Regex SetVarRegex();
 
-        // 匹配 -x key=value；值在空白字符或 ^（续行符）处截止
-        [GeneratedRegex(@"-x\s+([\w.]+)=([^\s^]+)")]
+        // 匹配 -x key=value；值为带引号串（"..."，可含空格）或无空白/无 ^（续行符）的裸串
+        [GeneratedRegex(@"-x\s+([\w.]+)=(""[^""]*""|[^\s^]+)")]
         private static partial Regex XArgRegex();
 
         /// <summary>
@@ -90,6 +90,7 @@ namespace ConfigExcelEnhancer.Core
         /// </summary>
         private static void ParseCommandArgs(string cmdLine, LubanDotnetCommand cmd)
         {
+            // 标准参数 -t/-d/-c/--conf 按 token 提取（其值不含空格）
             var tokens = cmdLine.Split((char[])[' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < tokens.Length; i++)
             {
@@ -98,21 +99,24 @@ namespace ConfigExcelEnhancer.Core
                     cmd.Args[tok.TrimStart('-')] = tokens[++i];
                 else if (tok == "--conf" && i + 1 < tokens.Length)
                     cmd.Args["conf"] = tokens[++i];
-                else if (tok == "-x" && i + 1 < tokens.Length)
-                {
-                    var kv = tokens[++i].Trim('"');
-                    var eq = kv.IndexOf('=');
-                    if (eq > 0)
-                        cmd.XArgs[kv[..eq]] = kv[(eq + 1)..];
-                }
             }
+
+            // -x 参数用正则提取，正确处理带引号（含空格）的值；存入时剥掉外层引号
+            foreach (Match m in XArgRegex().Matches(cmdLine))
+                cmd.XArgs[m.Groups[1].Value] = m.Groups[2].Value.Trim('"');
         }
 
         /// <summary>
-        /// 将修改后的配置写回 bat 文件，保留原始格式和注释。
-        /// 只更新 set 变量值和各命令块内的 -x 参数值。
+        /// 将修改后的配置写回原 bat 文件（<see cref="LubanConfig.BatFilePath"/>），保留原始格式和注释。
         /// </summary>
-        public static void Save(LubanConfig config)
+        public static void Save(LubanConfig config) => Save(config, config.BatFilePath);
+
+        /// <summary>
+        /// 以 <see cref="LubanConfig.BatFilePath"/> 为源文件按行替换，将结果写出到 <paramref name="targetPath"/>。
+        /// 保留原始格式和注释，只更新 set 变量值和各命令块内的 -x 参数值。
+        /// 当 targetPath 不同于源文件时，可用于生成套用本地覆盖的临时副本而不改动原文件。
+        /// </summary>
+        public static void Save(LubanConfig config, string targetPath)
         {
             var lines = File.ReadAllLines(config.BatFilePath);
             var result = new List<string>(lines.Length);
@@ -150,7 +154,7 @@ namespace ConfigExcelEnhancer.Core
                     {
                         var key = m.Groups[1].Value;
                         return cmd.XArgs.TryGetValue(key, out var val)
-                            ? $"-x {key}={val}"
+                            ? $"-x {key}={QuoteIfNeeded(val)}"
                             : m.Value;
                     });
 
@@ -168,7 +172,15 @@ namespace ConfigExcelEnhancer.Core
                 result.Add(line);
             }
 
-            File.WriteAllLines(config.BatFilePath, result);
+            File.WriteAllLines(targetPath, result);
+        }
+
+        /// <summary>值含空白时用引号包裹（避免命令行按空格拆分）；已含引号或无空白则原样返回。</summary>
+        private static string QuoteIfNeeded(string val)
+        {
+            if (string.IsNullOrEmpty(val)) return val;
+            if (val.StartsWith('"') && val.EndsWith('"')) return val;
+            return val.IndexOf(' ') >= 0 || val.IndexOf('\t') >= 0 ? $"\"{val}\"" : val;
         }
     }
 }

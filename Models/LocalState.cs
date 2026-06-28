@@ -118,5 +118,15 @@ namespace ConfigExcelEnhancer.Models
         /// 导出模式：0 = 按列表，1 = 批量导出。属个人操作习惯的当前选择，机器私有。
         /// </summary>
         public int ExcelExportMode { get; set; } = 0;
+
+        // ── Luban 导表 ────────────────────────────────────────
+
+        /// <summary>
+        /// Luban gen.bat 的机器私有路径覆盖。外层键 = gen.bat 绝对路径；
+        /// 内层键 = 覆盖目标标识（"set:{变量名}" 或 "x:{命令序号}:{-x键}"）；值 = 本机注入的原始路径值（绝对路径）。
+        /// gen.bat 中的路径常写死且无法相对化（如本机 Luban 工具、指向其他工程的输出目录），
+        /// 各机器路径不同。此处存机器私有覆盖，导出时临时注入 gen.bat 副本运行，避免污染团队共享的 gen.bat。
+        /// </summary>
+        public Dictionary<string, Dictionary<string, string>> LubanBatOverrides { get; set; } = new();
     }
 }
