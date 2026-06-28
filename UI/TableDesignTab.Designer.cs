@@ -92,7 +92,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseSource
             // 
             btnBrowseSource.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseSource.Location = new Point(578, 9);
+            btnBrowseSource.Location = new Point(548, 9);
             btnBrowseSource.Name = "btnBrowseSource";
             btnBrowseSource.Size = new Size(75, 28);
             btnBrowseSource.TabIndex = 3;
@@ -103,7 +103,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             btnOpenSource.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenSource.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenSource.Location = new Point(548, 9);
+            btnOpenSource.Location = new Point(625, 9);
             btnOpenSource.Name = "btnOpenSource";
             btnOpenSource.Size = new Size(28, 28);
             btnOpenSource.TabIndex = 4;

@@ -400,7 +400,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseXmlFolder
             // 
             btnBrowseXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseXmlFolder.Location = new Point(677, 6);
+            btnBrowseXmlFolder.Location = new Point(647, 6);
             btnBrowseXmlFolder.Name = "btnBrowseXmlFolder";
             btnBrowseXmlFolder.Size = new Size(75, 28);
             btnBrowseXmlFolder.TabIndex = 2;
@@ -411,7 +411,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             btnOpenXmlFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenXmlFolder.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenXmlFolder.Location = new Point(647, 6);
+            btnOpenXmlFolder.Location = new Point(724, 6);
             btnOpenXmlFolder.Name = "btnOpenXmlFolder";
             btnOpenXmlFolder.Size = new Size(28, 28);
             btnOpenXmlFolder.TabIndex = 6;
@@ -430,7 +430,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseTemplate
             // 
             btnBrowseTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseTemplate.Location = new Point(677, 44);
+            btnBrowseTemplate.Location = new Point(647, 44);
             btnBrowseTemplate.Name = "btnBrowseTemplate";
             btnBrowseTemplate.Size = new Size(75, 28);
             btnBrowseTemplate.TabIndex = 5;
@@ -441,7 +441,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             btnOpenTemplate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenTemplate.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenTemplate.Location = new Point(647, 44);
+            btnOpenTemplate.Location = new Point(724, 44);
             btnOpenTemplate.Name = "btnOpenTemplate";
             btnOpenTemplate.Size = new Size(28, 28);
             btnOpenTemplate.TabIndex = 7;
@@ -622,7 +622,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseListFolder
             // 
             btnBrowseListFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseListFolder.Location = new Point(670, 3);
+            btnBrowseListFolder.Location = new Point(640, 3);
             btnBrowseListFolder.Name = "btnBrowseListFolder";
             btnBrowseListFolder.Size = new Size(75, 28);
             btnBrowseListFolder.TabIndex = 2;
@@ -633,7 +633,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             btnOpenListFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenListFolder.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenListFolder.Location = new Point(640, 3);
+            btnOpenListFolder.Location = new Point(717, 3);
             btnOpenListFolder.Name = "btnOpenListFolder";
             btnOpenListFolder.Size = new Size(28, 28);
             btnOpenListFolder.TabIndex = 3;
@@ -675,7 +675,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseTargetFolder
             // 
             btnBrowseTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseTargetFolder.Location = new Point(670, 3);
+            btnBrowseTargetFolder.Location = new Point(640, 3);
             btnBrowseTargetFolder.Name = "btnBrowseTargetFolder";
             btnBrowseTargetFolder.Size = new Size(75, 28);
             btnBrowseTargetFolder.TabIndex = 2;
@@ -686,7 +686,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             btnOpenTargetFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenTargetFolder.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenTargetFolder.Location = new Point(640, 3);
+            btnOpenTargetFolder.Location = new Point(717, 3);
             btnOpenTargetFolder.Name = "btnOpenTargetFolder";
             btnOpenTargetFolder.Size = new Size(28, 28);
             btnOpenTargetFolder.TabIndex = 3;
@@ -786,7 +786,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseSingleTarget
             // 
             btnBrowseSingleTarget.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseSingleTarget.Location = new Point(608, 3);
+            btnBrowseSingleTarget.Location = new Point(578, 3);
             btnBrowseSingleTarget.Name = "btnBrowseSingleTarget";
             btnBrowseSingleTarget.Size = new Size(75, 28);
             btnBrowseSingleTarget.TabIndex = 3;
@@ -797,7 +797,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             btnOpenSingleTarget.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenSingleTarget.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenSingleTarget.Location = new Point(578, 3);
+            btnOpenSingleTarget.Location = new Point(655, 3);
             btnOpenSingleTarget.Name = "btnOpenSingleTarget";
             btnOpenSingleTarget.Size = new Size(28, 28);
             btnOpenSingleTarget.TabIndex = 2;
@@ -829,7 +829,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseSingleXml
             // 
             btnBrowseSingleXml.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseSingleXml.Location = new Point(608, 3);
+            btnBrowseSingleXml.Location = new Point(578, 3);
             btnBrowseSingleXml.Name = "btnBrowseSingleXml";
             btnBrowseSingleXml.Size = new Size(75, 28);
             btnBrowseSingleXml.TabIndex = 3;
@@ -840,7 +840,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             btnOpenSingleXml.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenSingleXml.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenSingleXml.Location = new Point(578, 3);
+            btnOpenSingleXml.Location = new Point(655, 3);
             btnOpenSingleXml.Name = "btnOpenSingleXml";
             btnOpenSingleXml.Size = new Size(28, 28);
             btnOpenSingleXml.TabIndex = 2;

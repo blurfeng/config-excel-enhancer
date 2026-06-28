@@ -94,7 +94,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowse
             // 
             btnBrowse.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowse.Location = new Point(566, 2);
+            btnBrowse.Location = new Point(536, 2);
             btnBrowse.Name = "btnBrowse";
             btnBrowse.Size = new Size(75, 28);
             btnBrowse.TabIndex = 1;
@@ -105,7 +105,7 @@ namespace ConfigExcelEnhancer.UI
             //
             btnOpenDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenDir.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenDir.Location = new Point(536, 2);
+            btnOpenDir.Location = new Point(613, 2);
             btnOpenDir.Name = "btnOpenDir";
             btnOpenDir.Size = new Size(28, 28);
             btnOpenDir.TabIndex = 2;

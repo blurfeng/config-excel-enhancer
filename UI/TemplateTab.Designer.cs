@@ -108,7 +108,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseTablesClass
             // 
             btnBrowseTablesClass.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseTablesClass.Location = new Point(735, 7);
+            btnBrowseTablesClass.Location = new Point(705, 7);
             btnBrowseTablesClass.Name = "btnBrowseTablesClass";
             btnBrowseTablesClass.Size = new Size(75, 28);
             btnBrowseTablesClass.TabIndex = 2;
@@ -120,7 +120,7 @@ namespace ConfigExcelEnhancer.UI
             //
             btnOpenTablesClass.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenTablesClass.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenTablesClass.Location = new Point(705, 7);
+            btnOpenTablesClass.Location = new Point(782, 7);
             btnOpenTablesClass.Name = "btnOpenTablesClass";
             btnOpenTablesClass.Size = new Size(28, 28);
             btnOpenTablesClass.TabIndex = 3;
@@ -182,7 +182,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseJsonFile
             // 
             btnBrowseJsonFile.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseJsonFile.Location = new Point(504, 49);
+            btnBrowseJsonFile.Location = new Point(476, 49);
             btnBrowseJsonFile.Name = "btnBrowseJsonFile";
             btnBrowseJsonFile.Size = new Size(76, 26);
             btnBrowseJsonFile.TabIndex = 2;
@@ -194,7 +194,7 @@ namespace ConfigExcelEnhancer.UI
             //
             btnOpenJsonFile.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenJsonFile.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenJsonFile.Location = new Point(476, 49);
+            btnOpenJsonFile.Location = new Point(554, 49);
             btnOpenJsonFile.Name = "btnOpenJsonFile";
             btnOpenJsonFile.Size = new Size(26, 26);
             btnOpenJsonFile.TabIndex = 3;
@@ -214,7 +214,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseOutputDir
             // 
             btnBrowseOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseOutputDir.Location = new Point(505, 76);
+            btnBrowseOutputDir.Location = new Point(477, 76);
             btnBrowseOutputDir.Name = "btnBrowseOutputDir";
             btnBrowseOutputDir.Size = new Size(76, 26);
             btnBrowseOutputDir.TabIndex = 4;
@@ -226,7 +226,7 @@ namespace ConfigExcelEnhancer.UI
             //
             btnOpenOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenOutputDir.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenOutputDir.Location = new Point(477, 76);
+            btnOpenOutputDir.Location = new Point(555, 76);
             btnOpenOutputDir.Name = "btnOpenOutputDir";
             btnOpenOutputDir.Size = new Size(26, 26);
             btnOpenOutputDir.TabIndex = 5;
@@ -292,7 +292,7 @@ namespace ConfigExcelEnhancer.UI
             // btnBrowseIdsOutputDir
             // 
             btnBrowseIdsOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBrowseIdsOutputDir.Location = new Point(504, 49);
+            btnBrowseIdsOutputDir.Location = new Point(476, 49);
             btnBrowseIdsOutputDir.Name = "btnBrowseIdsOutputDir";
             btnBrowseIdsOutputDir.Size = new Size(76, 26);
             btnBrowseIdsOutputDir.TabIndex = 2;
@@ -304,7 +304,7 @@ namespace ConfigExcelEnhancer.UI
             //
             btnOpenIdsOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenIdsOutputDir.Font = new Font("Segoe UI Emoji", 9F);
-            btnOpenIdsOutputDir.Location = new Point(476, 49);
+            btnOpenIdsOutputDir.Location = new Point(554, 49);
             btnOpenIdsOutputDir.Name = "btnOpenIdsOutputDir";
             btnOpenIdsOutputDir.Size = new Size(26, 26);
             btnOpenIdsOutputDir.TabIndex = 3;
