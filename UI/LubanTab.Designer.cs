@@ -21,6 +21,7 @@ namespace ConfigExcelEnhancer.UI
             btnBrowseBat = new Button();
             btnOpenBat = new Button();
             pnlConfigActions = new Panel();
+            btnRefresh = new Button();
             btnReset = new Button();
             btnWriteShared = new Button();
             tabsCommands = new TabControl();
@@ -98,6 +99,7 @@ namespace ConfigExcelEnhancer.UI
             // 
             // pnlConfigActions
             // 
+            pnlConfigActions.Controls.Add(btnRefresh);
             pnlConfigActions.Controls.Add(btnReset);
             pnlConfigActions.Controls.Add(btnWriteShared);
             pnlConfigActions.Dock = DockStyle.Top;
@@ -106,6 +108,18 @@ namespace ConfigExcelEnhancer.UI
             pnlConfigActions.Size = new Size(665, 40);
             pnlConfigActions.TabIndex = 4;
             //
+            // btnRefresh
+            //
+            btnRefresh.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            btnRefresh.Font = new Font("Segoe UI Emoji", 9F);
+            btnRefresh.Location = new Point(12, 5);
+            btnRefresh.Name = "btnRefresh";
+            btnRefresh.Size = new Size(90, 28);
+            btnRefresh.TabIndex = 0;
+            btnRefresh.Text = "🔄 刷新";
+            toolTip.SetToolTip(btnRefresh, "按当前磁盘状态重新校验路径的红/绿显示（新建对应文件夹后点此即可更新，不重读 gen.bat、保留当前编辑）。");
+            btnRefresh.Click += btnRefresh_Click;
+            //
             // btnReset
             //
             btnReset.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -113,7 +127,7 @@ namespace ConfigExcelEnhancer.UI
             btnReset.Location = new Point(405, 5);
             btnReset.Name = "btnReset";
             btnReset.Size = new Size(80, 28);
-            btnReset.TabIndex = 0;
+            btnReset.TabIndex = 1;
             btnReset.Text = "重置";
             toolTip.SetToolTip(btnReset, "清除本机的所有路径覆盖与未写入改动，还原为 gen.bat 的共享配置（点击后需确认）。");
             btnReset.Click += btnReset_Click;
@@ -125,7 +139,7 @@ namespace ConfigExcelEnhancer.UI
             btnWriteShared.Location = new Point(493, 5);
             btnWriteShared.Name = "btnWriteShared";
             btnWriteShared.Size = new Size(160, 28);
-            btnWriteShared.TabIndex = 1;
+            btnWriteShared.TabIndex = 2;
             btnWriteShared.Text = "写入 gen.bat（共享）";
             toolTip.SetToolTip(btnWriteShared, "将当前本地配置（含路径覆盖）写入共享的 gen.bat（进版本控制，影响团队，点击后需确认）。");
             btnWriteShared.Click += btnWriteShared_Click;
@@ -240,6 +254,7 @@ namespace ConfigExcelEnhancer.UI
         private Button btnBrowseBat = null!;
         private Button btnOpenBat = null!;
         private Panel pnlConfigActions = null!;
+        private Button btnRefresh = null!;
         private Button btnReset = null!;
         private Button btnWriteShared = null!;
         private TabControl tabsCommands = null!;

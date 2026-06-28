@@ -245,8 +245,11 @@ namespace ConfigExcelEnhancer.Core
             sb.AppendLine("}");
 
             Directory.CreateDirectory(options.IdsOutputDirectory);
-            WriteFile(outputPath, sb.ToString());
-            log($"Ids 文件已生成（覆盖）：{fileName}（共 {options.Entries.Count} 条）", LogLevel.Ok);
+            bool written = WriteFileIfChanged(outputPath, sb.ToString());
+            if (written)
+                log($"Ids 文件已生成（覆盖）：{fileName}（共 {options.Entries.Count} 条）", LogLevel.Ok);
+            else
+                log($"Ids 文件内容未变，已跳过：{fileName}（共 {options.Entries.Count} 条）", LogLevel.Info);
         }
 
         // ── 工具方法 ─────────────────────────────────────────────────

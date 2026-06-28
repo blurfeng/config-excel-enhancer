@@ -663,6 +663,18 @@ namespace ConfigExcelEnhancer.UI
             }
         }
 
+        /// <summary>按当前磁盘状态重新校验所有路径行的红/绿显示（不重读 gen.bat，保留 grid 当前编辑与本地覆盖）。</summary>
+        private void btnRefresh_Click(object sender, EventArgs e)
+        {
+            if (_config == null)
+            {
+                Log("未加载 gen.bat，无可刷新的配置。", LogLevel.Warn);
+                return;
+            }
+            ValidateAllPathCells();
+            Log("已按当前磁盘状态刷新路径显示。", LogLevel.Ok);
+        }
+
         private void btnReset_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show(
@@ -829,6 +841,8 @@ namespace ConfigExcelEnhancer.UI
                 btnCancel.Enabled = false;
                 _runner = null;
                 CleanupTempBat();
+                // 导表过程中可能已自动创建原本不存在的文件夹 → 按当前磁盘状态刷新路径红/绿显示
+                ValidateAllPathCells();
                 Log("─ 结束 ─", LogLevel.Info);
                 LogDivider();
                 tcs.TrySetResult(success);

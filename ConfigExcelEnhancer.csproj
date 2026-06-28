@@ -29,6 +29,11 @@
     <!-- 调试符号嵌入，避免输出目录残留 .pdb -->
     <DebugType>embedded</DebugType>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="publish\**" />
+    <EmbeddedResource Remove="publish\**" />
+    <None Remove="publish\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Icon\ConfigExcelEnhancer.ico" />
