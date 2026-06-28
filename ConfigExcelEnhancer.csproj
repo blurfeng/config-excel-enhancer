@@ -15,6 +15,21 @@
     <ApplicationIcon>Icon\ConfigExcelEnhancer.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <!-- 发布为单文件（仅 Release 生效，Debug 构建/运行不受影响）。
+       框架依赖：目标机需预装 .NET 8 Desktop Runtime。
+       发布命令： dotnet publish -c Release -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <!-- 把原生依赖也打入 exe，保证产物真正只有一个文件 -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- 不裁剪：WinForms + Excel COM 依赖反射，裁剪会导致运行时崩溃 -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <!-- 调试符号嵌入，避免输出目录残留 .pdb -->
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
   <ItemGroup>
     <Content Include="Icon\ConfigExcelEnhancer.ico" />
   </ItemGroup>
