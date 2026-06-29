@@ -40,7 +40,9 @@ namespace ConfigExcelEnhancer.UI
             UpdateListCommonFolderEnabled(Settings.ExcelExportListCommonFolderEnabled);
             txtTargetFolder.Text       = Settings.ExcelExportTargetFolder;
             txtSingleXmlFile.Text      = LocalState.ExcelExportSingleXmlFile;
-            txtSingleTargetPath.Text   = LocalState.ExcelExportSingleTargetFolder;
+            rdoSingleTargetFolder.Checked = LocalState.ExcelExportSingleTargetMode != 1;
+            rdoSingleTargetFile.Checked   = LocalState.ExcelExportSingleTargetMode == 1;
+            ApplySingleTargetMode(LocalState.ExcelExportSingleTargetMode);
             txtPrefix.Text             = LocalState.ExcelExportNamePrefix;
             txtSuffix.Text             = LocalState.ExcelExportNameSuffix;
 
@@ -91,7 +93,14 @@ namespace ConfigExcelEnhancer.UI
             => LocalState.ExcelExportSingleXmlFile = txtSingleXmlFile.Text;
 
         private void txtSingleTargetPath_TextChanged(object sender, EventArgs e)
-            => LocalState.ExcelExportSingleTargetFolder = txtSingleTargetPath.Text;
+        {
+            // 切换目标形式时文本框由程序赋值，避免把另一形式的值误写入当前字段。
+            if (_loadingSingleTarget) return;
+            if (LocalState.ExcelExportSingleTargetMode == 1)
+                LocalState.ExcelExportSingleTargetFile = txtSingleTargetPath.Text;
+            else
+                LocalState.ExcelExportSingleTargetFolder = txtSingleTargetPath.Text;
+        }
 
         private void txtPrefix_TextChanged(object sender, EventArgs e)
             => LocalState.ExcelExportNamePrefix = txtPrefix.Text;
@@ -200,13 +209,72 @@ namespace ConfigExcelEnhancer.UI
                 ? txtSingleTargetPath.Text
                 : Settings.ExcelExportListTargetFolder;
 
-            var path = DialogHelper.BrowseFolder("选择导出 Excel 目标文件夹", initial);
-            if (path != null)
-                txtSingleTargetPath.Text = path;
+            if (LocalState.ExcelExportSingleTargetMode == 1)
+            {
+                // 文件形式：保存文件对话框，默认名按当前命名规则生成（仅作建议，可改）。
+                string className   = LocalState.ExcelExportSingleClassName?.Trim() ?? string.Empty;
+                string defaultName = string.IsNullOrEmpty(className)
+                    ? string.Empty
+                    : FunctionLibrary.BuildExcelFileName(
+                        className, LocalState.ExcelExportNameConvention, txtPrefix.Text, txtSuffix.Text);
+
+                var file = DialogHelper.BrowseSaveFile(
+                    "选择导出 Excel 目标文件", "Excel 文件 (*.xlsx)|*.xlsx", initial, defaultName);
+                if (file != null)
+                    txtSingleTargetPath.Text = file;
+            }
+            else
+            {
+                var path = DialogHelper.BrowseFolder("选择导出 Excel 目标文件夹", initial);
+                if (path != null)
+                    txtSingleTargetPath.Text = path;
+            }
         }
 
         private void btnClearSingleTarget_Click(object sender, EventArgs e)
             => txtSingleTargetPath.Text = string.Empty;
+
+        /// <summary>切换单独导出目标形式时为 true，避免文本框程序化赋值触发 TextChanged 误写另一字段。</summary>
+        private bool _loadingSingleTarget;
+
+        private void rdoSingleTargetFolder_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!rdoSingleTargetFolder.Checked) return;
+            LocalState.ExcelExportSingleTargetMode = 0;
+            ApplySingleTargetMode(0);
+        }
+
+        private void rdoSingleTargetFile_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!rdoSingleTargetFile.Checked) return;
+            LocalState.ExcelExportSingleTargetMode = 1;
+            ApplySingleTargetMode(1);
+        }
+
+        /// <summary>
+        /// 按目标形式（0 = 文件夹，1 = 文件）刷新目标行：还原对应形式已保存的路径文本与提示。
+        /// 文本框由程序赋值，故包裹 <see cref="_loadingSingleTarget"/> 守卫避免误写。
+        /// </summary>
+        private void ApplySingleTargetMode(int mode)
+        {
+            _loadingSingleTarget = true;
+            try
+            {
+                txtSingleTargetPath.Text = mode == 1
+                    ? LocalState.ExcelExportSingleTargetFile
+                    : LocalState.ExcelExportSingleTargetFolder;
+            }
+            finally
+            {
+                _loadingSingleTarget = false;
+            }
+
+            string tip = mode == 1
+                ? "选中数据类导出到此 Excel 文件；文件名以你选择的为准（不套用“文件命名/文件名”规则），文件存在则更新、不存在则新建（目录自动创建）。"
+                : "选中数据类导出到此文件夹；文件名按“文件命名/文件名”规则自动生成，文件存在则更新、不存在则新建（文件夹自动创建）。";
+            toolTip.SetToolTip(txtSingleTargetPath, tip);
+            toolTip.SetToolTip(btnBrowseSingleTarget, tip);
+        }
 
         // ── 列表模式：刷新列表 ────────────────────────────────────────────
 
@@ -562,6 +630,8 @@ namespace ConfigExcelEnhancer.UI
             btnClearSingleXml.Enabled      = !locked;
             btnRefreshSingle.Enabled       = !locked;
             dgvSingleClasses.Enabled       = !locked;
+            rdoSingleTargetFolder.Enabled  = !locked;
+            rdoSingleTargetFile.Enabled    = !locked;
             txtSingleTargetPath.Enabled    = !locked;
             btnBrowseSingleTarget.Enabled  = !locked;
             btnClearSingleTarget.Enabled   = !locked;
@@ -1034,18 +1104,15 @@ namespace ConfigExcelEnhancer.UI
             {
                 // 单独导出模式：
                 //  - 来源 = 单文件（若设）否则整个文件夹；继承上下文始终来自整个文件夹的 beanMap
-                //  - 取选中类（LocalState.ExcelExportSingleClassName），目标 = 目标文件夹 + 按命名规则生成的文件名
+                //  - 取选中类（LocalState.ExcelExportSingleClassName）
+                //  - 目标形式（ExcelExportSingleTargetMode）：
+                //      0 = 文件夹 → 目标文件夹 + 按命名规则生成的文件名
+                //      1 = 文件   → 直接使用指定的 .xlsx 路径（不套用命名规则）
                 //  - 目标存在 → 更新，不存在 → 新建（ExportAll/CreateExcel 自动处理）
-                string className    = LocalState.ExcelExportSingleClassName?.Trim() ?? string.Empty;
-                string targetFolder = txtSingleTargetPath.Text.Trim();
+                string className = LocalState.ExcelExportSingleClassName?.Trim() ?? string.Empty;
                 if (string.IsNullOrEmpty(className))
                 {
                     Log("请在列表中选择一个数据类。", LogLevel.Warn);
-                    return tasks;
-                }
-                if (string.IsNullOrEmpty(targetFolder))
-                {
-                    Log("请设置导出 Excel 目标文件夹。", LogLevel.Warn);
                     return tasks;
                 }
 
@@ -1059,9 +1126,30 @@ namespace ConfigExcelEnhancer.UI
                     return tasks;
                 }
 
-                string fileName  = FunctionLibrary.BuildExcelFileName(className, convention, prefix, suffix);
-                string targetPath = Path.Combine(targetFolder, fileName);
-                var    allFields  = BeanParser.GetAllFields(bean, beanMap);
+                string targetPath;
+                if (LocalState.ExcelExportSingleTargetMode == 1)
+                {
+                    string targetFile = txtSingleTargetPath.Text.Trim();
+                    if (string.IsNullOrEmpty(targetFile))
+                    {
+                        Log("请设置导出 Excel 目标文件。", LogLevel.Warn);
+                        return tasks;
+                    }
+                    targetPath = targetFile;
+                }
+                else
+                {
+                    string targetFolder = txtSingleTargetPath.Text.Trim();
+                    if (string.IsNullOrEmpty(targetFolder))
+                    {
+                        Log("请设置导出 Excel 目标文件夹。", LogLevel.Warn);
+                        return tasks;
+                    }
+                    string fileName = FunctionLibrary.BuildExcelFileName(className, convention, prefix, suffix);
+                    targetPath = Path.Combine(targetFolder, fileName);
+                }
+
+                var allFields = BeanParser.GetAllFields(bean, beanMap);
                 tasks.Add(new ExcelExportTask(bean, allFields, targetPath));
             }
             else

@@ -36,7 +36,8 @@ namespace ConfigExcelEnhancer.UI
             lblSingleXmlFile = new Label();
             btnClearSingleXml = new Button();
             btnRefreshSingle = new Button();
-            lblSingleTarget = new Label();
+            rdoSingleTargetFolder = new RadioButton();
+            rdoSingleTargetFile = new RadioButton();
             btnClearSingleTarget = new Button();
             btnRename = new Button();
             pnlSettings = new Panel();
@@ -341,15 +342,29 @@ namespace ConfigExcelEnhancer.UI
             toolTip.SetToolTip(btnRefreshSingle, "重新扫描 XML 来源，刷新可选的数据类列表。");
             btnRefreshSingle.Click += btnRefreshSingle_Click;
             // 
-            // lblSingleTarget
+            // rdoSingleTargetFolder
             // 
-            lblSingleTarget.AutoSize = true;
-            lblSingleTarget.Location = new Point(7, 9);
-            lblSingleTarget.Name = "lblSingleTarget";
-            lblSingleTarget.Size = new Size(146, 17);
-            lblSingleTarget.TabIndex = 0;
-            lblSingleTarget.Text = "导出 Excel 目标文件夹：";
-            toolTip.SetToolTip(lblSingleTarget, "选中数据类导出到此文件夹；文件名按“文件命名/文件名”规则自动生成，文件存在则更新、不存在则新建（文件夹自动创建）。");
+            rdoSingleTargetFolder.AutoSize = true;
+            rdoSingleTargetFolder.Checked = true;
+            rdoSingleTargetFolder.Location = new Point(7, 8);
+            rdoSingleTargetFolder.Name = "rdoSingleTargetFolder";
+            rdoSingleTargetFolder.Size = new Size(123, 21);
+            rdoSingleTargetFolder.TabIndex = 0;
+            rdoSingleTargetFolder.TabStop = true;
+            rdoSingleTargetFolder.Text = "导出 Excel 文件夹";
+            toolTip.SetToolTip(rdoSingleTargetFolder, "目标为文件夹：文件名按“文件命名/文件名”规则自动生成，文件存在则更新、不存在则新建（文件夹自动创建）。");
+            rdoSingleTargetFolder.CheckedChanged += rdoSingleTargetFolder_CheckedChanged;
+            // 
+            // rdoSingleTargetFile
+            // 
+            rdoSingleTargetFile.AutoSize = true;
+            rdoSingleTargetFile.Location = new Point(132, 8);
+            rdoSingleTargetFile.Name = "rdoSingleTargetFile";
+            rdoSingleTargetFile.Size = new Size(111, 21);
+            rdoSingleTargetFile.TabIndex = 1;
+            rdoSingleTargetFile.Text = "导出 Excel 文件";
+            toolTip.SetToolTip(rdoSingleTargetFile, "目标为指定的 .xlsx 文件：文件名以你选择的为准（不套用“文件命名/文件名”规则），文件存在则更新、不存在则新建（目录自动创建）。");
+            rdoSingleTargetFile.CheckedChanged += rdoSingleTargetFile_CheckedChanged;
             // 
             // btnClearSingleTarget
             // 
@@ -763,7 +778,8 @@ namespace ConfigExcelEnhancer.UI
             // 
             // pnlSingleTarget
             // 
-            pnlSingleTarget.Controls.Add(lblSingleTarget);
+            pnlSingleTarget.Controls.Add(rdoSingleTargetFolder);
+            pnlSingleTarget.Controls.Add(rdoSingleTargetFile);
             pnlSingleTarget.Controls.Add(txtSingleTargetPath);
             pnlSingleTarget.Controls.Add(btnBrowseSingleTarget);
             pnlSingleTarget.Controls.Add(btnOpenSingleTarget);
@@ -777,10 +793,10 @@ namespace ConfigExcelEnhancer.UI
             // txtSingleTargetPath
             // 
             txtSingleTargetPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtSingleTargetPath.Location = new Point(159, 5);
+            txtSingleTargetPath.Location = new Point(249, 5);
             txtSingleTargetPath.Name = "txtSingleTargetPath";
-            txtSingleTargetPath.Size = new Size(415, 23);
-            txtSingleTargetPath.TabIndex = 1;
+            txtSingleTargetPath.Size = new Size(325, 23);
+            txtSingleTargetPath.TabIndex = 2;
             txtSingleTargetPath.TextChanged += txtSingleTargetPath_TextChanged;
             // 
             // btnBrowseSingleTarget
@@ -1029,7 +1045,8 @@ namespace ConfigExcelEnhancer.UI
         private DataGridViewTextBoxColumn  colSingleClassName  = null!;
         private DataGridViewTextBoxColumn  colSingleSourceFile = null!;
         private Panel       pnlSingleTarget       = null!;
-        private Label       lblSingleTarget       = null!;
+        private RadioButton rdoSingleTargetFolder = null!;
+        private RadioButton rdoSingleTargetFile   = null!;
         private TextBox     txtSingleTargetPath   = null!;
         private Button      btnBrowseSingleTarget = null!;
         private Button      btnOpenSingleTarget   = null!;
