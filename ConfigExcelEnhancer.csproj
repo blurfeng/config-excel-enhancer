@@ -7,12 +7,13 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- 唯一版本来源：升级只改这一处。自动派生 AssemblyVersion / FileVersion(取数字部分) 与 InformationalVersion(原样，可带 -beta 等后缀)。 -->
-    <Version>0.3.3</Version>
+    <Version>0.3.4</Version>
     <!-- 关闭 SDK 默认在 InformationalVersion 后追加 +git哈希 的行为，保证显示为纯净版本号 -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Authors>BlurFeng</Authors>
     <PackageIcon></PackageIcon>
     <ApplicationIcon>Icon\ConfigExcelEnhancer.ico</ApplicationIcon>
+    <LangVersion>12</LangVersion>
   </PropertyGroup>
 
   <!-- 发布为单文件（仅 Release 生效，Debug 构建/运行不受影响）。
