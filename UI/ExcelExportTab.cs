@@ -754,7 +754,9 @@ namespace ConfigExcelEnhancer.UI
         /// <summary>
         /// 对刚导出的 Excel 文件执行 Enum 数据验证：复用 <see cref="EnumValidationService"/> 扫描
         /// 本页 XML 文件夹的枚举定义，再交给 <see cref="ValidationUpdater"/> 写入验证规则。
-        /// 验证开关与 HideEnumDataSheet/BoolValidation/EnumForceRewrite 均复用全局设置。
+        /// HideEnumDataSheet/BoolValidation 复用全局设置；此处恒为强制重写：导出步骤会按新列
+        /// 布局清空旧验证（含 RebuildColumnsInOrder 删除全部验证），故必须无条件按新列重新应用，
+        /// 不受 Enum 选项卡的全局 EnumForceRewrite 开关影响。
         /// </summary>
         private async Task RunEnumValidationOnExportAsync(
             string xmlFolder, List<ExcelExportTask> tasks, CancellationToken token)
@@ -791,7 +793,7 @@ namespace ConfigExcelEnhancer.UI
                     prepared.EnumsForValidation,
                     Settings.HideEnumDataSheet,
                     _ => { },
-                    forceRewrite: LocalState.EnumForceRewrite,
+                    forceRewrite: true,
                     beanFieldEnumMap: prepared.BeanFieldEnumMap);
 
                 int cols      = results.Sum(r => r.EnumColumnsFound);
